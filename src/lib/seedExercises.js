@@ -36,7 +36,13 @@ const METADATA_BACKFILL_KEY = '@volyume_exercise_metadata_backfilled_v1';
 // v6 (final pass S2, 2026-09-05): every delt-primary press now derives the
 // overhead position, so a "no overhead" rule covers Seated Dumbbell Press,
 // Z-Press, Log Press and the kettlebell presses on existing installs too.
-const METADATA_REDERIVE_KEY = '@volyume_exercise_metadata_rederived_v6';
+// v7 (certification 2026-09-06, new-family reachability): the band
+// reclassification no longer fires on the name alone, so the six
+// "Band-Resisted"/"Reverse Band" barbell lifts derive `barbell` (Full Gym
+// and Barbell & Plates) instead of `band` (no-equipment profile only).
+// The category is written by corpusEntryToSeedRow, so without this bump an
+// install that already ran v6 would keep the wrong category for good.
+const METADATA_REDERIVE_KEY = '@volyume_exercise_metadata_rederived_v7';
 // Bumped when exercises are added to the corpus so the top-up scans for the
 // new canonical IDs once on installs that already seeded an earlier list.
 // v4 (EL-14/EL-15, exercise-library-expansion-2026-09-05): the corpus

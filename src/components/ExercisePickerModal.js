@@ -32,7 +32,7 @@ import { familyLabel } from '../lib/exercise/movementFamily';
 // sees noise about a lane they do not use.
 import { getLocalCapabilityConsent } from '../lib/consent/capabilityConsent';
 import { appAlert } from './AppAlert';
-import { matchesEquipmentFilter, matchesMuscleFilter } from '../lib/exerciseDisplay';
+import { matchesEquipmentFilter, matchesMuscleFilter, PICKER_EQUIPMENT_CHIPS } from '../lib/exerciseDisplay';
 // CC27 (section 34.1): custom creation derives equipment metadata from the
 // owner's own choices so customs can meet the built-in pool-entry bar.
 import { deriveExerciseMetadata } from '../lib/exerciseMetadata';
@@ -59,7 +59,10 @@ const PICKER_MUSCLES = Object.keys(MUSCLE_DISPLAY_NAMES);
 // corpus carries a full kettlebell family and five kettlebell library
 // plans, and matchesEquipmentFilter already handled the label; the picker
 // simply never offered it.
-const PICKER_EQUIPMENT = ['Barbell', 'Dumbbell', 'Kettlebell', 'Cable', 'Machine', 'Bodyweight', 'Smith Machine', 'Bands'];
+// Certification 2026-09-06: the list itself moved to exerciseDisplay.js,
+// beside the filter that resolves each label, and gained Landmine,
+// Suspension and Other so every equipment family in the corpus has a chip.
+const PICKER_EQUIPMENT = PICKER_EQUIPMENT_CHIPS;
 
 // L07-F8: the exercise TYPE axis a custom exercise can pick, matching the
 // existing exercise_type CHECK constraint (supabase/migrate_091_exercise_type.sql,

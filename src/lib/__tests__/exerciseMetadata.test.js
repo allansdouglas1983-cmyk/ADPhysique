@@ -37,6 +37,28 @@ describe('deriveEquipmentCategory', () => {
     expect(deriveEquipmentCategory('Banded Row', 'bodyweight')).toBe('band');
   });
 
+  // Certification 2026-09-06. The band reclassification is for rows whose
+  // coarse equipment is the legacy 'bodyweight'. It used to fire on the
+  // NAME alone, so the corpus's six "Band-Resisted"/"Reverse Band" barbell
+  // lifts derived to `band` — which filed them under the picker's Bands
+  // chip instead of Barbell and, through PROFILES_BY_CATEGORY.band, made
+  // them reachable ONLY in the no-equipment profile and never in Full Gym
+  // or Barbell & Plates. EL-4 files "bands on bars" under specialty
+  // barbell work, not under the band family.
+  test('a band ON A BARBELL stays a barbell move', () => {
+    expect(deriveEquipmentCategory('Band-Resisted Squat', 'barbell')).toBe('barbell');
+    expect(deriveEquipmentCategory('Reverse Band Deadlift', 'barbell')).toBe('barbell');
+    expect(deriveEquipmentProfiles('barbell')).toEqual(['full_gym', 'barbell_plates']);
+    // ...while the legacy bodyweight-tagged band rows keep reclassifying.
+    expect(deriveEquipmentCategory('Band Pull-Apart', 'bodyweight')).toBe('band');
+    expect(deriveEquipmentCategory('Banded Good Morning', '')).toBe('band');
+  });
+
+  test('band and landmine equipment values resolve even when the name omits the word', () => {
+    expect(deriveEquipmentCategory('Pull-Apart', 'band')).toBe('band');
+    expect(deriveEquipmentCategory('Meadows Row', 'landmine')).toBe('landmine');
+  });
+
   test('a Hammer Curl is a dumbbell move, not a plate-loaded machine', () => {
     expect(deriveEquipmentCategory('Hammer Curl', 'dumbbell')).toBe('dumbbell');
   });
