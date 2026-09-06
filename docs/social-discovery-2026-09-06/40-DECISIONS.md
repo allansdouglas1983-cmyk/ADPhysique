@@ -186,3 +186,21 @@ its fallback form).
   §9 wording applies only once Lane E has landed and shipped.
 - **SD-13a Leaving keeps blocks, mutes and programme-use counters.** A
   block is a safety record and must outlive the blocker's membership.
+- **SD-15a Quiet hours are device-local; server pushes cannot see them.**
+  Security review finding 6: quiet hours live only in AsyncStorage, so a
+  push sent by `community-notify` (like `partner-cheer` before it) does not
+  pause for them. The settings copy is corrected to promise only what is
+  true (no push while a wellbeing check is open). Making server pushes
+  honour quiet hours needs a synced quiet-hours preference; recorded as
+  genuine remaining work in the final report, not built here.
+- **SD-14b Post-level and programme-level view predicates.** The security
+  review's P0s shared one root cause: `_community_can_view` answers "may I
+  see this person" and four sites used it for "may I see this post". Two
+  helpers now answer the second question and every read and write on a
+  post or programme goes through them.
+- **SD-05a Partial profile updates.** `community_upsert_profile` keeps an
+  absent key's current value on update and clears a null one, so Edit
+  profile and the privacy screen send only the fields they own.
+- **SD-04a Browse before joining.** The hub loads Discover for a user with
+  no profile by skipping the two profile-only RPCs and never letting one
+  optional section's failure discard the others.
