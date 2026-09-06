@@ -49,7 +49,13 @@ clock. 24 Sentry issues resolved with reasons, 2 ignored until escalating,
 VOLYUME-1K (iOS native crash, no symbols on build 57) left open.
 
 Builds: 3567 (main f02847c, codec gates passed, artefacts to 9 Sept);
-3568 dispatched from 39df0f8 (adds the sign-in clock-skew retry).
+3568 (39df0f8, sign-in clock-skew retry); 3569 (6f339e0, version 1.3.5).
+ALL THREE SUPERSEDED: the founder's iOS 1.3.5+64 showed VOLYUME-28
+"exercise not found" x90 on an existing install (routine seed raced the
+corpus top-up; kettlebell and band library plans created with stations
+missing). Fixed on main: seed awaits the exercise chain, library plans
+repair in place, seed key v17. Use the build dispatched from that head
+for Play, and rebuild iOS before submitting 1.3.5.
 
 FOUNDER (in chat 2026-09-06, this is the delivery):
 1. Upload the 3568 AAB (or 3567) to a Play internal testing track; update
