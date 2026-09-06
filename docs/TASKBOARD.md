@@ -82,7 +82,9 @@ missing). Fixed on main: seed awaits the exercise chain, library plans
 repair in place, seed key v17. Run 3570 (ea34c8c, another session's
 setup-weight fix) predates the seed fix: SUPERSEDED. Run 3571 (main
 6554f6d: seed fix + picker chips + band-on-bar + setup weight) is the
-build for Play; rebuild iOS before submitting 1.3.5.
+build for Play: SUCCESS 10:46 UTC, both codec gates passed (prebuild
+asked Gradle for SQLCipher; packaged SQLite carries SQLCipher), AAB and
+APK artefacts expire 9 Sept. Rebuild iOS before submitting 1.3.5.
 
 FOUNDER (in chat 2026-09-06, this is the delivery):
 1. Upload the 3568 AAB (or 3567) to a Play internal testing track; update
