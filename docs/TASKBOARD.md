@@ -82,6 +82,19 @@ Landed on main (all green, lint + 16,372 tests):
 Founder-side actions raised by this campaign (section 3 mirror):
 - Re-paste the store listings (`docs/PLAY_STORE_LISTING.md`, `docs/APP_STORE_CONNECT_LISTING.md`) so the live listings say "Injuries & limitations".
 - The Article 9 line "never the photos" is untrue only for the allow-listed founder debug accounts (rgb/mask attached to their own rows); decide whether to reword the consent line or drop the founder debug attachment.
+## TODAY: SETUP WEIGHT POPULATES, LOG LABEL VISIBLE (2026-09-06) — COMPLETE, MERGED TO MAIN. Record D153.
+
+**Device checklist (Android, fresh account).**
+1. Complete setup with body weight 89 kg. Land on Today. Expected: no
+   weigh-in strip; the check-in card shows "Morning weight 89 kg" with
+   a green tick and "1 of 3 morning weigh-ins this week".
+2. Next morning, Today. Expected: the weigh-in strip with the input
+   pre-filled with 89; the Log button reads "Log" in white on charcoal,
+   clearly a button. Tap Log. Expected: "Morning weight 89 kg" logged.
+3. Weekly check-in on day 0. Expected: it still asks for a real weigh-in
+   before treating today as weighed (unchanged).
+ED-safety: the enrolment row already counted toward the gate; nothing
+weight-adjacent changed in the engine or the notifications.
 
 ## EXERCISE LIBRARY & ALTERNATIVE TRAINING EXPANSION (2026-09-05) — COMPLETE, MERGED TO MAIN. Record EL-1 to EL-25; closure `11-CLOSURE.md`; device checklist `10-VERIFICATION.md`.
 
