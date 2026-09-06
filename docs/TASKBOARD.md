@@ -33,6 +33,25 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## COMMUNITY: DISCOVERY, CONNECTIONS AND MESSAGING (2026-09-06, second campaign) — IN FLIGHT on `claude/volyume-social-discovery-h7dknu`
+
+Founder addition to the Community brief (in chat): best-in-class people
+discovery, a Follow / Connect / Message relationship model, training
+profile bands from observed training (opt-in, coarse), Find people with
+six doors, training-partner flag, programme and gym as bridges. Spec
+`docs/social-discovery-2026-09-06/70-DISCOVERY-BLUEPRINT.md`; rulings
+SD-20..SD-32; media model `71-MEDIA-MODEL.md` (founder decision).
+Lanes (Opus unless noted; recovery = re-dispatch the lane from the
+blueprint sections named; lead reviews every diff; agents never commit):
+A migration 161 + community-notify kinds (§11, §2); B client library
+(§3-§9); C1 screens: Find people, people list, training profile, connect
+sheet, profile/activity/hub changes (§10); C2 screens: conversations and
+conversation, message entry points (§2, §10); D (Sonnet) message
+notification category; E (Sonnet) safety records; then reviews (security
+and product), fixes, full regression, merge to main.
+
+---
+
 ## COMMUNITY REPLACES PARTNERS (2026-09-06) — LANDED on `claude/volyume-social-discovery-h7dknu`, merged to main; CLOUD 160 WRITTEN NOT APPLIED
 
 Founder brief in chat 2026-09-06 (one autonomous end-to-end task). Campaign
