@@ -33,6 +33,26 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## UK GYM MASTER DATABASE (2026-09-06, third workstream) — RESEARCH IN FLIGHT on `claude/volyume-social-discovery-h7dknu`
+
+Founder brief in chat: a national canonical gym and fitness-venue
+directory under Community (onboarding gym, primary and other gyms, people
+at my gym, gyms near me, gym pages, local recommendations). Folder
+`docs/gym-database-2026-09-06/` (README = document map). Law: nothing is
+imported before its licence is resolved; the founder decides paid
+licences. Phase 1 (read-only Sonnet research, four agents): `01` England,
+OS, Google, OSM, open places; `02` Scotland, Wales, NI; `03` operators
+and industry; `04` design precedents and dedup. Recovery: re-dispatch
+from the README document map. Phase 2: lead synthesis `10`, blueprint
+`20`. Phase 3: pipeline scripts, cloud tables, search RPCs, app
+integration, coverage report `30`. Reachability probe from this
+container (2026-09-06): activeplacespower.com, opendatani.gov.uk,
+geoportal.statistics.gov.uk, api.os.uk, puregym.com, thegymgroup.com
+reachable; spatialdata.gov.scot returns 403 to a bare request;
+overpass-api.de unreachable through the proxy (to re-test).
+
+---
+
 ## COMMUNITY: DISCOVERY, CONNECTIONS AND MESSAGING (2026-09-06, second campaign) — IN FLIGHT on `claude/volyume-social-discovery-h7dknu`
 
 Founder addition to the Community brief (in chat): best-in-class people
