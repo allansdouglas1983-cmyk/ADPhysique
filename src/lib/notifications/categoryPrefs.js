@@ -127,6 +127,15 @@ export const CATEGORY_PREFS = Object.freeze({
     legacyKey: null,
     defaultEnabled: true,
   },
+  // SD-21: a message from a connected person. Same server-sendable shape as
+  // the two Community categories above -- the projection is pushed
+  // immediately (pushCategoryPrefsNow) so an opt-out takes effect before the
+  // next ordinary sync.
+  [CATEGORY.COMMUNITY_MESSAGE]: {
+    blobField: 'communityMessageEnabled',
+    legacyKey: null,
+    defaultEnabled: true,
+  },
 });
 
 async function readBlob() {

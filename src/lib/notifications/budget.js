@@ -60,6 +60,11 @@ export const EVENT_PRIORITY = Object.freeze([
   // Partners was retired on 2026-09-06 (SD-03); this rank is kept so any
   // old partner push still resolves to a budgeted category.
   CATEGORY.PARTNER_CHEER,
+  // SD-21: a message from a connected person outranks a follow or a
+  // reaction/comment (COMMUNITY_FOLLOW / COMMUNITY_ACTIVITY, below) on a
+  // collision -- it is server-sent and already collapsed to one push per
+  // conversation on the server, so it never competes with itself.
+  CATEGORY.COMMUNITY_MESSAGE,
   // SD-15: Community's two categories sit at the bottom of the priority
   // list, same rank tier as partner cheer.
   CATEGORY.COMMUNITY_FOLLOW,

@@ -61,6 +61,11 @@ export const CATEGORY = Object.freeze({
   // Edge Function), exactly like PARTNER_CHEER above.
   COMMUNITY_FOLLOW: 'community_follow',
   COMMUNITY_ACTIVITY: 'community_activity',
+  // Discovery blueprint §2 (SD-21): a message from a connected person.
+  // Server-sent (community-notify Edge Function) and collapsed per
+  // conversation on the server, so at most one COMMUNITY_MESSAGE push is ever
+  // in flight for a given conversation at a time.
+  COMMUNITY_MESSAGE: 'community_message',
 });
 
 /**
@@ -178,6 +183,9 @@ export const CATEGORY_CHANNELS = Object.freeze({
   // PARTNER_CHEER above.
   [CATEGORY.COMMUNITY_FOLLOW]: [CHANNEL.PUSH, CHANNEL.IN_APP],
   [CATEGORY.COMMUNITY_ACTIVITY]: [CHANNEL.PUSH, CHANNEL.IN_APP],
+  // SD-21: a message from a connected person. Push + in-app, same shape as
+  // the other two Community categories.
+  [CATEGORY.COMMUNITY_MESSAGE]: [CHANNEL.PUSH, CHANNEL.IN_APP],
 });
 
 /**
@@ -262,6 +270,7 @@ export function categoryForDataType(type) {
     case 'block_ready_to_review': return CATEGORY.WEEKLY_COACH_READY;
     case 'community_follow': return CATEGORY.COMMUNITY_FOLLOW;
     case 'community_activity': return CATEGORY.COMMUNITY_ACTIVITY;
+    case 'community_message': return CATEGORY.COMMUNITY_MESSAGE;
     default: return null;
   }
 }

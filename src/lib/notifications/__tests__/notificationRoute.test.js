@@ -97,6 +97,22 @@ describe('routeForNotificationType', () => {
     });
   });
 
+  test('SD-21: community_message lands on the conversation it names, not the general inbox', () => {
+    expect(routeForNotificationType('community_message', { conversation_id: 'conv-1' })).toEqual({
+      tab: 'HomeTab', screen: 'CommunityConversation', params: { id: 'conv-1', source: 'notification' },
+    });
+    // The camelCase field is read too, defensively, same either-shape pattern
+    // as the rest of this module.
+    expect(routeForNotificationType('community_message', { conversationId: 'conv-2' })).toEqual({
+      tab: 'HomeTab', screen: 'CommunityConversation', params: { id: 'conv-2', source: 'notification' },
+    });
+    // A missing id never throws; it routes with a null id rather than
+    // dead-ending on the general activity inbox.
+    expect(routeForNotificationType('community_message')).toEqual({
+      tab: 'HomeTab', screen: 'CommunityConversation', params: { id: null, source: 'notification' },
+    });
+  });
+
   test('§15 item 8: diary_day with a valid local day-key opens that exact diary day', () => {
     expect(routeForNotificationType('diary_day', { date: '2026-07-05' })).toEqual({
       tab: 'DiaryTab', screen: 'Diary', params: { date: '2026-07-05' },

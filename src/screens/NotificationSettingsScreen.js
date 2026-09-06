@@ -98,6 +98,8 @@ export default function NotificationSettingsScreen({ navigation }) {
   // the getting-started nudges above.
   const [communityFollowEnabled, setCommunityFollowEnabled] = useState(true);
   const [communityActivityEnabled, setCommunityActivityEnabled] = useState(true);
+  // SD-21: the message toggle, same blob-backed shape, default on.
+  const [communityMessageEnabled, setCommunityMessageEnabled] = useState(true);
   useEffect(() => {
     (async () => {
       try {
@@ -107,6 +109,7 @@ export default function NotificationSettingsScreen({ navigation }) {
         setReturnNudgeEnabled(blob.returnNudgeEnabled !== false);
         setCommunityFollowEnabled(blob.communityFollowEnabled !== false);
         setCommunityActivityEnabled(blob.communityActivityEnabled !== false);
+        setCommunityMessageEnabled(blob.communityMessageEnabled !== false);
       } catch (_) { /* default on */ }
     })();
   }, []);
@@ -461,6 +464,21 @@ export default function NotificationSettingsScreen({ navigation }) {
     }
   }
 
+  // SD-21: same no-schedule shape as the two toggles above -- messages are
+  // sent by community-notify off a live event, and the projection is what it
+  // reads before delivering.
+  async function handleCommunityMessageToggle(value) {
+    setCommunityMessageEnabled(value);
+    try {
+      const userId = useAppStore.getState().user?.id;
+      await setCategoryEnabled(userId, CATEGORY.COMMUNITY_MESSAGE, value);
+      await pushCategoryPrefsNow(userId);
+      toast.show(value ? 'Community messages on' : 'Community messages off', { variant: 'success' });
+    } catch (_) {
+      toast.show('Could not save that change', { variant: 'error' });
+    }
+  }
+
   function handleTrainingTimePick() {
     const currentLabel = `${String(trainingHour).padStart(2, '0')}:${String(trainingMinute).padStart(2, '0')}`;
     appAlert(
@@ -781,6 +799,25 @@ export default function NotificationSettingsScreen({ navigation }) {
           <View style={[styles.helperRow, live.helperRow]}>
             <Text style={[styles.helperText, live.helperText]}>
               When someone reacts to or comments on your posts, or uses your programme.
+            </Text>
+          </View>
+          <View style={styles.toggleRow}>
+            <View style={[styles.toggleIconWrap, live.toggleIconWrap]}>
+              <Ionicons name="mail-outline" size={18} color={t.colors.primary} />
+            </View>
+            <Text style={[styles.toggleLabel, live.toggleLabel]}>Messages</Text>
+            <Switch
+              value={communityMessageEnabled}
+              onValueChange={handleCommunityMessageToggle}
+              trackColor={{ false: t.colors.surface3, true: withAlpha(t.colors.primary, alpha.half) }}
+              thumbColor={t.colors.primary}
+              ios_backgroundColor={t.colors.surface2}
+              accessibilityLabel="Messages toggle"
+            />
+          </View>
+          <View style={[styles.helperRow, live.helperRow]}>
+            <Text style={[styles.helperText, live.helperText]}>
+              From people you are connected with.
             </Text>
           </View>
           <View style={[styles.helperRow, live.helperRow]}>

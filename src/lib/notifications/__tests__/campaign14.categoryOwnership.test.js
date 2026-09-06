@@ -61,10 +61,11 @@ describe('C14-3 each live category has exactly one user-choice authority (11)', 
     expect(registered).toContain(CATEGORY.PLANNED_MEAL_CONFIRM);
     expect(registered).toContain(CATEGORY.PARTNER_CHEER);
     expect(registered).toContain(CATEGORY.ACTIVATION_NUDGE);
-    // SD-15: Community's two categories, same server-sendable shape as
-    // partner cheer.
+    // SD-15/SD-21: Community's three categories, same server-sendable shape
+    // as partner cheer.
     expect(registered).toContain(CATEGORY.COMMUNITY_FOLLOW);
     expect(registered).toContain(CATEGORY.COMMUNITY_ACTIVITY);
+    expect(registered).toContain(CATEGORY.COMMUNITY_MESSAGE);
     // One blob field per category, and no field serving two categories -
     // a shared field would be two switches fighting over one answer.
     const fields = registered.map(c => CATEGORY_PREFS[c].blobField);
@@ -157,11 +158,14 @@ describe('C14-4 a real off switch exists for every optional category (12, 13, 14
     expect(CATEGORY_PREFS[CATEGORY.PARTNER_CHEER].defaultEnabled).toBe(true);
     expect(CATEGORY_PREFS[CATEGORY.CHECKIN_MISSED].defaultEnabled).toBe(true);
     expect(await isCategoryEnabled(CATEGORY.PARTNER_CHEER)).toBe(true);
-    // SD-15: both Community categories default on, same as partner cheer.
+    // SD-15/SD-21: all three Community categories default on, same as
+    // partner cheer.
     expect(CATEGORY_PREFS[CATEGORY.COMMUNITY_FOLLOW].defaultEnabled).toBe(true);
     expect(CATEGORY_PREFS[CATEGORY.COMMUNITY_ACTIVITY].defaultEnabled).toBe(true);
+    expect(CATEGORY_PREFS[CATEGORY.COMMUNITY_MESSAGE].defaultEnabled).toBe(true);
     expect(await isCategoryEnabled(CATEGORY.COMMUNITY_FOLLOW)).toBe(true);
     expect(await isCategoryEnabled(CATEGORY.COMMUNITY_ACTIVITY)).toBe(true);
+    expect(await isCategoryEnabled(CATEGORY.COMMUNITY_MESSAGE)).toBe(true);
     // The two coaching reminders default OFF because their field is seeded
     // by Pro onboarding, so absent means "not set up", exactly as
     // restoreNotifications has always read it. The authority must say what

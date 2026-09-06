@@ -41,7 +41,7 @@ export async function ensureNotifChannels() {
     // any old partner push that reaches a device.)
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Updates',
-      description: 'Community follows and activity, and other Volyume updates',
+      description: 'Community follows, activity and messages, and other Volyume updates',
       importance: Notifications.AndroidImportance.DEFAULT,
       sound: 'default',
       enableVibrate: true,

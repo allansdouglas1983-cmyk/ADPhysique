@@ -171,6 +171,17 @@ export function routeForNotificationType(type, data = {}) {
       // entry points (e.g. the retired partner beats above) so surface-view
       // telemetry can attribute the open.
       return { tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' } };
+    case 'community_message':
+      // SD-21 (discovery blueprint §2): a message from a connected person
+      // lands directly on that conversation, not the general activity inbox.
+      // `conversation_id` is the server payload's field name; `conversationId`
+      // is read too in case a future emitter bakes the camelCase form, same
+      // defensive either-shape read as elsewhere in this module.
+      return {
+        tab: 'HomeTab',
+        screen: 'CommunityConversation',
+        params: { id: data?.conversation_id ?? data?.conversationId ?? null, source: 'notification' },
+      };
     case 'diary_day':
       // §15 item 8 (deep-link expansion): the general-purpose target for any
       // notification that references ONE specific diary day rather than
