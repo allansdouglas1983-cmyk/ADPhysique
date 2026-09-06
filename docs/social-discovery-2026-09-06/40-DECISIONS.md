@@ -235,3 +235,73 @@ its fallback form).
   because it needs relevance, not volume. Privacy by construction
   (structure-only programmes, body data never, minors protected) is the
   fourth thing, and it is what lets the first three exist.
+
+## Second campaign: discovery, connections and the social graph (SD-20..SD-32, lead, 2026-09-06)
+
+Authority: the founder's addition to the Community brief (in chat). Spec:
+`70-DISCOVERY-BLUEPRINT.md`.
+
+- **SD-20 Three tiers: Follow, Connect, Message.** Follow stays one-way.
+  Connect is a mutual, accepted tie with optional context (two fixed
+  reasons and a short note); accepting creates following both ways;
+  removing a connection ends messaging and keeps the follows; unfollowing
+  a connection removes it. `connect_from` (anyone / people who follow me /
+  nobody) is the one control. No codes exist anywhere. Rationale: a
+  training product needs exactly one consent gate between "I watch your
+  training" and "we talk", and a mutual tie is the honest name for the
+  relationship a gym partner has. A single follow tier (Hevy, Strava)
+  either bans messaging or opens it too wide; a Facebook-style friend
+  graph without follow loses the light interest tier that discovery runs
+  on.
+- **SD-21 Messaging is a consequence of connection, not a feature.**
+  One-to-one text between connected people, a context reference from a
+  programme or story, no groups, no media, no pre-written text, one push
+  per conversation per 15 minutes with no content in the push, minors
+  excluded. This reverses SD-12's "no direct messages" because the
+  connection graph now supplies the consent gate the earlier ruling
+  lacked.
+- **SD-22 Observed training becomes coarse bands, on the device, by
+  choice.** Days, time bands, sessions band, staple lifts, experience
+  band, programme key, age band. Nothing finer than a band ever leaves the
+  device; the person sees the bands before they are shared; days, time
+  bands and age band default off; the server stores only what was sent.
+  Rationale: this is the differentiator no competitor has (real training
+  history) delivered in the only form that is safe (bands, chosen).
+- **SD-23 Find people is a screen with six doors.** At my gym, near me,
+  train like me, on my programme, open to training together, people you
+  might know, plus search; every door shows a real count and an honest
+  zero state.
+- **SD-24 Reasons, never percentages.** A match percentage claims a
+  precision the bands cannot carry and invites ranking people. Every
+  suggestion shows its reasons in fixed wording; the score only orders.
+- **SD-25 Training partner is an opt-in flag with preferences.** Nobody
+  is shown as looking unless they switched it on; the flag is a chip on
+  the profile and a door on Find people.
+- **SD-26 The programme is a bridge between people.** "People on this
+  programme" lists public profiles who use or published it, behind a
+  "Show which programmes I use" toggle (default on for public profiles).
+- **SD-27 Gym pages get a summary, not a room.** Counts by style, time
+  band and partner flag, "N you follow", members' programmes and stories;
+  labels de-duplicate through a typeahead over labels already used in the
+  same area. No verification, no coordinates, no live presence (SD-10
+  holds). Distance bands are a later question because they need a
+  geocoding source.
+- **SD-28 Density is handled by counts and honest zero states**, not by
+  hiding doors; the invite path is the profile link and programme pages.
+- **SD-29 Rejected features, reconsidered.** Direct messages: now built
+  (SD-21). Challenges, leaderboards, live presence, community rooms, gym
+  verification, contacts import, person-to-person comparison: still not
+  built; none becomes more honest at 25 people because a graph exists.
+  Photo avatars and post media: still a founder decision on the
+  processor dependency; the model is written in `71-MEDIA-MODEL.md` so the
+  decision is informed, not deferred.
+- **SD-30 Nothing in this campaign reads nutrition, body metrics,
+  Progress Scan, injuries and limitations, coaching or check-ins.** The
+  training profile reads completed-workout timestamps and exercise ids
+  only. Guarded.
+- **SD-31 Creepiness rule.** Copy states bands and shared facts ("Both
+  usually train evenings"), never observations about a specific person's
+  movements, times or distance. No "last trained", no "nearby now", no
+  precise times, no map.
+- **SD-32 Under-18 accounts** never connect or message, are never listed
+  in any Find people door, and carry no age band.
