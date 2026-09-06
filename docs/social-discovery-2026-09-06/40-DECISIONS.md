@@ -305,3 +305,19 @@ Authority: the founder's addition to the Community brief (in chat). Spec:
   precise times, no map.
 - **SD-32 Under-18 accounts** never connect or message, are never listed
   in any Find people door, and carry no age band.
+- **SD-20a Connect stays explicit, against the Garmin trend.** Research
+  `14`: Garmin dropped mutual requests in 2026 for one-way follow; Strava
+  gates messaging with a Following / Mutuals / No one setting; JEFIT keeps
+  friend-gated DMs; Hevy has no messaging; no product shows a match
+  percentage; GymBuddy is the only app matching on schedule, in coarse
+  bands. Volyume keeps an explicit Connect because the training-partner
+  case needs intent and context ("Jamie wants to connect · Same gym ·
+  Want to train together?") that a follow-back cannot carry, and because
+  a mutual follow is a coincidence, not a decision. Friction is contained:
+  a public profile's Follow is instant, and a Connect request to a
+  followers-only profile counts as the follow request too (accepting does
+  both). Strava's three-value setting is adopted as `connect_from`;
+  messaging is adults only, exactly as Strava's rule. Boostcamp's
+  aggregate-only programme counts are noted; Volyume lists identities on
+  a programme only behind the "Show which programmes I use" toggle, which
+  the Join step now shows explicitly.
