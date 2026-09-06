@@ -6359,10 +6359,22 @@ always populate; when it doesn't, the log button is an empty shell."
 **What was observed.** Setup writes today's `morning_weights` row with
 an `enrolment` marker. Under C5-P22-01 (a lead ruling, D96) the Today
 weigh-in strip deliberately treated a marked row as not logged, so day 0
-always showed the empty strip with the typed figure as a prefill. The
-"sometimes populated" cases were the Health Connect import
-(`src/lib/health.js`) or a manual weigh-in replacing the marked row with
-a real reading. And the strip's edit-mode Log label still carried the
+always showed the empty strip with the typed figure as a prefill.
+CORRECTION (founder, same day: both cases were fresh users straight
+through setup): the "sometimes populated" case was a race inside setup
+itself. Setup wrote today's row twice, first through the body-metric
+write-through WITHOUT the marker, then with it; each write fired its own
+fire-and-forget cloud push, the cloud stamps `updated_at` at push time,
+and the two pushes could land in either order. When the unmarked push
+landed last, the next pull's last-write-wins replaced the local row with
+the unmarked copy and Today read the weight as logged. Fix: the marked
+write goes first and the write-through preserves an existing row's
+notes, so both pushes carry the marker and their order cannot change
+the row's meaning. Known wider limitation, mentioned not fixed: any two
+rapid edits of the same synced row can reorder the same way because the
+push stamps its own time; per-row push serialisation or a true
+local-edit timestamp in the payload is the general fix. And the strip's
+edit-mode Log label still carried the
 dark-on-amber colour from before the D148 hierarchy, so on the raised
 charcoal primary it was dark on dark: the "empty shell".
 
