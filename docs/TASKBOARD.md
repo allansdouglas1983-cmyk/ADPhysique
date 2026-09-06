@@ -61,6 +61,16 @@ commit; agents never commit):
 - Lane D: notifications, deep links, AASA, app.json, web pages (§7, §8).
 - Lane E (after C): Partners retirement (§9).
 
+Landed on the branch so far (lead-reviewed, each green): Lane A `bd03abd`
+(migration 160 WRITTEN NOT APPLIED, community-notify, community-public,
+security targets, README); Lane B `c1ef08c` (client library + guards);
+Lane D `11d44b8` (notification categories, /u /p /s links, web pages);
+safety records `fc455d8` (`docs/community-safety/`); visual review
+`4992543` (render + §13 rulings). In flight: Lane C split in two Opus
+agents (C1 hub/profile/nav/entry points; C2 programme/adapt/compose/post).
+Then Lane E (Partners retirement), full regression, verification doc,
+final report, merge to main.
+
 ---
 
 ## SENTRY TRIAGE AND THE CODEC-LESS ANDROID BUILDS (2026-09-06) — CODE ON MAIN `39df0f8`; FOUNDER: PUBLISH A CODEC BUILD TO PLAY.
