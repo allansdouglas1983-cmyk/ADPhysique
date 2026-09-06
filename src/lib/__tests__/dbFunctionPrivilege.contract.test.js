@@ -74,6 +74,53 @@ const CLIENT_RPCS = [
   'record_partner_consent',
   'record_rpc_fallback_deletion',
   'redeem_partner_invite',
+  // Community (migrate_160, SD-14). Every one is SECURITY DEFINER with
+  // `search_path = public, pg_temp`, derives its user from auth.uid(), and is
+  // granted to `authenticated` only; the `_community_*` helpers beneath them
+  // are granted to nobody. They are listed here so that a Community RPC can
+  // never be mistaken for an internal function by the check below, and so
+  // that adding one to the app without adding it here fails the build.
+  'community_activity',
+  'community_block',
+  'community_check_handle',
+  'community_comment',
+  'community_create_post',
+  'community_delete_comment',
+  'community_delete_post',
+  'community_dimension',
+  'community_dimensions_me',
+  'community_discover_posts',
+  'community_discover_programmes',
+  'community_feed',
+  'community_follow',
+  'community_get_me',
+  'community_get_post',
+  'community_get_profile',
+  'community_get_programme',
+  'community_is_moderator',
+  'community_leave',
+  'community_list_comments',
+  'community_list_follows',
+  'community_mark_activity_seen',
+  'community_moderate',
+  'community_moderation_queue',
+  'community_mute',
+  'community_my_programmes',
+  'community_publish_programme',
+  'community_react',
+  'community_record_programme_use',
+  'community_relationships',
+  'community_remove_follower',
+  'community_report',
+  'community_respond_follow',
+  'community_search_people',
+  'community_search_programmes',
+  'community_suggested_people',
+  'community_unblock',
+  'community_unfollow',
+  'community_unmute',
+  'community_unpublish_programme',
+  'community_upsert_profile',
 ];
 
 /** Every RPC name the app actually calls, read from the real source. */

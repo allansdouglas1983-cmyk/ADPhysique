@@ -10,6 +10,9 @@ describe('changed Edge functions enforce actual streamed body limits', () => {
     ['app-store-verify', '64 * 1024'],
     ['play-billing-rtdn', '1024 * 1024'],
     ['app-store-notifications', '128 * 1024'],
+    // community-notify takes a three-field body and nothing else, so it gets
+    // the same tight bound as partner-cheer.
+    ['community-notify', '4096'],
   ])('%s uses the shared bounded reader (%s bytes)', (name, bound) => {
     const source = read(name);
     expect(source).toContain('readBoundedJson');
