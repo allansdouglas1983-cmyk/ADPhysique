@@ -24,3 +24,11 @@ Agent window: the founder brief explicitly commissions heavy lower-cost agent
 use ("Use lower-cost agents aggressively"), so Phase A runs a wider window
 than the standing two-at-a-time rule. All Phase A agents are READ-ONLY;
 recovery path is simply re-dispatch.
+
+Founder order (in chat, 2026-09-06, standing for this and the gym
+workstream): use the lowest agent tier that meets the elite standard for
+the task in hand. Haiku for mechanical work (inventories, renames,
+fixtures, counts), Sonnet for well-specified builds, tests, documents and
+the product/UX review, Opus only where judgement drives the outcome (the
+security review of a new schema, engine-adjacent composition). Fable stays
+in the main loop and reads to judge, not to learn.
