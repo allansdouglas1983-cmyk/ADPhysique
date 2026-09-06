@@ -2353,6 +2353,14 @@ conditional on the decision; recorded here so they are visible, not lost._
 
 ## 3. FOUNDER-SIDE OPS (not agent work - only the founder can do these)
 
+- **GYM DIRECTORY (2026-09-06) - three unlocks, none blocking the free
+  stack.** (1) Register a free sportscotland Spatial Hub account
+  (data.spatialhub.scot) so Scotland's Sports Facilities register can be
+  pulled. (2) Say yes to a pipeline-only DuckDB command-line binary (never
+  in the app) so Foursquare Open Source Places and Overture Places, both
+  permissively licensed Parquet datasets, become cross-checks and
+  gap-fillers. (3) Optional: price an OS Points of Interest licence. Standard
+  recorded as GD-15 in `docs/gym-database-2026-09-06/20-BLUEPRINT.md`.
 - **COMMUNITY (2026-09-06) - four actions, in order.** (1) Say "run
   against production" for migration 160 (`supabase/migrate_160_community.sql`)
   and the deploy of `community-notify` and `community-public`; Claude

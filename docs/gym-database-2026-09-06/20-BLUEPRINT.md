@@ -162,3 +162,16 @@ PureGym", "the gym motherwell", "JD", "J D Gyms", "Motherwell gym",
 "David Lloyd Glasgow", and misspellings); the coverage report `30`;
 rpc-only guard over 162; privacy guard over `src/lib/gyms`; device
 checklist in `40`.
+
+## GD-15 The standard is "the best UK gyms database there is" (founder, 2026-09-06)
+Completeness is measured, never asserted: the coverage report states
+canonical venues by nation, local authority and operator against
+ukactive's 5,842 clubs and each operator's own branch count, and lists
+single-source rows, unresolved matches and suspected gaps by name. Every
+open source that reaches independents is used (VOA premises, Companies
+House, the national registers, operator feeds); every venue carries
+coordinates, hierarchy, status and provenance; the pipeline re-runs on
+each source's cadence; users correct it. Three founder unlocks raise the
+ceiling and are recorded on the board: the free sportscotland account,
+a pipeline-only Parquet reader for Foursquare and Overture, and an
+optional paid OS Points of Interest licence.
