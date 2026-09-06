@@ -19,3 +19,11 @@ Document map (filled as the workstream runs):
 - `50-FINAL-REPORT.md`
 Recovery: Phase 1 agents are read-only; re-dispatch from the briefs
 recorded in `docs/TASKBOARD.md`.
+
+Founder standard (in chat, 2026-09-06): independent gyms, not just
+groups. Named test case: "Volt Gym, Burscough" must be findable. Sources
+that cover independents by construction: the VOA non-domestic rating
+list (England and Wales, gyms are a rated category), Companies House
+company data filtered to SIC 93130 (fitness facilities), Active Places
+where operators registered, operator feeds for chains, user submissions
+for the rest, OSM and open places as cross-checks.
