@@ -612,7 +612,12 @@ describe('State matrix — A: established Pro, all progressing, photos current',
     // BodyMetrics, Training -> LiftProgress), so Consistency now stands in
     // for "the utilities grid renders".
     expect(flattenText(tree)).toContain('Consistency');
-    expect(flattenText(tree)).toContain('Partners');
+    // The Partners tile was REMOVED from this grid with no replacement
+    // (social-discovery blueprint section 1, entry point 4: "Community is
+    // not a stat"), so "Full history" is the second grid tile this state
+    // pins now.
+    expect(flattenText(tree)).toContain('Full history');
+    expect(flattenText(tree)).not.toContain('Partners');
 
     // Retired idioms never render on the landing.
     expect(flattenText(tree)).not.toMatch(/For you/i);

@@ -1,23 +1,21 @@
 /**
  * Source guard for the Partners placement spine (DESIGN-SPEC B8, C1).
  *
- * Pins the four placement invariants so the calm partner entries cannot drift
- * or regress:
- *   1. Coach home (historical file: YouScreen) carries a lock-aware "Partners"
- *      row that attributes its view and jumps cross-tab to the Partner route.
+ * Pins the placement invariants so the calm entries cannot drift or regress.
+ *
+ * AMENDED 2026-09-06 (social-discovery blueprint section 1, entry points 2
+ * and 4): the two surviving Partners entries became Community.
+ *   1. Coach home (historical file: YouScreen) carries the "Community" row
+ *      with the people glyph, jumping cross-tab to the Community route in
+ *      the Home stack. It is the row that used to say "Partners".
  *   2. ConsistencyScreen carries NO Partners row (founder device-walk
  *      2026-07-03: three entry points read as duplication; the Consistency
  *      row was the most out-of-place and was removed).
- *   3. AnalyticsScreen carries the Partners tile INSIDE the utilities grid
- *      (Campaign 23, PROGRESS-UX-SPEC.md §27: "Partners tile (top slot) |
- *      DEMOTE to utilities grid; feature KEEP" -- superseding the earlier
- *      promoted full-width row this suite used to pin. §22 R6 lists the
- *      grid order explicitly with Partners last, so it is now AFTER Full
- *      history, not before it. Label went sentence case, and the grid's
- *      Body Metrics/Lifts tiles were later removed as duplicates of the
- *      Answer Block's pillar rows above -- neither changes Partners'
- *      position relative to Full history).
- *   4. HomeScreen stays free of any partner entry — the one-banner invariant.
+ *   3. AnalyticsScreen carries NO Partners tile: it was removed with no
+ *      replacement, because Community is not a stat (blueprint section 1,
+ *      entry point 4). The Campaign 23 §27 demotion this used to pin is
+ *      superseded.
+ *   4. HomeScreen stays free of any partner entry, the one-banner invariant.
  */
 import fs from 'fs';
 import path from 'path';
@@ -29,10 +27,11 @@ const CONSISTENCY = read('ConsistencyScreen.js');
 const ANALYTICS = read('AnalyticsScreen.js');
 const HOME = read('HomeScreen.js');
 
-describe('Coach home Partners row', () => {
-  test('has a Partners NavRow with the people icon', () => {
+describe('Coach home Community row (was Partners)', () => {
+  test('has a Community NavRow with the people icon', () => {
     expect(COACH).toMatch(/icon="people-outline"/);
-    expect(COACH).toMatch(/label="Partners"/);
+    expect(COACH).toMatch(/label="Community"/);
+    expect(COACH).not.toMatch(/label="Partners"/);
   });
 
   // The pro lock affordance ('pro={!isPro}') is REMOVED (D137, fully free
@@ -41,15 +40,8 @@ describe('Coach home Partners row', () => {
     expect(COACH).not.toMatch(/pro=\{!isPro\}/);
   });
 
-  test('reuses the shared line derivation, not a duplicated string', () => {
-    expect(COACH).toMatch(/partnerRowLine/);
-    // The row copy must not be re-implemented inline here.
-    expect(COACH).not.toMatch(/resting this week/);
-  });
-
-  test('attributes the view and jumps cross-tab with a source param', () => {
-    expect(COACH).toMatch(/trackPartnerSurfaceView\('coach_row'\)/);
-    expect(COACH).toMatch(/navigateCrossTab\(navigation, 'ProgressTab', 'Partner', \{ source: 'coach_row' \}\)/);
+  test('jumps cross-tab to Community in the Home stack', () => {
+    expect(COACH).toMatch(/navigateCrossTab\(navigation, 'HomeTab', 'Community'\)/);
   });
 });
 
@@ -67,29 +59,23 @@ describe('ConsistencyScreen carries no Partners row (deduped)', () => {
   });
 });
 
-describe('AnalyticsScreen Partners tile', () => {
-  // Campaign 23 (§27/§22 R6): Partners demoted OUT of its promoted full-width
-  // row into the utilities grid, ordered last per §22 R6's explicit list
-  // ("Body Metrics, Lifts, Consistency, Full History, Recaps..., Year of
-  // Lifts..., Partners").
-  test('is demoted into the utilities grid, after Full history (no longer a promoted row)', () => {
-    const partnersIdx = ANALYTICS.indexOf('label="Partners"');
-    const fullHistoryIdx = ANALYTICS.indexOf('label="Full history"');
-    expect(partnersIdx).toBeGreaterThan(-1);
-    expect(fullHistoryIdx).toBeGreaterThan(-1);
-    expect(partnersIdx).toBeGreaterThan(fullHistoryIdx);
+describe('AnalyticsScreen carries no Partners tile', () => {
+  // Blueprint section 1, entry point 4: "the Partners tile is removed (no
+  // replacement; Community is not a stat)". The utilities grid keeps its
+  // own tiles; nothing takes the vacated slot.
+  test('no Partners tile and no partner attribution survive', () => {
+    expect(ANALYTICS).not.toMatch(/label="Partners"/);
+    expect(ANALYTICS).not.toMatch(/trackPartnerSurfaceView/);
+    expect(ANALYTICS).not.toMatch(/navigation\.navigate\('Partner'/);
   });
 
-  // The pro lock ('pro={tier !== 'pro'}') is REMOVED (D137, fully free
-  // product), not inverted: there is no tier to lock behind any more.
-  test('carries no pro lock, and attributes the view with a source param', () => {
-    expect(ANALYTICS).not.toMatch(/pro=\{tier !== 'pro'\}/);
-    expect(ANALYTICS).toMatch(/trackPartnerSurfaceView\('progress_tile'\)/);
-    expect(ANALYTICS).toMatch(/navigation\.navigate\('Partner', \{ source: 'progress_tile' \}\)/);
+  test('the grid it sat in is still there (the removal was surgical)', () => {
+    expect(ANALYTICS).toMatch(/label="Full history"/);
+    expect(ANALYTICS).toMatch(/label="Consistency"/);
   });
 
-  test('there is exactly one Partners tile (moved, not duplicated)', () => {
-    expect(ANALYTICS.match(/label="Partners"/g)?.length).toBe(1);
+  test('no Community tile replaced it', () => {
+    expect(ANALYTICS).not.toMatch(/label="Community"/);
   });
 });
 

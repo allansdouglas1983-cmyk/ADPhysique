@@ -19,8 +19,9 @@
 
 import { useCallback, useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Share,
+  View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Share,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -270,9 +271,10 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
         </View>
       ) : (
         <>
-          <FlatList
+          <FlashList
             data={comments}
             keyExtractor={(item) => String(item.id)}
+            estimatedItemSize={88}
             ListHeaderComponent={header}
             contentContainerStyle={styles.content}
             onEndReachedThreshold={0.4}

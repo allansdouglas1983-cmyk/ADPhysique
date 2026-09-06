@@ -12,6 +12,18 @@
  * their session. A unit test only covers the code that exists today;
  * this covers the code nobody has written yet.
  *
+ * A SECOND allowance, narrower still, for two files whose whole job is to
+ * SAY what is never shared: `src/components/community/PrivacyReceipt.js`
+ * (the "Others can see" / "Never shared" receipt) and
+ * `src/screens/CommunityRulesScreen.js` (the versioned rules text, which
+ * lists "Your bodyweight and body composition", "Your Progress Scan",
+ * "Your nutrition and food diary"). Those words are USER-FACING COPY, the
+ * opposite of a read: they are the promise itself. So for exactly those
+ * two files, and no others, quoted string literals are stripped before the
+ * scan and the remaining code is scanned as normal. A real read in either
+ * file (a property access, an import, a database call) still fails, because
+ * none of that is inside a string.
+ *
  * ONE deliberate allowance, and why it is not a hole. The blueprint's
  * section 10 shorthand lists "capability" among the words no Community
  * file may read, while section 5.4 requires "Adapt for me" to compose
@@ -44,6 +56,23 @@ function code(source) {
   return source
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+}
+
+/** The two files that exist to say what is never shared (see the header).
+ * Their copy names the forbidden things on purpose; their CODE still may
+ * not read any of it. */
+const COPY_ONLY_FILES = [
+  'src/components/community/PrivacyReceipt.js',
+  'src/screens/CommunityRulesScreen.js',
+];
+
+/** Strip quoted string literals, leaving the code around them. Applied to
+ * the two copy-only files above and to nothing else. */
+function stripStrings(source) {
+  return source
+    .replace(/'(?:\\.|[^'\\])*'/g, "''")
+    .replace(/"(?:\\.|[^"\\])*"/g, '""')
+    .replace(/`(?:\\.|[^`\\])*`/g, '``');
 }
 
 function walk(dir) {
@@ -125,7 +154,12 @@ describe('no Community file reads personal data', () => {
       // validation.js IS the refusal list. It names every forbidden key
       // on purpose, which is the one place that is correct.
       if (rel.endsWith('src/lib/community/validation.js')) return;
-      const source = code(fs.readFileSync(full, 'utf8'));
+      const stripped = code(fs.readFileSync(full, 'utf8'));
+      // The two copy-only files keep every line of code under the scan;
+      // only their quoted copy is set aside (see the header).
+      const source = COPY_ONLY_FILES.includes(rel.split(path.sep).join('/'))
+        ? stripStrings(stripped)
+        : stripped;
       for (const pattern of FORBIDDEN_READS) {
         expect(source).not.toMatch(pattern);
       }

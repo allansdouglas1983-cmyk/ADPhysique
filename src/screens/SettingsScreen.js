@@ -1,5 +1,6 @@
 import { View, Platform } from 'react-native';
 import { appAlert } from '../components/AppAlert';
+import { navigateCrossTab } from '../navigation/navigateCrossTab';
 import { SettingsPage, SettingRow, settingsStyles as styles, useSettingsStyles } from '../components/SettingsPrimitives';
 import useAppStore from '../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -140,6 +141,17 @@ export default function SettingsScreen({ navigation }) {
           label="Your data"
           sub="Sync, backup, import, export"
           onPress={() => { haptics.selection(); navigation.navigate('SettingsData'); }}
+        />
+        {/* Community (blueprint section 6): the privacy half of Community
+            is reachable from Settings as well as from Community itself, so
+            "who can see me" is answerable from where people look for it.
+            Community lives in the Home stack, so this is a cross-tab jump
+            like the volume-targets row on Coach. */}
+        <SettingRow
+          icon="people-outline"
+          label="Community"
+          sub="Who can follow you, blocked and muted people"
+          onPress={() => { haptics.selection(); navigateCrossTab(navigation, 'HomeTab', 'CommunityPrivacy'); }}
         />
         <SettingRow
           icon="shield-checkmark-outline"
