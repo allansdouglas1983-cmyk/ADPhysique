@@ -60,7 +60,8 @@ export {
 
 export {
   ME_CACHE_PREFIX, meCacheKey, currentUserId, emptyMe, readCachedMe,
-  clearCachedMe, loadMe, refreshMe, hasProfile, hasUnseen, upsertProfile,
+  clearCachedMe, loadMe, refreshMe, hasProfile, hasUnseen, hasUnreadMessages,
+  upsertProfile, acceptRules,
   checkHandle, leaveCommunity, getProfile, follow, unfollow,
   respondToFollow, removeFollower, listFollows, blockUser, unblockUser,
   muteUser, unmuteUser, relationships,
@@ -85,3 +86,35 @@ export {
 } from './moderation';
 
 export { COMMUNITY_NOTIFY_KINDS, notifyCommunityEvent } from './notify';
+
+// ─── Discovery, connections and the social graph (blueprint 70) ───────
+
+export {
+  TP_DAYS, TP_TIME_BANDS, TP_SESSIONS_BANDS, TP_SESSIONS_BAND_ORDER,
+  TP_EXPERIENCE_BANDS, TP_AGE_BANDS,
+  TP_DEFAULT_SHARE, TP_SHARE_KEYS, TP_WINDOW_WEEKS, TP_MAX_STAPLE_LIFTS,
+  TP_MAX_TIME_BANDS, TP_DAY_SHARE, TP_DAY_MIN_SESSIONS, TP_TIME_BAND_SHARE,
+  TP_SHARE_PREFIX, TP_SYNCED_PREFIX, TP_SYNC_INTERVAL_MS,
+  tpShareKey, tpSyncedKey, timeBandForHour, experienceBand, sessionsBandFor,
+  deriveTrainingProfile, dayListLabel, timeBandsLabel, previewLine,
+  readShareSettings, writeShareSettings, shareablePayload,
+  loadTrainingProfile, syncTrainingProfile, clearTrainingProfileState,
+} from './trainingProfile';
+
+export {
+  CONNECT_REASONS, CONNECT_REASON_KEYS, MAX_CONNECT_REASONS, CONNECT_NOTE_MAX,
+  CONNECT_FROM_VALUES, CONNECTION_STATES, CONNECT_BUTTON_LABELS,
+  connectionState, cleanReasons, cleanPartnerPrefs,
+  connect, respondToConnect, withdrawConnect, removeConnection,
+  listConnections, setConnectFrom, setShowProgrammes, setPartner,
+} from './connections';
+
+export {
+  MESSAGE_MAX, MESSAGE_REF_KINDS, placeholderFor,
+  listConversations, listMessages, sendMessage, markRead, deleteMessage,
+} from './messages';
+
+export {
+  FIND_MODES, FIND_MODE_ORDER, doorsFor, doorLine, doorZeroState,
+  findPeople, programmePeople, gymSummary, gymSuggest,
+} from './findPeople';

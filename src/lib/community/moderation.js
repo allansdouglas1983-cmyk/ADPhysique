@@ -22,7 +22,11 @@ export const MODERATION_ACTIONS = Object.freeze([
   'restrict_account', 'unrestrict_account', 'suspend_account', 'unsuspend_account',
 ]);
 
-export const REPORT_TARGET_KINDS = Object.freeze(['profile', 'post', 'comment', 'programme']);
+/** `message` joins the list with the discovery campaign (blueprint
+ * section 2): a private conversation is exactly where harassment goes
+ * when the public surfaces are moderated, so reporting one has to be
+ * available from the moment messaging exists, not after it. */
+export const REPORT_TARGET_KINDS = Object.freeze(['profile', 'post', 'comment', 'programme', 'message']);
 
 /**
  * File a report.

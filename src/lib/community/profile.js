@@ -44,6 +44,25 @@ export function emptyMe() {
     is_moderator: false,
     is_minor: false,
     rules_version: COMMUNITY_RULES_VERSION,
+    // Discovery campaign (blueprint section 11). The counts and the
+    // training profile bands start EMPTY: an unreadable `me` must never
+    // render as "3 people want to connect" or claim a band the person
+    // has not shared. `connect_from` and `show_programmes` mirror the
+    // column defaults in migrate_161 instead, so a cold render matches
+    // what the server would say about a profile that has just been made.
+    pending_connect_requests: 0,
+    unseen_messages: 0,
+    connect_from: 'anyone',
+    open_to_partner: false,
+    partner_prefs: null,
+    show_programmes: true,
+    tp_days: null,
+    tp_time_bands: null,
+    tp_sessions_band: null,
+    tp_staple_lifts: null,
+    tp_experience_band: null,
+    tp_programme_key: null,
+    tp_age_band: null,
   };
 }
 
@@ -123,9 +142,24 @@ export function hasProfile(me) {
   return !!me?.profile?.handle;
 }
 
-/** The unseen dot on the Today header: activity or a follow request. */
+/**
+ * The unseen dot on the Today header: activity, a follow request, a
+ * connection request or an unread message. One dot for all four, because
+ * the header action is one destination and the dot only means "there is
+ * something in there".
+ */
 export function hasUnseen(me) {
-  return Number(me?.unseen_activity ?? 0) > 0 || Number(me?.pending_requests ?? 0) > 0;
+  return Number(me?.unseen_activity ?? 0) > 0
+    || Number(me?.pending_requests ?? 0) > 0
+    || Number(me?.pending_connect_requests ?? 0) > 0
+    || Number(me?.unseen_messages ?? 0) > 0;
+}
+
+/** The messages glyph in the Community header carries its own dot: the
+ * hub sends people to two different places, so one dot cannot serve both
+ * (blueprint section 10). */
+export function hasUnreadMessages(me) {
+  return Number(me?.unseen_messages ?? 0) > 0;
 }
 
 /**
@@ -142,6 +176,33 @@ export async function upsertProfile(fields = {}) {
   const uid = currentUserId();
   const cached = (await readCachedMe(uid)) ?? emptyMe();
   await writeCachedMe(uid, { ...cached, profile: card ?? null });
+  return card;
+}
+
+/**
+ * Re-accept the Community rules at the CURRENT version, and nothing else.
+ *
+ * The rules text moved to version 2 with this campaign (messages, meeting
+ * a training partner in person, and what the training profile does and
+ * does not share). The server raises `rules_outdated` on the first
+ * connect, message send or training profile update from a profile that
+ * accepted version 1, and the screen answers by showing the rules again
+ * and calling this.
+ *
+ * It sends `accept_rules_version` ALONE. `community_upsert_profile` is a
+ * partial update, so a payload carrying only the version cannot
+ * accidentally rewrite a handle, a display name or a visibility setting
+ * on the way past: re-consent is a consent act, not a profile edit.
+ *
+ * @returns {Promise<object>} the profile card
+ */
+export async function acceptRules() {
+  const card = await callCommunity('community_upsert_profile', {
+    _p: { accept_rules_version: COMMUNITY_RULES_VERSION },
+  });
+  const uid = currentUserId();
+  const cached = (await readCachedMe(uid)) ?? emptyMe();
+  await writeCachedMe(uid, { ...cached, profile: card ?? cached.profile ?? null });
   return card;
 }
 

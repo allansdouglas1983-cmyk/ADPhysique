@@ -53,6 +53,20 @@ export const COMMUNITY_ERROR_CODES = Object.freeze([
   'forbidden_field',
   'rate_limited',
   'blocked',
+  // Raised by the discovery RPCs (migrate_161; discovery blueprint
+  // section 11). `connect_not_allowed` sits BEFORE `not_allowed` in this
+  // list on purpose: `codeFor` falls back to a substring match, and
+  // "connect_not_allowed" contains "not_allowed", so the more specific
+  // code has to be reached first or a refused connect would read as a
+  // generic refusal.
+  'not_connected',
+  'connect_not_allowed',
+  'minor_restricted',
+  // The accepted rules version is behind the current one. Raised on the
+  // first connect, message send or training profile update by a profile
+  // that accepted an earlier version; the screen shows the rules again
+  // and calls `acceptRules()`.
+  'rules_outdated',
   'not_found',
   'not_allowed',
   'already_reported',
@@ -69,6 +83,7 @@ const EXPECTED_CODES = new Set([
   'content_not_allowed', 'forbidden_field', 'rate_limited', 'blocked',
   'not_found', 'not_allowed', 'already_reported', 'not_moderator',
   'profile_restricted', 'profile_suspended',
+  'not_connected', 'connect_not_allowed', 'minor_restricted', 'rules_outdated',
 ]);
 
 /** Every Community failure is one of these. `.code` is the contract. */

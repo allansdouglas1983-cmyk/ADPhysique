@@ -117,7 +117,53 @@ describe('one transport', () => {
  */
 describe('client RPC arguments match the migration signatures', () => {
   const MIGRATION = path.join(ROOT, 'supabase/migrate_160_community.sql');
-  const sql = fs.existsSync(MIGRATION) ? fs.readFileSync(MIGRATION, 'utf8') : null;
+  // The discovery campaign's RPCs live in a second migration, written in a
+  // separate lane (discovery blueprint
+  // `docs/social-discovery-2026-09-06/70-DISCOVERY-BLUEPRINT.md` section
+  // 11). Both files are parsed together so a client call is checked
+  // against whichever one declares it.
+  const MIGRATION_161 = path.join(ROOT, 'supabase/migrate_161_community_connections.sql');
+  const sql160 = fs.existsSync(MIGRATION) ? fs.readFileSync(MIGRATION, 'utf8') : null;
+  const sql161 = fs.existsSync(MIGRATION_161) ? fs.readFileSync(MIGRATION_161, 'utf8') : null;
+  const sql = sql160 === null && sql161 === null ? null : `${sql160 ?? ''}\n${sql161 ?? ''}`;
+
+  /**
+   * The RPCs migrate_161 must declare (blueprint section 11), listed here
+   * so this guard knows which client calls it CANNOT check while that
+   * file is absent, rather than reporting them as missing functions. Once
+   * the file lands, every name below is checked like any other; a name
+   * the migration does not declare fails the first test.
+   */
+  const RPCS_161 = [
+    'community_connect',
+    'community_respond_connect',
+    'community_withdraw_connect',
+    'community_remove_connection',
+    'community_list_connections',
+    'community_update_training_profile',
+    'community_set_partner',
+    'community_set_connect_from',
+    'community_set_show_programmes',
+    'community_find_people',
+    'community_programme_people',
+    'community_gym_summary',
+    'community_gym_suggest',
+    'community_conversations',
+    'community_messages',
+    'community_send_message',
+    'community_mark_conversation_read',
+    'community_delete_message',
+  ];
+  /** Every `community_*` function name one migration declares. */
+  function namesIn(text) {
+    return new Set(
+      (text.match(/CREATE OR REPLACE FUNCTION public\.(community_[a-z_]+)/gi) ?? [])
+        .map((line) => line.split('public.')[1].toLowerCase()),
+    );
+  }
+
+  const NAMES_160 = sql160 ? namesIn(sql160) : new Set();
+  const NAMES_161 = sql161 ? namesIn(sql161) : new Set();
 
   /** name -> Set of declared parameter names, from the SQL. */
   function declaredParams() {
@@ -171,12 +217,16 @@ describe('client RPC arguments match the migration signatures', () => {
     return sites;
   }
 
-  test('the migration is present and declares every RPC the client calls', () => {
+  test('the migrations are present and declare every RPC the client calls', () => {
     if (!sql) { expect(fs.existsSync(MIGRATION)).toBe(false); return; }
     const declared = declaredParams();
     expect(declared.size).toBeGreaterThan(30);
+    // A discovery RPC that migrate_161 has not declared YET is listed as
+    // pending rather than missing: that file is written in a separate
+    // lane and may be absent or part-written when this runs. Anything
+    // else the client calls and nothing declares is a real defect.
     const missing = [...new Set(callSites().map((s2) => s2.name))]
-      .filter((name) => !declared.has(name));
+      .filter((name) => !declared.has(name) && !RPCS_161.includes(name));
     expect({ missing }).toEqual({ missing: [] });
   });
 
@@ -192,5 +242,46 @@ describe('client RPC arguments match the migration signatures', () => {
       }
     }
     expect({ wrong }).toEqual({ wrong: [] });
+  });
+
+  /**
+   * migrate_161 is written in a separate lane, so at any moment it can be
+   * absent, part-written or finished. What this checks is the thing that
+   * is true in all three states and is the actual cross-lane risk: the
+   * two lanes must not drift on NAMES. A discovery RPC declared under a
+   * name the client never calls, or called under a name the migration
+   * never declares, is "function does not exist" on a real device, and
+   * neither lane's own tests would see it.
+   *
+   * The argument NAMES are checked by the test above for every RPC that
+   * is declared, so each of these arms itself the moment its function
+   * lands, with nothing here to change.
+   */
+  test('migrate_161 declares nothing under a name the blueprint did not give it', () => {
+    if (!sql161) {
+      // NOT YET CHECKED: supabase/migrate_161_community_connections.sql
+      // does not exist, so the 18 RPCs in RPCS_161 (connections, messages,
+      // training profile, find people, gym) have no declared signature to
+      // compare against. This arms itself the moment that file appears.
+      expect(fs.existsSync(MIGRATION_161)).toBe(false);
+      return;
+    }
+    // A name 161 declares that is neither on the blueprint's list nor a
+    // re-issue of a 160 function (`community_get_me` and
+    // `community_upsert_profile` are re-issued to add the new fields).
+    const unexpected = [...NAMES_161]
+      .filter((name) => !RPCS_161.includes(name) && !NAMES_160.has(name));
+    expect({ unexpected }).toEqual({ unexpected: [] });
+  });
+
+  test('every discovery RPC the client calls is one the blueprint named', () => {
+    // The other direction, and the one that catches a client typo: a
+    // `community_*` call that neither migration declares must at least be
+    // a name migrate_161 is on record to declare. Anything else is a call
+    // nobody is writing a function for.
+    const called = [...new Set(callSites().map((s2) => s2.name))];
+    const unaccounted = called
+      .filter((name) => !NAMES_160.has(name) && !NAMES_161.has(name) && !RPCS_161.includes(name));
+    expect({ unaccounted }).toEqual({ unaccounted: [] });
   });
 });

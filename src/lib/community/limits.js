@@ -14,8 +14,17 @@
  * consent_log rail as `notice_version` when a profile is created. Bump
  * it only when the rules TEXT changes, and only alongside a re-consent
  * path: the number is a consent record, not a build number.
+ *
+ * Version 2 (2026-09-06, discovery campaign): the rules text at
+ * `docs/community-safety/COMMUNITY-RULES.md` gained rules for messages,
+ * for meeting a training partner in person, and an explanation of the
+ * training profile under "what stays private". The re-consent path that
+ * has to accompany a bump is `acceptRules()` in `profile.js`: the server
+ * raises `rules_outdated` on the first connect, message or training
+ * profile update from a profile that accepted version 1, and the screen
+ * shows the rules again and re-accepts.
  */
-export const COMMUNITY_RULES_VERSION = 1;
+export const COMMUNITY_RULES_VERSION = 2;
 
 /**
  * SD-10: a dimension (style, programme, gym, area) is surfaced on the

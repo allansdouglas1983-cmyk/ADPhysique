@@ -20,6 +20,13 @@ import { invokeCommunityFunction } from './transport';
 
 export const COMMUNITY_NOTIFY_KINDS = Object.freeze([
   'follow', 'follow_request', 'follow_accepted', 'reaction', 'comment', 'programme_used',
+  // Discovery campaign (blueprint sections 1, 2; SD-20, SD-21). `message`
+  // is the one kind the server collapses on a clock: at most one push per
+  // conversation every 15 minutes while it is unread, read from
+  // `community_conversations.last_message_at` and the recipient's own read
+  // time. The push body is "New message from @handle" and NEVER the
+  // content, so a locked screen cannot leak a conversation.
+  'connect_request', 'connect_accepted', 'message',
 ]);
 
 /**

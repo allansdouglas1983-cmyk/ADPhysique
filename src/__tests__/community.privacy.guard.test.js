@@ -141,6 +141,52 @@ const CAPABILITY_ALLOWED_IMPORTS = [
   "import { blockingConflicts, capabilityKnown, loadCapabilityResolveState } from '../capability/resolve';",
 ];
 
+/**
+ * The discovery campaign's files (discovery blueprint
+ * `docs/social-discovery-2026-09-06/70-DISCOVERY-BLUEPRINT.md` section 3;
+ * SD-30). These are the first Community files that read the training
+ * history at all, which makes them the first place a body, food or
+ * coaching read could plausibly be added by someone reaching for "one
+ * more useful signal". They are named here so a rename cannot quietly
+ * drop them out of the walk, and they are held to a STRICTER list than
+ * the rest: none of them has the adaptation lane's reason to name the
+ * capability layer, so for these four the bare words are refused too.
+ */
+const DISCOVERY_FILES = [
+  'src/lib/community/trainingProfile.js',
+  'src/lib/community/connections.js',
+  'src/lib/community/messages.js',
+  'src/lib/community/findPeople.js',
+];
+
+const DISCOVERY_EXTRA_FORBIDDEN = [
+  /\bscan\b/i,
+  /\bcapability\b/i,
+  /\bcapabilities\b/i,
+  /\bprotein\b/i,
+  /\bcarbs\b/i,
+  /\bcheck_?in\b/i,
+  /\binjur/i,
+  /\blimitation\b/i,
+  /\bmeasurement/i,
+  /\bage\b(?!_band)/i,
+];
+
+/**
+ * The ONLY device reads `trainingProfile.js` may make (SD-30: "the
+ * training profile reads completed-workout timestamps and exercise ids
+ * only"). An allow-list rather than a deny-list, for the same reason the
+ * post payloads are: a database helper added to the app next year cannot
+ * be pulled in here, because it was never named.
+ */
+const TRAINING_PROFILE_FILE = path.join(LIB_DIR, 'trainingProfile.js');
+const TRAINING_PROFILE_DB_READS = [
+  'getCompletedWorkoutStartTimestamps',
+  'getWorkoutSetsSince',
+  'getAllExercises',
+  'getActivePlan',
+];
+
 describe('no Community file reads personal data', () => {
   test('there is Community source to guard', () => {
     // If this ever fails, the guard has quietly stopped guarding
@@ -190,6 +236,38 @@ describe('no Community file reads personal data', () => {
     expect(source).not.toMatch(/callCommunity|invokeCommunityFunction/);
   });
 
+  test('every discovery file is present and inside the walk', () => {
+    // A rename that moved one of these out of src/lib/community would
+    // leave the guard passing over a file it no longer sees.
+    const walked = new Set(communityFiles().map((f) => path.relative(ROOT, f).split(path.sep).join('/')));
+    const missing = DISCOVERY_FILES.filter((rel) => !walked.has(rel));
+    expect({ missing }).toEqual({ missing: [] });
+  });
+
+  test.each(DISCOVERY_FILES)('%s reads nothing personal, on the stricter list', (rel) => {
+    const source = code(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+    for (const pattern of [...FORBIDDEN_READS, ...DISCOVERY_EXTRA_FORBIDDEN]) {
+      expect({ rel, pattern: String(pattern), matched: pattern.test(source) })
+        .toEqual({ rel, pattern: String(pattern), matched: false });
+    }
+  });
+
+  test('trainingProfile.js reads only the four device functions SD-30 allows', () => {
+    const source = code(fs.readFileSync(TRAINING_PROFILE_FILE, 'utf8'));
+    // The single database import, and everything it takes from it.
+    const imports = source.match(/import\s*\{[^}]*\}\s*from\s*'\.\.\/database';/g) ?? [];
+    expect(imports).toHaveLength(1);
+    const named = imports[0]
+      .replace(/^import\s*\{|\}\s*from\s*'\.\.\/database';$/g, '')
+      .split(',')
+      .map((s2) => s2.trim())
+      .filter(Boolean);
+    expect(named.sort()).toEqual([...TRAINING_PROFILE_DB_READS].sort());
+    // And no second route to the device: a lazy require would sidestep
+    // the import above entirely.
+    expect(source).not.toMatch(/require\(['"][^'"]*database['"]\)/);
+  });
+
   test('no Community file imports the food, nutrition, wellbeing or ED modules', () => {
     for (const full of communityFiles()) {
       const source = code(fs.readFileSync(full, 'utf8'));
@@ -235,5 +313,64 @@ describe('the client and the SQL agree', () => {
     for (const keys of Object.values(POST_PAYLOAD_KEYS)) {
       for (const key of keys) expect(sql).toContain(`'${key}'`);
     }
+  });
+});
+
+/**
+ * The training profile's closed sets exist twice: once in
+ * `trainingProfile.js` and `connections.js`, once in migrate_161, which
+ * validates every value it is sent against them. Two copies of a closed
+ * set drift, and the failure is quiet in the worst way: a band the client
+ * offers and the server rejects makes a toggle that silently does
+ * nothing. migrate_161 says in its own comments that a Jest guard compares
+ * the two; this is that guard.
+ */
+describe('the closed sets are the same on both sides', () => {
+  const MIGRATION_161 = path.join(ROOT, 'supabase/migrate_161_community_connections.sql');
+  const sql161 = fs.existsSync(MIGRATION_161) ? fs.readFileSync(MIGRATION_161, 'utf8') : null;
+
+  const {
+    TP_DAYS, TP_TIME_BANDS, TP_SESSIONS_BANDS, TP_SESSIONS_BAND_ORDER,
+    TP_EXPERIENCE_BANDS, TP_AGE_BANDS,
+  } = require('../lib/community/trainingProfile');
+  const { CONNECT_REASONS, CONNECT_FROM_VALUES } = require('../lib/community/connections');
+
+  /** The array literal one `_community_*_list()` helper returns. */
+  function sqlList(helper) {
+    const re = new RegExp(`FUNCTION public\\.${helper}\\(\\)[\\s\\S]*?ARRAY\\[([^\\]]*)\\]`, 'i');
+    const m = re.exec(sql161);
+    if (!m) return null;
+    return m[1].split(',').map((s2) => s2.trim().replace(/^'|'$/g, '')).filter(Boolean);
+  }
+
+  test.each([
+    ['_community_tp_days_list', () => Object.keys(TP_DAYS)],
+    ['_community_tp_time_bands_list', () => Object.keys(TP_TIME_BANDS)],
+    // Not Object.keys: '3' is an integer-like key and JavaScript would
+    // hoist it to the front. TP_SESSIONS_BAND_ORDER is the order.
+    ['_community_tp_sessions_list', () => [...TP_SESSIONS_BAND_ORDER]],
+    ['_community_tp_experience_list', () => Object.keys(TP_EXPERIENCE_BANDS)],
+    ['_community_tp_age_bands_list', () => Object.keys(TP_AGE_BANDS)],
+    ['_community_connect_reasons_list', () => Object.keys(CONNECT_REASONS)],
+  ])('%s carries the client set, in the same order', (helper, clientKeys) => {
+    if (!sql161) { expect(fs.existsSync(MIGRATION_161)).toBe(false); return; }
+    expect({ helper, values: sqlList(helper) })
+      .toEqual({ helper, values: clientKeys() });
+  });
+
+  test('the connect_from CHECK carries the client values', () => {
+    if (!sql161) { expect(fs.existsSync(MIGRATION_161)).toBe(false); return; }
+    for (const value of Object.keys(CONNECT_FROM_VALUES)) {
+      expect(sql161).toContain(`'${value}'`);
+    }
+  });
+
+  test('the band phrases the reasons line uses read the same on both sides', () => {
+    if (!sql161) { expect(fs.existsSync(MIGRATION_161)).toBe(false); return; }
+    // "Both usually train evenings", "Both train 4 to 5 times a week": the
+    // server composes these, and a phrase that differs from the client's
+    // preview line would show one person a band worded two ways.
+    for (const label of Object.values(TP_TIME_BANDS)) expect(sql161).toContain(`'${label}'`);
+    for (const label of Object.values(TP_SESSIONS_BANDS)) expect(sql161).toContain(`'${label}'`);
   });
 });
