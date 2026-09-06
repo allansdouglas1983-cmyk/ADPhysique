@@ -3676,6 +3676,8 @@ BEGIN
     '_community_fold(text)',
     '_community_is_blocked(uuid, uuid)',
     '_community_can_view(uuid, uuid)',
+    '_community_can_view_post(uuid, uuid)',
+    '_community_can_view_programme(uuid, uuid)',
     '_community_minor(uuid)',
     '_community_rate_check(uuid, text, int, int, interval)',
     '_community_clean_text(text)',
