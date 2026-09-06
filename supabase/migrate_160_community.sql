@@ -2232,8 +2232,15 @@ DECLARE
   v_uid uuid := public._community_caller();
   v_out jsonb;
 BEGIN
-  SELECT coalesce(jsonb_agg(public._community_programme_tile(r) ORDER BY r.updated_at DESC),
-                  '[]'::jsonb)
+  -- The owner's own list also carries source_plan_id and version, so the
+  -- publish screen can tell on a cold open whether THIS local plan is
+  -- already published (lead review, 2026-09-06). Nobody else's list does:
+  -- a local plan id is the owner's business.
+  SELECT coalesce(jsonb_agg(
+           public._community_programme_tile(r)
+             || jsonb_build_object('source_plan_id', r.source_plan_id, 'version', r.version)
+           ORDER BY r.updated_at DESC),
+         '[]'::jsonb)
   INTO v_out
   FROM public.community_programmes r
   WHERE r.owner_id = v_uid;

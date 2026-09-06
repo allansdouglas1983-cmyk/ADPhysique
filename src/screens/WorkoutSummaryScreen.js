@@ -1055,7 +1055,9 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
     // Pass every PR from the session so the share card can let the user choose
     // which one to feature (a session can set several); prData stays as the
     // first for back-compat.
-    navigation.navigate('ShareCard', { sessionData, prData, prList: detectedPRs });
+    // `workoutId` rides along for Community entry point 7 only: ShareCard's
+    // own card build never reads it (social-discovery blueprint section 1).
+    navigation.navigate('ShareCard', { sessionData, workoutId, prData, prList: detectedPRs });
   }
 
   // CO-3: destination for the quiet "See your progress" link. A PR routes
@@ -1468,6 +1470,27 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
             </RevealSection>
           );
         })}
+
+        {/* Community entry point 6 (social-discovery blueprint section 1):
+            where the Partners "share with your partner" beat sits, because
+            this is the moment a session is worth telling someone about.
+            Always shown: CommunityCompose routes to Join first when there is
+            no profile yet. The read-only re-open of an old summary is not a
+            posting moment, so it is the one state without it. */}
+        {!readOnly && workoutId ? (
+          <RevealSection delay={1140}>
+            <Button
+              title="Post to Community"
+              icon="people-outline"
+              variant="secondary"
+              onPress={() => {
+                hapticSelection();
+                navigation.navigate('CommunityCompose', { kind: 'session', workoutId });
+              }}
+              accessibilityLabel="Post this session to Community"
+            />
+          </RevealSection>
+        ) : null}
 
         {/* D2: programme-arc strip, where this session sits in the block, so
             the work reads as a journey towards the recovery week, not an
