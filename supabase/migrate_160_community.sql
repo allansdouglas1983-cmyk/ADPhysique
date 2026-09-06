@@ -742,15 +742,82 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.community_profiles p
     WHERE p.user_id = _owner
-      AND p.status = 'active'
+      -- Security review 2026-09-06 (finding 13): a RESTRICTED account can
+      -- still read, including its own content; only SUSPENDED is invisible.
+      AND (_viewer = _owner OR p.status <> 'suspended')
       AND NOT public._community_is_blocked(_viewer, _owner)
       AND (
         _viewer = _owner
-        OR p.visibility = 'public'
+        OR (p.status = 'active' AND p.visibility = 'public')
         OR EXISTS (
           SELECT 1 FROM public.community_follows f
           WHERE f.follower_id = _viewer AND f.followee_id = _owner
             AND f.state = 'accepted'
+        )
+      )
+  );
+$$;
+
+-- "May I see THIS post?" - the person predicate above answers "may I see
+-- this person?", which is not the same question (security review
+-- 2026-09-06, findings 1-3: a removed follower holding a post id could read
+-- and write on a followers-only post). Every egress and every write that
+-- touches a post goes through here.
+CREATE OR REPLACE FUNCTION public._community_can_view_post(_viewer uuid, _post_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.community_posts r
+    WHERE r.id = _post_id
+      AND (
+        r.author_id = _viewer
+        OR (
+          r.status = 'visible'
+          AND public._community_can_view(_viewer, r.author_id)
+          AND (
+            r.visibility = 'public'
+            OR EXISTS (
+              SELECT 1 FROM public.community_follows f
+              WHERE f.follower_id = _viewer AND f.followee_id = r.author_id
+                AND f.state = 'accepted')
+          )
+        )
+      )
+  );
+$$;
+
+-- "May I see THIS programme?" 'link' means anyone signed in who holds the
+-- id and is not blocked; 'followers' needs an accepted follow; 'public'
+-- needs the creator to be viewable. Mirrors community_get_programme.
+CREATE OR REPLACE FUNCTION public._community_can_view_programme(_viewer uuid, _prog_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.community_programmes g
+    WHERE g.id = _prog_id
+      AND (
+        g.owner_id = _viewer
+        OR (
+          g.status = 'visible'
+          AND NOT public._community_is_blocked(_viewer, g.owner_id)
+          AND EXISTS (SELECT 1 FROM public.community_profiles op
+                      WHERE op.user_id = g.owner_id AND op.status <> 'suspended')
+          AND (
+            g.visibility = 'link'
+            OR (g.visibility = 'public' AND public._community_can_view(_viewer, g.owner_id))
+            OR (g.visibility = 'followers' AND EXISTS (
+                  SELECT 1 FROM public.community_follows f
+                  WHERE f.follower_id = _viewer AND f.followee_id = g.owner_id
+                    AND f.state = 'accepted'))
+          )
         )
       )
   );
@@ -885,9 +952,12 @@ BEGIN
 
   IF jsonb_typeof(_p) = 'object' THEN
     FOR v_key, v_val IN SELECT key, value FROM jsonb_each(_p) LOOP
+      -- Security review 2026-09-06 (finding 10): compare on the folded key
+      -- (lower, trimmed, NFKC) so "bodyWeight " and width variants match.
       IF EXISTS (
         SELECT 1 FROM unnest(public._community_forbidden_keys_list()) AS t(k)
-        WHERE t.k = v_key OR lower(t.k) = lower(v_key)
+        WHERE lower(btrim(t.k)) = lower(btrim(normalize(v_key, NFKC)))
+           OR lower(replace(btrim(t.k), '_', '')) = lower(replace(btrim(normalize(v_key, NFKC)), '_', ''))
       ) THEN
         RAISE EXCEPTION USING message = 'forbidden_field';
       END IF;
@@ -975,9 +1045,14 @@ AS $$
 DECLARE
   p public.community_profiles%ROWTYPE;
   v_following text;
+  v_viewable boolean;
 BEGIN
   SELECT * INTO p FROM public.community_profiles WHERE user_id = _uid;
   IF NOT FOUND THEN RETURN NULL; END IF;
+  -- Security review 2026-09-06 (finding 12): a suspended profile has no
+  -- card for anyone but itself.
+  IF p.status = 'suspended' AND _viewer <> _uid THEN RETURN NULL; END IF;
+  v_viewable := public._community_can_view(_viewer, _uid);
 
   SELECT f.state INTO v_following
   FROM public.community_follows f
@@ -989,11 +1064,15 @@ BEGIN
     'display_name',    p.display_name,
     'avatar_preset',   p.avatar_preset,
     'bio',             p.bio,
-    'styles',          to_jsonb(p.styles),
-    'goal',            p.goal,
-    'setting',         p.setting,
-    'area_label',      p.area_label,
-    'gym_label',       p.gym_label,
+    -- Security review 2026-09-06 (finding 5): the chosen facts travel only
+    -- to someone who may view the profile (self, public, or accepted
+    -- follower). A followers-only card, and so every minor's card, is
+    -- handle, name, avatar, bio and counts. Nothing about where they train.
+    'styles',          CASE WHEN v_viewable THEN to_jsonb(p.styles) ELSE '[]'::jsonb END,
+    'goal',            CASE WHEN v_viewable THEN p.goal END,
+    'setting',         CASE WHEN v_viewable THEN p.setting END,
+    'area_label',      CASE WHEN v_viewable THEN p.area_label END,
+    'gym_label',       CASE WHEN v_viewable THEN p.gym_label END,
     'visibility',      p.visibility,
     'follower_count',  p.follower_count,
     'following_count', p.following_count,
@@ -1346,7 +1425,6 @@ $$;
 CREATE OR REPLACE FUNCTION public.community_check_handle(_h text)
 RETURNS boolean
 LANGUAGE plpgsql
-STABLE
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -1355,6 +1433,9 @@ DECLARE
   v_h   text := lower(btrim(coalesce(_h, '')));
 BEGIN
   IF NOT public._community_handle_valid(v_h) THEN RETURN false; END IF;
+  -- Security review 2026-09-06 (finding 5): an existence oracle on the rate
+  -- rail; 120 checks an hour is a person typing, not a dictionary.
+  PERFORM public._community_rate_check(v_uid, 'check_handle', 120, 120, interval '1 hour');
   RETURN NOT EXISTS (
     SELECT 1 FROM public.community_profiles
     WHERE handle = v_h AND user_id <> v_uid
@@ -1446,6 +1527,25 @@ BEGIN
 
   SELECT * INTO v_existing FROM public.community_profiles WHERE user_id = v_uid;
   v_is_new := NOT FOUND;
+  -- Product review 2026-09-06 (findings 1-2): on an UPDATE, a key that is
+  -- absent from the payload keeps its current value; a key sent as null
+  -- clears it. Edit profile and the privacy screen send only the fields
+  -- they own, and a full-replace contract made every such save fail on
+  -- handle_invalid.
+  IF NOT v_is_new THEN
+    _p := jsonb_build_object(
+      'handle',        v_existing.handle,
+      'display_name',  v_existing.display_name,
+      'avatar_preset', v_existing.avatar_preset,
+      'bio',           v_existing.bio,
+      'styles',        to_jsonb(v_existing.styles),
+      'goal',          v_existing.goal,
+      'setting',       v_existing.setting,
+      'area_label',    v_existing.area_label,
+      'gym_label',     v_existing.gym_label,
+      'visibility',    v_existing.visibility
+    ) || coalesce(_p, '{}'::jsonb);
+  END IF;
 
   IF NOT v_is_new AND v_existing.status = 'suspended' THEN
     RAISE EXCEPTION USING message = 'profile_suspended';
@@ -1619,6 +1719,9 @@ BEGIN
   -- Activity this user CAUSED for other people goes too; the rows they
   -- RECEIVED cascade with their profile.
   DELETE FROM public.community_activity WHERE actor_id = v_uid;
+  -- Blueprint section 2: reports they filed keep their reporter as NULL
+  -- (security review 2026-09-06, finding 11).
+  UPDATE public.community_reports SET reporter_id = NULL WHERE reporter_id = v_uid;
 
   -- Deleting the profile cascades to follows (both directions), posts,
   -- reactions, comments, programmes (and their uses) and received activity.
@@ -1793,6 +1896,11 @@ BEGIN
       )
       AND NOT public._community_is_blocked(
         v_uid, CASE WHEN _kind = 'following' THEN f.followee_id ELSE f.follower_id END)
+      -- Security review 2026-09-06 (finding 12): suspended profiles vanish
+      -- from follower and following lists too.
+      AND EXISTS (SELECT 1 FROM public.community_profiles sp
+                  WHERE sp.user_id = CASE WHEN _kind = 'following' THEN f.followee_id ELSE f.follower_id END
+                    AND sp.status <> 'suspended')
       AND (
         v_ts IS NULL
         OR (f.created_at, CASE WHEN _kind = 'following' THEN f.followee_id ELSE f.follower_id END)
@@ -1956,12 +2064,41 @@ BEGIN
     RAISE EXCEPTION USING message = 'invalid_input';
   END IF;
 
+  -- Security review 2026-09-06 (finding 10): the snapshot is structure only,
+  -- so its shape is an ALLOW-list, not just a forbidden-list. The top level,
+  -- each day and each exercise may carry exactly the blueprint section 5.2
+  -- keys; anything else is invalid_input. community-public serves the
+  -- snapshot verbatim to the anonymous web, so this is the wall.
+  IF EXISTS (
+    SELECT 1 FROM jsonb_object_keys(_s) k
+    WHERE k NOT IN ('v', 'title', 'description', 'style_key', 'split_type',
+                    'difficulty', 'days_per_week', 'days', 'tags')
+  ) THEN
+    RAISE EXCEPTION USING message = 'invalid_input';
+  END IF;
   FOR v_day IN SELECT value FROM jsonb_array_elements(v_days) LOOP
     IF jsonb_typeof(v_day) <> 'object'
        OR jsonb_typeof(v_day -> 'exercises') <> 'array' THEN
       RAISE EXCEPTION USING message = 'invalid_input';
     END IF;
     IF jsonb_array_length(v_day -> 'exercises') > 20 THEN
+      RAISE EXCEPTION USING message = 'invalid_input';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM jsonb_object_keys(v_day) k
+      WHERE k NOT IN ('name', 'position', 'exercises')
+    ) THEN
+      RAISE EXCEPTION USING message = 'invalid_input';
+    END IF;
+    IF EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements(v_day -> 'exercises') e
+      CROSS JOIN LATERAL jsonb_object_keys(
+        CASE WHEN jsonb_typeof(e.value) = 'object' THEN e.value ELSE '{}'::jsonb END) k
+      WHERE k NOT IN ('exercise_id', 'exercise_name', 'order', 'sets', 'reps_min',
+                      'reps_max', 'rest_seconds', 'notes', 'superset_group_id',
+                      'group_kind', 'round_rest_seconds')
+    ) THEN
       RAISE EXCEPTION USING message = 'invalid_input';
     END IF;
   END LOOP;
@@ -2207,6 +2344,11 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION USING message = 'not_found'; END IF;
   IF public._community_is_blocked(v_uid, v_owner) THEN
     RAISE EXCEPTION USING message = 'blocked';
+  END IF;
+  -- Security review 2026-09-06 (finding 14): a use is only recorded by
+  -- someone who may see the programme.
+  IF NOT public._community_can_view_programme(v_uid, _id) THEN
+    RAISE EXCEPTION USING message = 'not_allowed';
   END IF;
 
   -- Once per user: the count is "how many people use this", never "how many
@@ -2618,11 +2760,15 @@ BEGIN
   IF public._community_is_blocked(v_uid, v_author) THEN
     RAISE EXCEPTION USING message = 'blocked';
   END IF;
-  IF v_author <> v_uid AND NOT public._community_can_view(v_uid, v_author) THEN
+  IF NOT public._community_can_view_post(v_uid, _post_id) THEN
     RAISE EXCEPTION USING message = 'not_allowed';
   END IF;
 
   IF _on THEN
+    -- Security review 2026-09-06 (finding 8): reactions are a push and an
+    -- activity row at the author, so they sit on the rate rail like every
+    -- other write. 100 a day new, 300 established.
+    PERFORM public._community_rate_check(v_uid, 'react', 100, 300);
     INSERT INTO public.community_reactions (post_id, user_id)
     VALUES (_post_id, v_uid) ON CONFLICT DO NOTHING;
     IF FOUND THEN
@@ -2670,7 +2816,10 @@ BEGIN
   IF public._community_is_blocked(v_uid, v_owner) THEN
     RAISE EXCEPTION USING message = 'blocked';
   END IF;
-  IF v_owner <> v_uid AND NOT public._community_can_view(v_uid, v_owner) THEN
+  -- Security review 2026-09-06 (findings 1-2): the TARGET's own visibility
+  -- decides, not the owner's profile visibility.
+  IF (_target_kind = 'post' AND NOT public._community_can_view_post(v_uid, _target_id))
+     OR (_target_kind = 'programme' AND NOT public._community_can_view_programme(v_uid, _target_id)) THEN
     RAISE EXCEPTION USING message = 'not_allowed';
   END IF;
 
@@ -2746,7 +2895,10 @@ BEGIN
     WHERE id = _target_id AND status = 'visible';
   END IF;
   IF v_owner IS NULL THEN RAISE EXCEPTION USING message = 'not_found'; END IF;
-  IF v_owner <> v_uid AND NOT public._community_can_view(v_uid, v_owner) THEN
+  -- Security review 2026-09-06 (finding 1): the TARGET's own visibility
+  -- decides who may read its thread.
+  IF (_target_kind = 'post' AND NOT public._community_can_view_post(v_uid, _target_id))
+     OR (_target_kind = 'programme' AND NOT public._community_can_view_programme(v_uid, _target_id)) THEN
     RAISE EXCEPTION USING message = 'not_allowed';
   END IF;
 
@@ -3134,6 +3286,11 @@ BEGIN
   SELECT c_ts, c_id INTO v_ts, v_id FROM public._community_cursor_parts(_cursor);
 
   IF _kind = 'programme' THEN
+    -- Security review 2026-09-06 (finding 4): the programme dimension is
+    -- gated exactly like the programme itself.
+    IF NOT public._community_can_view_programme(v_uid, _key::uuid) THEN
+      RAISE EXCEPTION USING message = 'not_found';
+    END IF;
     SELECT title INTO v_label FROM public.community_programmes
     WHERE id = _key::uuid AND status = 'visible';
     IF v_label IS NULL THEN RAISE EXCEPTION USING message = 'not_found'; END IF;
@@ -3203,7 +3360,8 @@ BEGIN
   ELSIF _kind = 'programme' THEN
     SELECT coalesce(jsonb_agg(public._community_programme_tile(g)), '[]'::jsonb)
     INTO v_progs
-    FROM (SELECT * FROM public.community_programmes WHERE id = _key::uuid) g;
+    FROM (SELECT * FROM public.community_programmes
+          WHERE id = _key::uuid AND public._community_can_view_programme(v_uid, id)) g;
   END IF;
 
   RETURN jsonb_build_object(
@@ -3241,6 +3399,9 @@ BEGIN
     FROM public.community_activity a
     WHERE a.user_id = v_uid
       AND (a.actor_id IS NULL OR NOT public._community_is_blocked(v_uid, a.actor_id))
+      AND (a.actor_id IS NULL OR EXISTS (
+            SELECT 1 FROM public.community_profiles sp
+            WHERE sp.user_id = a.actor_id AND sp.status <> 'suspended'))
       AND (v_ts IS NULL OR (a.created_at, a.id) < (v_ts, v_id))
     ORDER BY a.created_at DESC, a.id DESC
     LIMIT v_lim
