@@ -89,25 +89,22 @@ sentiment were used instead. Nothing below is from memory unless marked
   ignore Discover) is possible. [PRPath Hevy vs Strong](https://prpath.app/blog/strong-vs-hevy-2026.html)
 
 **Top complaints:** (1) social feed as default tab annoys logbook-first
-users [PRPath]; (2) timer bugs/occasional crashes, described as non-
-dealbreaking and fixed fast [hotelgyms.com](https://www.hotelgyms.com/blog/hevy-workout-app-review-the-up-and-comer-taking-the-fitness-world-by-storm); (3) routine-copy-drops-weights confusion; (4) photo/
-measurement-persistence inconsistency (flagged above, latent risk not yet a
-headline complaint); (5) no DMs limits interaction to comments (unverified
-as a *named* complaint, inferred from feature absence); (6) no clubs/
-challenges, unlike JEFIT [dr-muscle](https://dr-muscle.com/jefit-review-alternative/); (7) advanced-stats Pro-gate friction, though
-core social stays free [sensai.fit](https://www.sensai.fit/blog/fitness-app-pricing-free-tier-comparison); (8) suggested-athletes carousel noisy enough
-that Hevy ships a dedicated hide-toggle (existence of the escape hatch is
-itself evidence).
+users [PRPath](https://prpath.app/blog/strong-vs-hevy-2026.html); (2) timer bugs/occasional crashes, non-dealbreaking, fixed
+fast [hotelgyms.com](https://www.hotelgyms.com/blog/hevy-workout-app-review-the-up-and-comer-taking-the-fitness-world-by-storm); (3) routine-copy-drops-weights confusion; (4) photo/
+measurement-persistence inconsistency (flagged above, latent risk); (5) no
+DMs limits interaction to comments (inferred, not a named complaint);
+(6) no clubs/challenges unlike JEFIT [dr-muscle](https://dr-muscle.com/jefit-review-alternative/); (7) advanced-stats Pro-gate
+friction though core social stays free [sensai.fit](https://www.sensai.fit/blog/fitness-app-pricing-free-tier-comparison); (8) suggested-athletes
+carousel noisy enough that Hevy ships a dedicated hide-toggle.
 
 **Does exceptionally well:** Home/Discover as a clean, separately-rollable
-mental model; hevy.com no-install-required routine preview as a real growth
-loop; deliberate two-tier sharing (plan-only vs full-log) treats "share the
-plan" and "share what I did" as different products.
+mental model; hevy.com no-install routine preview as a real growth loop;
+deliberate two-tier sharing (plan-only vs full-log) treats "share the plan"
+and "share what I did" as different products.
 
 **Noise:** Strava auto-post duplicates the in-app shareable-cards feature;
 per-user notification toggle is an extra step most competitors fold into
-follow; leaderboards/comparison exist but clubs/challenges never got built
-on top of them.
+follow; leaderboards/comparison exist but clubs/challenges never got built.
 
 ---
 
@@ -160,15 +157,14 @@ on top of them.
 
 **Top complaints:** (1) free tier capped at 3 custom routines before Pro
 ($4.99/mo, $29.99/yr, $99.99 lifetime) [RepReturn](https://repreturn.com/strong-app-review/), [sensai.fit](https://www.sensai.fit/blog/hevy-vs-strong-2026); (2) "high-priced for a
-simple log" per one aggregator (unverified, single source, JustUseApp
-direct fetch 403'd); (3) sharing requires recipient to already have Strong
-installed — no non-user preview path (inferred, not a directly quoted
-complaint); (4) no way to see training partners' activity without leaving
-the app — Strong's single most consistent "competitive gap" callout across
+simple log" per one aggregator (unverified, single source); (3) sharing
+requires recipient to already have Strong installed — no non-user preview
+path (inferred); (4) no way to see training partners' activity without
+leaving the app — Strong's single most consistent "gap" callout across
 every Hevy-vs-Strong comparison found, though its own core users frame this
-as a feature, not a bug [PRPath](https://prpath.app/blog/strong-vs-hevy-2026.html). No further distinct sourced social complaints
-were found — reported honestly at 4, not padded to 8; Strong's complaint
-surface skews to pricing/feature-depth, not social.
+as a feature [PRPath](https://prpath.app/blog/strong-vs-hevy-2026.html). No further distinct sourced complaints found — reported
+honestly at 4, not padded to 8; Strong's complaint surface skews to
+pricing/feature-depth, not social.
 
 **Does exceptionally well:** zero social attack surface (nothing to leak,
 moderate, or be distracted by) while being the fastest mid-set logger for
@@ -259,17 +255,17 @@ follow-up signal.
 
 **Top complaints:** (1) update cycles introduce new bugs faster than old
 ones are fixed [etechshout](https://etechshout.com/jefit-app-review/); (2) core logging reliability regression — "the log
-itself started feeling unreliable mid-workout," explicitly *not* a
-"needs more features" complaint (same source); (3) post-redesign UI/nav
-complexity, more taps, confusing continue/stop prompts (same source);
-(4) Apple Watch rest-timer sync unreliable (same source); (5) paywall
-friction even for adding a workout day/exercise mid-session (same source);
-(6) Elite pricing ($12.99/mo, $69.99/yr) increasingly gates previously-free
-logging features, cited as driving churn to alternatives [setgraph.app](https://setgraph.app/articles/best-jefit-alternatives-2026); (7)
-reviewers rank JEFIT weaker than Hevy on "social accountability" despite
-more raw primitives on paper [dr-muscle](https://dr-muscle.com/jefit-review-alternative/); (8) website-only privacy settings —
-not a named review complaint, but a structural friction this research
-flags directly from observing the settings flow (not padding to reach 8).
+itself started feeling unreliable mid-workout," explicitly *not* a "needs
+more features" complaint (same source); (3) post-redesign UI/nav
+complexity, more taps, confusing continue/stop prompts (same); (4) Apple
+Watch rest-timer sync unreliable (same); (5) paywall friction even for
+adding a workout day/exercise mid-session (same); (6) Elite pricing
+($12.99/mo, $69.99/yr) increasingly gates previously-free logging features,
+cited as driving churn to alternatives [setgraph.app](https://setgraph.app/articles/best-jefit-alternatives-2026); (7) reviewers rank JEFIT
+weaker than Hevy on "social accountability" despite more raw primitives on
+paper [dr-muscle](https://dr-muscle.com/jefit-review-alternative/); (8) website-only privacy settings — not a named review
+complaint but a structural friction flagged directly from observing the
+settings flow.
 
 **Does exceptionally well:** broadest community primitives on paper
 (groups, dated contests with leaderboards, confirmed DMs); most granular

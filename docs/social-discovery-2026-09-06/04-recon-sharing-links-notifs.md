@@ -79,18 +79,13 @@ icon framing only (`ShareCardScreen.js:42-47,530-537,783-805`).
   `progressShareConfirmed`, `:104-106,363-383`).
 
 **Entry points (`navigation.navigate('ShareCard', {...})`):**
-- `src/screens/WorkoutSummaryScreen.js:1058` (session + PR), `:1148`, `:1164`
-  (other share triggers on the same screen).
-- `src/screens/CoachOutputScreen.js:2707` (weekly recap, "great week" CTA,
-  gated on safe/on-target per comment at `:2691`).
-- `src/screens/LiftProgressScreen.js:237,277` (PR share from lift history).
-- `src/screens/BodyMetricsScreen.js:1276` (milestone card).
-- `src/screens/YearOfLiftsScreen.js:690` (milestone card).
-- Route registered three times (once per auth-state stack) in
-  `src/navigation/RootNavigator.js:127` (lazy import), `:441,531,607` (`Stack.
-  Screen name="ShareCard"`).
-- `BeforeAfterShareSheet` is a modal-style sheet, not a route; mounted from
-  `src/screens/ProgressPhotosScreen.js:83,1917`.
+`WorkoutSummaryScreen.js:1058,1148,1164` (session+PR), `CoachOutputScreen.js:
+2707` (weekly recap, gated safe/on-target per `:2691`),
+`LiftProgressScreen.js:237,277` (PR), `BodyMetricsScreen.js:1276`,
+`YearOfLiftsScreen.js:690` (milestone). Route registered per auth-state
+stack in `RootNavigator.js:127` (lazy import), `:441,531,607`.
+`BeforeAfterShareSheet` is a modal sheet, not a route — mounted from
+`ProgressPhotosScreen.js:83,1917`.
 
 ### A2. Share text / link generation
 
@@ -233,21 +228,17 @@ social/community category should follow this exact `schedule*`/`cancel*`
 pair convention plus registration in `categories.js` to get quiet-hours +
 budget + telemetry for free.
 
-**Category enum** (`src/lib/notifications/categories.js:17-56`, 21 live
-values): `WEEKLY_CHECKIN_REMINDER`, `CASCADE_GATE`,
-`SUBSCRIPTION_PAYMENT_FAILURE`, `SUBSCRIPTION_EXPIRING`, `SYNC_ERROR`,
-`ED_PATTERN_LOCKOUT`, `FFM_FLOOR_HOLD`, `WEEKLY_COACH_READY`,
-`COACH_TRIAL_ENDING`, `MORNING_WEIGHT`, `EVENING_WEIGHT`,
-`TRAINING_REMINDER`, `YEAR_OF_LIFTS_UNLOCK`, `MONTHLY_RECAP`, `TRIAL_DAY3`,
-`WINBACK`, `PARTNER_CHEER`, `CHECKIN_MISSED`, `PLANNED_MEAL_CONFIRM`,
-`REST_TIMER`, `MEAL_LOG_REMINDER`, `ACTIVATION_NUDGE`, `RETURN_NUDGE`.
-Each maps to a channel set via `CATEGORY_CHANNELS`
-(`categories.js:114-167`: push / in_app / email, some both) and a
-`data.type` string via `categoryForDataType()` (`:208-249`, used by tap
-telemetry to resolve category from the runtime notification payload).
-`PARTNER_CHEER` already models push-downgrades-to-in-app-under-ED-flag
-(`categories.js:140-143`) — the pattern a social "like/cheer" notification
-would reuse.
+**Category enum** (`categories.js:17-56`, 21 values): `WEEKLY_CHECKIN_
+REMINDER, CASCADE_GATE, SUBSCRIPTION_PAYMENT_FAILURE, SUBSCRIPTION_EXPIRING,
+SYNC_ERROR, ED_PATTERN_LOCKOUT, FFM_FLOOR_HOLD, WEEKLY_COACH_READY, COACH_
+TRIAL_ENDING, MORNING_WEIGHT, EVENING_WEIGHT, TRAINING_REMINDER, YEAR_OF_
+LIFTS_UNLOCK, MONTHLY_RECAP, TRIAL_DAY3, WINBACK, PARTNER_CHEER, CHECKIN_
+MISSED, PLANNED_MEAL_CONFIRM, REST_TIMER, MEAL_LOG_REMINDER, ACTIVATION_
+NUDGE, RETURN_NUDGE`. Each maps to a channel set via `CATEGORY_CHANNELS`
+(`:114-167`: push/in_app/email, some both) and a `data.type` string via
+`categoryForDataType()` (`:208-249`, used by tap telemetry). `PARTNER_CHEER`
+already models push-downgrades-to-in-app-under-ED-flag (`:140-143`) — the
+pattern a social "like/cheer" notification would reuse.
 
 **Quiet hours** (`src/lib/notifications/quietHours.js`): default 22:00-07:00
 local, AsyncStorage-persisted (`QUIET_HOURS_KEY`, `:18-26`), pure
@@ -361,100 +352,82 @@ per-category on/off store a new social category would slot into.
 ### C7. In-app notification centre / inbox
 
 **No evidence of one.** Grepped `src/` for `notification.*inbox`, `activity
-feed`, `NotificationCentre`, `NotificationCenter`, `ActivityFeed` —
-zero matches. The only "in-app" notification surfaces found are (a) the
-`CHANNEL.IN_APP` toast/banner delivered live via the foreground handler
-(ephemeral, not a persisted list — `handler.js`) and (b) Partners' one-shot
-"cheer"/"win" delivery (also ephemeral per `shareWins.js`/`partner-cheer`
-edge function, no feed by policy — `SHARE_WIN_POLICY.excluded`,
-`shareWins.js:31`: "No passive feed... or automatic photo sharing"). A
-social/community feature that wants a persistent activity inbox would be
-building new ground, not extending an existing surface.
+feed`, `NotificationCentre`, `NotificationCenter`, `ActivityFeed` — zero
+matches. Only "in-app" surfaces found: (a) the `CHANNEL.IN_APP` toast/banner
+via the foreground handler (ephemeral, not persisted, `handler.js`) and (b)
+Partners' one-shot "cheer"/"win" delivery (also ephemeral, no feed by
+policy — `SHARE_WIN_POLICY.excluded`, `shareWins.js:31`: "No passive feed...
+or automatic photo sharing"). A social feature wanting a persistent activity
+inbox builds new ground, not an extension.
 
 ### C8. Tests pinning notification behaviour
 
 | Test file | Pins |
 |---|---|
-| `budget.test.js` | Push-budget decision core: exemptions, one-per-topic, daily/weekly caps, priority eviction, fail-open on unreadable schedule |
-| `scheduler.edSuppression.guard.test.js` | Source-level: the fail-closed ED-suppression pattern repeated at 5 sites in scheduler.js |
-| `scheduler.nextWeekdayDate.guard.test.js`, `triggerDate.guard.test.js`, `triggerDate.test.js` | DATE-trigger validation — a past native crash (Sentry VOLYUME-1K, invalid Date → native EXC_BREAKPOINT); pins that nothing schedules outside `triggerDate.js` and no DATE trigger is built unvalidated |
-| `campaign14.categoryOwnership.test.js` | ONE authority per user-controlled category (kills 3-way pref-source disagreement across sync mechanisms); **also asserts every `CATEGORY` value is either user-controlled or explicitly declared not** (`:252-253`) — **this is the regression guard that will fail/force-update when a new category is added without classifying it** |
-| `campaign14.routingTruth.test.js` | Every delivered notification either navigates to a real destination or is an explicit, declared non-navigating type — no dead routes, no "route string exists so we navigate anyway" |
-| `campaign14.inactivityStandDown.test.js` | 3-week-no-training stand-down on routine weigh-in prompts; boundary-day fails open |
-| `notificationRoute.test.js` | `routeForNotificationType()` mapping table — **also the guard that fails when a new `data.type` has no route/non-navigating decision registered** |
-| `preferences.test.js`, `winbackScheduler.test.js`, `winbackContent.test.js`, `returnNudge.test.js`, `missedCheckin.test.js`, `activationNudgeScheduler.test.js`, `partnerBeats.test.js`, `plannedMealConfirm.test.js`, `campaign10h.mealReminderRestore.test.js` | Per-feature scheduling/copy/restore behaviour for each named category |
-| `listeners.test.js`, `restTimerActions.test.js`, `restTimerActions.adversarial.test.js`, `restCuesBackground.guard.test.js` | Tap listener wiring + rest-timer action buttons |
-| `nextCheckinDate.dst.test.js` | DST-safe weekly check-in date math |
-| `scheduler.copyFixes.guard.test.js` | Source-level copy-string pins (the house convention referenced by the ED-suppression guard above) |
-| `blockReadyRelay.test.js` | Block-complete review notification relay |
+| `budget.test.js` | Budget decision core: exemptions, one-per-topic, caps, priority eviction, fail-open |
+| `scheduler.edSuppression.guard.test.js` | Source-level: fail-closed ED-suppression repeated at 5 sites in scheduler.js |
+| `triggerDate.guard.test.js`, `triggerDate.test.js`, `scheduler.nextWeekdayDate.guard.test.js` | DATE-trigger validation (Sentry VOLYUME-1K native crash); nothing schedules outside `triggerDate.js` |
+| `campaign14.categoryOwnership.test.js` | ONE authority per user-controlled category; **asserts every `CATEGORY` value is classified user-controlled or explicitly not (`:252-253`) — fails on an unclassified new category** |
+| `campaign14.routingTruth.test.js` | Every notification navigates to a real destination or is an explicit non-navigating type — no dead routes |
+| `campaign14.inactivityStandDown.test.js` | 3-week-no-training stand-down on weigh-in prompts; boundary day fails open |
+| `notificationRoute.test.js` | `routeForNotificationType()` mapping — **fails when a new `data.type` has no route decision** |
+| `preferences/winbackScheduler/winbackContent/returnNudge/missedCheckin/activationNudgeScheduler/partnerBeats/plannedMealConfirm/campaign10h.mealReminderRestore` `.test.js` | Per-feature scheduling/copy/restore behaviour |
+| `listeners/restTimerActions/restTimerActions.adversarial/restCuesBackground.guard.test.js` | Tap listener + rest-timer action wiring |
+| `nextCheckinDate.dst.test.js` | DST-safe weekly check-in math |
+| `scheduler.copyFixes.guard.test.js` | Source-level copy-string pins |
+| `blockReadyRelay.test.js` | Block-complete review relay |
 
-**The two regression guards that must be updated for ANY new
-category:** `campaign14.categoryOwnership.test.js` (classification
-completeness) and `notificationRoute.test.js` (routing-decision
-completeness) — both iterate `Object.values(CATEGORY)` /
-`routeForNotificationType` and will fail on an unclassified addition, which
-is the intended enforcement mechanism, not a defect.
+**The two guards a new category must satisfy:**
+`campaign14.categoryOwnership.test.js` (classification completeness) and
+`notificationRoute.test.js` (routing completeness) — both iterate
+`Object.values(CATEGORY)` and fail on an unclassified addition by design.
 
 ---
 
 ## D. Live activity / widgets
 
-**`modules/live-activity/`** (iOS-only native module,
-`modules/live-activity/index.ts:1-40`): wraps Apple ActivityKit for the rest
-timer — `startRestActivity()`/`updateRestActivity()`/`endRestActivity()`
-drive a lock-screen/Dynamic-Island widget ticking down rest time without the
-app foregrounded. No-ops everywhere except iOS native builds (`isAvailable()`
-false on Android/Expo Go, every method silently no-ops — callers need no
-platform branch). Also hosts `writeWidgetSnapshot()`, unrelated to the
-rest-timer lifecycle: publishes the home/lock-screen widget snapshot to a
-shared iOS App Group, called from `src/lib/widgets/storage.js`
-independent of whether Live Activities are enabled (`index.ts:22-27`).
-Requires manual founder-side Apple Developer portal provisioning (App
-Groups + Live Activities capability) before it functions in a real build.
+**`modules/live-activity/`** (iOS-only, `index.ts:1-40`): wraps Apple
+ActivityKit for the rest timer — `startRestActivity`/`updateRestActivity`/
+`endRestActivity` drive a lock-screen/Dynamic-Island widget without the app
+foregrounded; no-ops on Android/Expo Go (`isAvailable()` false, every method
+silently no-ops). Also hosts `writeWidgetSnapshot()` (unrelated to the
+rest-timer lifecycle) publishing the home/lock-screen widget snapshot to a
+shared iOS App Group (`:22-27`). Needs manual founder Apple Developer portal
+provisioning (App Groups + Live Activities) to function in a real build.
 
-**`modules/rest-timer-live/`** (Android counterpart,
-`modules/rest-timer-live/index.ts:1-30`): foreground-service-backed
-notification API — `startRestActivity`/`updateRestActivity`/
-`startWorkoutForeground`/`startRestForeground`/rest-cue actions — the
-Android equivalent of a "live" rest timer, implemented as an ongoing
-foreground-service notification rather than ActivityKit (no Android Live
-Activity equivalent exists at the OS level). Both modules together are what
-`volyume://active-workout` deep links target when tapped
-(`RootNavigator.js:838-843` comment references `activeWorkout.js:152`,
+**`modules/rest-timer-live/`** (Android, `index.ts:1-30`):
+foreground-service-backed notification API (`startRestActivity`/
+`startWorkoutForeground`/`startRestForeground`/rest-cue actions) — the
+Android equivalent, since no Android Live Activity exists at the OS level.
+Both together back what `volyume://active-workout` targets when tapped
+(`RootNavigator.js:838-843` references `activeWorkout.js:152`,
 `restForeground.js:72,107`).
 
-**`plugins/withVolyumeWidget.js` + `src/widgets/`**: an Expo config plugin
-(`withVolyumeWidget.js:1-40`) that creates the iOS widget-extension Xcode
-target at prebuild time (ios/ is gitignored, managed workflow) and copies in
-the Swift widget sources + entitlements. Two content widgets exist, mirrored
-across platforms: **NextSession** (routine name + planned day + week-in-block
-chip) and **WeeklyConsistency** ("N of M sessions this week", neutral dots,
-never a red/fail colour). Android renderer: `src/widgets/widgets.js`
-(react-native-android-widget, `:1-40`) — free tier, **never weight/calories/
-body data** because "the home screen is semi-public" (`widgets.js:7-8`).
-iOS renderer: `modules/live-activity/widget/VolyumeHomeWidgets.swift` +
-`VolyumeWidgetBundle.swift`. Data pipeline is OTA-patchable JS
-(`src/lib/widgets/snapshot.js`) — a small versioned JSON snapshot
-(`buildWidgetSnapshot()`, `:32-56`) written by `src/lib/widgets/writer.js`
-through a storage adapter (`src/lib/widgets/storage.js`) that swaps to the
-native App-Group/SharedPreferences bridge at build time; widgets themselves
-are dumb renderers of that snapshot, never the DB directly. **Consistency
-block is FULLY suppressed** (falls back to neutral next-session content)
-while an ED/wellbeing flag is open (`snapshot.js:12-14`), inheriting the
-same suppression rule as everywhere else in the app.
+**`plugins/withVolyumeWidget.js` + `src/widgets/`**: Expo config plugin
+creating the iOS widget-extension Xcode target at prebuild time (`:1-40`).
+Two content widgets mirrored across platforms: **NextSession** (routine
+name + planned day + week-in-block chip) and **WeeklyConsistency** ("N of M
+sessions this week", neutral dots, never red/fail). Android renderer:
+`src/widgets/widgets.js` — free tier, **never weight/calories/body data**
+("the home screen is semi-public", `:7-8`). iOS renderer:
+`VolyumeHomeWidgets.swift`/`VolyumeWidgetBundle.swift`. Data pipeline is
+OTA-patchable JS: `src/lib/widgets/snapshot.js` builds a small versioned
+JSON snapshot (`buildWidgetSnapshot()`, `:32-56`), `writer.js` persists it
+through a storage adapter (`storage.js`) that swaps to native App-Group/
+SharedPreferences at build time — widgets are dumb renderers, never the DB
+directly. **Consistency block fully suppressed** (falls back to neutral
+next-session content) under an open ED/wellbeing flag (`snapshot.js:12-14`).
 
-**"Training now" state availability for a social feature:** `activeWorkout`
-IS exposed in the Zustand store — `src/store/useAppStore.js:1459`
-(`activeWorkout: null` initial), set via `setActiveWorkout()` (`:1578`) and
-read at many call sites (`:195-243,759,1365-1578,1687`). **However this is
-purely local, in-memory session state** — grepped `src/lib/sync/registry.js`
-and `src/lib/sync.js` for `activeWorkout`: zero matches, confirming it is
-NOT pushed through the sync layer and therefore NOT visible to any other
-user or device. A cross-user "X is training now" social signal does not
-exist today and would need new plumbing (either a lightweight
-presence/heartbeat row synced through the registry, or reuse of the
-existing `partner-cheer`-style authenticated edge-function pattern) — it
-cannot be read off the current store.
+**"Training now" state for a social feature:** `activeWorkout` IS exposed in
+the Zustand store (`src/store/useAppStore.js:1459` initial, `setActiveWorkout()`
+`:1578`, read at `:195-243,759,1365-1578,1687`) — but this is purely local,
+in-memory session state. Grepped `src/lib/sync/registry.js` and
+`src/lib/sync.js` for `activeWorkout`: zero matches — it is NOT pushed
+through the sync layer and NOT visible to any other user/device. A
+cross-user "X is training now" signal does not exist today; it would need
+new plumbing (a presence/heartbeat row through the registry, or the
+`partner-cheer`-style authenticated edge-function pattern) — it cannot be
+read off the current store.
 
 ---
 
