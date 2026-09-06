@@ -7846,7 +7846,13 @@ export async function getAdaptiveLandmarkHistory(userId) {
 
 // ─── Pro: Morning Weights ─────────────────────────────────────────────────────
 
-export async function logMorningWeight(userId, { weightKg, loggedAt = Date.now(), notes = null } = {}) {
+// D153 follow-up (2026-09-06): `preserveNotes` keeps an existing same-day
+// row's notes when the caller has none of its own. The body-metric
+// write-through uses it so a second write on the same day can never clear
+// the enrolment marker (or a Health import's source line) that the first
+// write set; with one meaning on the row, the two fire-and-forget cloud
+// pushes carry the same notes and their landing order no longer matters.
+export async function logMorningWeight(userId, { weightKg, loggedAt = Date.now(), notes = null, preserveNotes = false } = {}) {
   // Defence in depth. The weight column is NOT NULL and a single precise
   // measurement, so a non-finite or non-positive value has no sensible
   // default: coercing it would poison the weight trend. Reject it loudly
@@ -7878,14 +7884,16 @@ export async function logMorningWeight(userId, { weightKg, loggedAt = Date.now()
   const dayStart = startLocalDay(loggedAt);
   const dayEnd = nextLocalDay(loggedAt);
   const existing = await d.getFirstAsync(
-    'SELECT id FROM morning_weights WHERE user_id = ? AND logged_at >= ? AND logged_at < ? AND deleted_at IS NULL',
+    'SELECT id, notes FROM morning_weights WHERE user_id = ? AND logged_at >= ? AND logged_at < ? AND deleted_at IS NULL',
     [userId, dayStart, dayEnd],
   );
   let savedId = id;
+  let finalNotes = notes;
   if (existing?.id) {
+    if (preserveNotes && notes == null && existing.notes != null) finalNotes = existing.notes;
     await d.runAsync(
       'UPDATE morning_weights SET weight_kg = ?, notes = ?, updated_at = ? WHERE id = ?',
-      [weightKg, notes, now, existing.id],
+      [weightKg, finalNotes, now, existing.id],
     );
     savedId = existing.id;
   } else {
@@ -7901,7 +7909,7 @@ export async function logMorningWeight(userId, { weightKg, loggedAt = Date.now()
   try {
     // eslint-disable-next-line global-require
     const { syncMorningWeight } = require('./sync');
-    syncMorningWeight(userId, { id: savedId, weightKg, loggedAt, notes }).catch(() => {});
+    syncMorningWeight(userId, { id: savedId, weightKg, loggedAt, notes: finalNotes }).catch(() => {});
   } catch (_) { /* sync module unavailable, bulk upload will catch up later */ }
   return savedId;
 }

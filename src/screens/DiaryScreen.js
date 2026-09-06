@@ -2312,7 +2312,7 @@ const styles = StyleSheet.create({
   },
   saveMealBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radius.md },
   saveMealBtnText: { ...type.body, color: colors.textPrimary },
-  saveMealBtnTextPrimary: { ...type.label, color: colors.onPrimary },
+  saveMealBtnTextPrimary: { ...type.label, color: colors.textPrimary },
   savedFoodTitle: { ...type.bodyStrong, color: colors.textPrimary },
   savedFoodIntro: { ...type.bodySm, color: colors.textMuted },
   savedFoodOption: {
@@ -2553,7 +2553,7 @@ function buildLiveStyles(t) {
     saveMealHint: { color: t.colors.textMuted, fontSize: t.fontSize.sm },
     saveMealInput: { fontSize: t.fontSize.md },
     saveMealBtnText: { ...t.type.body, color: t.colors.textPrimary },
-    saveMealBtnTextPrimary: { ...t.type.label, color: t.colors.onPrimary },
+    saveMealBtnTextPrimary: { ...t.type.label, color: t.colors.textPrimary },
     savedFoodTitle: { ...t.type.bodyStrong, color: t.colors.textPrimary },
     savedFoodIntro: { ...t.type.bodySm, color: t.colors.textMuted },
     savedFoodIcon: { backgroundColor: t.colors.primaryBg },
