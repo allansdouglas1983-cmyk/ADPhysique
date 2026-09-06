@@ -55,13 +55,15 @@ export default function CommunityActivityScreen({ navigation }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [activity, pending] = await Promise.all([
+      const [page, pending] = await Promise.all([
         loadActivity({ limit: PAGE }),
-        pendingFollowRequests({ limit: PAGE }).catch(() => []),
+        pendingFollowRequests({ limit: PAGE }).catch(() => ({ people: [] })),
       ]);
-      setRows(activity);
-      setRequests(Array.isArray(pending) ? pending : []);
-      setCursor(activity.length ? (activity[activity.length - 1]?.created_at ?? null) : null);
+      setRows(page.activity);
+      setRequests(pending?.people ?? []);
+      // The server mints the cursor (`ts|uuid`); a client-built one is
+      // refused as `invalid_input`.
+      setCursor(page.cursor);
       setError(null);
     } catch (e) {
       setError(e?.code ?? 'unavailable');
@@ -83,10 +85,10 @@ export default function CommunityActivityScreen({ navigation }) {
     if (paging || !cursor || !rows.length) return;
     setPaging(true);
     try {
-      const more = await loadActivity({ cursor, limit: PAGE });
-      if (more.length) {
-        setRows((prev) => [...prev, ...more]);
-        setCursor(more[more.length - 1]?.created_at ?? null);
+      const page = await loadActivity({ cursor, limit: PAGE });
+      if (page.activity.length) {
+        setRows((prev) => [...prev, ...page.activity]);
+        setCursor(page.cursor);
       } else {
         setCursor(null);
       }

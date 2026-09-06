@@ -21,7 +21,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Card from '../Card';
 import Button from '../Button';
 import ProfileAvatarMark from '../ProfileAvatarMark';
-import { spacing, type, colors } from '../../styles/theme';
+import { spacing, type, colors, circle } from '../../styles/theme';
 import useTheme from '../../hooks/useTheme';
 import { calendarRelativeLabel } from '../../lib/workoutDate';
 
@@ -121,6 +121,6 @@ const styles = StyleSheet.create({
   line: { ...type.body, color: colors.textPrimary },
   preview: { ...type.caption, color: colors.textSecondary },
   when: { ...type.caption, color: colors.textMuted },
-  dot: { width: 8, height: 8, borderRadius: 4 },
+  dot: { width: 8, height: 8, borderRadius: circle(8) },
   actions: { flexDirection: 'row', gap: spacing.sm },
 });

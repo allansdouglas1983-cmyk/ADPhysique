@@ -52,6 +52,17 @@ import {
 export const OFFLINE_LINE = 'Volyume could not reach Community just now. Check your connection and try again.';
 
 /** The calm line for a refusal code. Never a raw message, never a stack. */
+/** The calm line when a comment is refused. A reader with no Community
+ * profile is told the actual reason and what fixes it, rather than "try
+ * again" for something trying again cannot fix. */
+export function commentErrorLine(code) {
+  if (code === 'offline') return OFFLINE_LINE;
+  if (code === 'no_profile') return 'Create your Community profile first, then post this.';
+  if (code === 'content_not_allowed') return 'Some of that wording is not allowed in Community. Please reword it.';
+  if (code === 'rate_limited') return 'That is a lot of comments for one hour. Try again a bit later.';
+  return 'That comment did not send. Please try again.';
+}
+
 export function programmeErrorLine(code) {
   if (code === 'offline') return OFFLINE_LINE;
   if (code === 'not_found') return 'This programme is no longer shared.';
@@ -70,7 +81,11 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
   const [errorCode, setErrorCode] = useState(null);
   const [comments, setComments] = useState([]);
   const [cursor, setCursor] = useState(null);
-  const [reportVisible, setReportVisible] = useState(false);
+  // What the report sheet is aimed at: the programme from the header menu,
+  // or one comment from its own flag. A comment reported as the programme
+  // leaves the comment untouched and never counts toward the
+  // three-reporter auto-hide, so the target travels with the sheet.
+  const [reportTarget, setReportTarget] = useState(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
 
@@ -169,10 +184,7 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
       setCursor(page?.cursor ?? null);
       return true;
     } catch (e) {
-      toast.show(
-        e?.code === 'offline' ? OFFLINE_LINE : 'That comment did not send. Please try again.',
-        { variant: 'error' },
-      );
+      toast.show(commentErrorLine(e?.code), { variant: 'error' });
       return false;
     }
   }
@@ -235,7 +247,7 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
       <SectionLabel style={styles.commentsLabel}>Comments</SectionLabel>
       {comments.length === 0 ? (
         <Text style={[styles.noComments, { color: t.colors.textMuted }]}>
-          No comments yet. Say something useful about the training.
+          No comments yet. Anything useful about the training is welcome here.
         </Text>
       ) : null}
     </View>
@@ -247,7 +259,7 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
         title="Programme"
         right={programme ? (
           <TouchableOpacity
-            onPress={() => { haptics.selection(); setReportVisible(true); }}
+            onPress={() => { haptics.selection(); setReportTarget({ targetKind: 'programme', targetId: programme.id }); }}
             hitSlop={hitSlop}
             style={styles.headerAction}
             accessibilityRole="button"
@@ -290,7 +302,7 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
                     userId: item.author.user_id, handle: item.author.handle,
                   })
                   : undefined}
-                onReport={item.mine ? undefined : () => setReportVisible(true)}
+                onReport={item.mine ? undefined : () => setReportTarget({ targetKind: 'comment', targetId: item.id })}
               />
             )}
             ListFooterComponent={<CommentComposer onSubmit={handleAddComment} />}
@@ -331,10 +343,10 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
         </>
       )}
       <ReportSheet
-        visible={reportVisible}
-        onClose={() => setReportVisible(false)}
-        targetKind="programme"
-        targetId={programme?.id ?? null}
+        visible={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        targetKind={reportTarget?.targetKind ?? 'programme'}
+        targetId={reportTarget?.targetId ?? null}
       />
     </SafeAreaView>
   );

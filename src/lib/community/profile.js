@@ -184,10 +184,22 @@ export async function removeFollower(followerId) {
   return callCommunity('community_remove_follower', { _follower: followerId });
 }
 
+/**
+ * One page of followers or following. `community_list_follows` answers
+ * `{people, cursor}` (migrate_160:1921); the cursor is the server's own
+ * opaque string and is never rebuilt here.
+ *
+ * @returns {Promise<{people: Array, cursor: (string|null)}>}
+ */
 export async function listFollows(userId, kind, { cursor = null, limit = 30 } = {}) {
-  return callCommunity('community_list_follows', {
+  const data = await callCommunity('community_list_follows', {
     _uid: userId, _kind: kind, _cursor: cursor, _limit: limit,
   });
+  const rows = data?.people;
+  return {
+    people: Array.isArray(rows) ? rows : [],
+    cursor: typeof data?.cursor === 'string' ? data.cursor : null,
+  };
 }
 
 export async function blockUser(targetUserId) {

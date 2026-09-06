@@ -28,6 +28,7 @@ import { drawShareCard, cardHeight, drawSticker, stickerHeight } from '../lib/sh
 import { buildWeeklyRecapParams } from '../lib/shareCard/greatWeek';
 import { loadWordmarkImage } from '../lib/shareCard/wordmarkImage';
 import usePhotoSuppression from '../hooks/usePhotoSuppression';
+import { navigateCrossTab } from '../navigation/navigateCrossTab';
 
 // Optional native modules, guarded so the screen still mounts (e.g. in tests
 // or before a rebuild) without them; the card just can't render/share until the
@@ -830,12 +831,16 @@ export default function ShareCardScreen({ navigation, route }) {
             session only: the weekly recap carries progress content and the
             before/after card is photo content, neither of which enters
             Community (SD-04). The params handed on are the ones this card
-            was built from, so the story and the image can never disagree. */}
+            was built from, so the story and the image can never disagree.
+            ShareCard is registered in HomeStack, ProgressStack AND
+            ProfileStack while the Community routes live only in HomeStack,
+            so this is a CROSS-TAB jump (F4: a bare navigate() to another
+            stack is silently dropped). */}
         {communityKind ? (
           <Button
             title="Post to Community"
             icon="people-outline"
-            onPress={() => navigation.navigate('CommunityCompose', communityComposeParams)}
+            onPress={() => navigateCrossTab(navigation, 'HomeTab', 'CommunityCompose', communityComposeParams)}
             accessibilityLabel="Post this to Community"
             variant="outline"
             size="lg"

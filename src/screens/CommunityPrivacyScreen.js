@@ -8,6 +8,10 @@
  * Someone who has never joined can open this from Settings, so the
  * screen also answers "what would Community share" with the same
  * receipt the Join screen carries, before there is anything to change.
+ *
+ * It is also the route to the two screens that have no other home: the
+ * profile editor, and (for a moderator only, from `community_get_me`)
+ * the moderation queue.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -197,6 +201,22 @@ export default function CommunityPrivacyScreen({ navigation }) {
                 );
               })}
             </View>
+
+            <Button
+              variant="secondary"
+              title="Edit profile"
+              onPress={() => navigation.navigate('CommunityEditProfile')}
+              accessibilityLabel="Edit my Community profile"
+            />
+
+            {me?.is_moderator ? (
+              <Button
+                variant="secondary"
+                title="Moderation queue"
+                onPress={() => navigation.navigate('CommunityModeration')}
+                accessibilityLabel="Open the moderation queue"
+              />
+            ) : null}
 
             <Button
               variant="secondary"

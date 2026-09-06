@@ -177,7 +177,26 @@ serve(async (req: Request) => {
         .eq('state', 'accepted')
         .limit(1)
         .maybeSingle()
-      verified = !!data
+      // Recency, as every other branch has (security review 2026-09-06,
+      // finding 7): the follow edge itself carries only the created_at of
+      // the REQUEST, so an acceptance is proved by the activity row
+      // `community_respond_follow` writes at the moment it accepts. Without
+      // this the edge stands for as long as the follow does and the push
+      // can be replayed at every follower, at any hour.
+      let accepted = false
+      if (data) {
+        const { data: act } = await admin
+          .from('community_activity')
+          .select('id')
+          .eq('user_id', targetUserId)
+          .eq('actor_id', actorId)
+          .eq('kind', 'follow_accepted')
+          .gte('created_at', sinceIso)
+          .limit(1)
+          .maybeSingle()
+        accepted = !!act
+      }
+      verified = accepted
     } else if (kind === 'reaction') {
       const { data } = await admin
         .from('community_reactions')

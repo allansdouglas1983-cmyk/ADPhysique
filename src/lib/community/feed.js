@@ -52,15 +52,44 @@ export async function clearCachedHub(uid) {
 }
 
 /**
+ * Every list RPC answers a wrapper object: `{posts, cursor}`,
+ * `{people, cursor}`, `{comments, cursor}` and so on (the
+ * `RETURN jsonb_build_object` lines in `migrate_160_community.sql`). The
+ * rows are unwrapped here, in one place, and the CURSOR is the server's
+ * own opaque string: `_community_cursor_parts` requires `ts|uuid` and
+ * refuses anything a client tries to build for itself.
+ *
+ * @param {object|null} data the RPC payload
+ * @param {string} key the wrapper's row key
+ */
+function listPage(data, key) {
+  const rows = data?.[key];
+  return {
+    [key]: Array.isArray(rows) ? rows : [],
+    cursor: typeof data?.cursor === 'string' ? data.cursor : null,
+  };
+}
+
+/**
  * Load one half of the hub.
  *
+ * Discover is readable without a Community profile (SD-04), so the two
+ * sections that are ABOUT the reader's own profile — suggestions and the
+ * dimensions they share — are only asked for once there is one: both
+ * raise `no_profile` otherwise. The four reads are settled independently
+ * as well, so one section failing leaves the rest of Discover standing
+ * rather than emptying the screen.
+ *
  * @param {'following'|'discover'} segment
- * @param {{cursor?: string|null, limit?: number, userId?: string}} [opts]
+ * @param {{cursor?: string|null, limit?: number, userId?: string,
+ *   joined?: boolean}} [opts]
  * @returns {Promise<{segment: string, posts: Array, programmes: Array,
  *   people: Array, dimensions: Array, cursor: (string|null),
  *   fromCache: boolean, error: (string|null)}>} never throws.
  */
-export async function loadHub(segment = 'following', { cursor = null, limit = DEFAULT_PAGE_SIZE, userId = null } = {}) {
+export async function loadHub(segment = 'following', {
+  cursor = null, limit = DEFAULT_PAGE_SIZE, userId = null, joined = true,
+} = {}) {
   const uid = userId ?? currentUserId();
   const empty = {
     segment, posts: [], programmes: [], people: [], dimensions: [], cursor: null,
@@ -68,25 +97,37 @@ export async function loadHub(segment = 'following', { cursor = null, limit = DE
   };
   try {
     if (segment === 'discover') {
-      const [programmes, people, dimensions, posts] = await Promise.all([
-        callCommunity('community_discover_programmes', { _style: null, _cursor: cursor, _limit: limit }),
-        callCommunity('community_suggested_people', { _limit: 5 }),
-        callCommunity('community_dimensions_me', {}),
-        callCommunity('community_discover_posts', { _cursor: cursor, _limit: limit }),
+      // Paging Discover pages the training stories: they are the list. The
+      // sections above them are a header, read once per open.
+      if (cursor) {
+        const page = await loadDiscoverPosts({ cursor, limit });
+        return { ...empty, posts: page.posts, cursor: page.cursor };
+      }
+      const settled = await Promise.allSettled([
+        discoverProgrammes({ limit }),
+        loadDiscoverPosts({ limit }),
+        joined ? suggestedPeople({ limit: 5 }) : Promise.resolve({ people: [] }),
+        joined ? myDimensions() : Promise.resolve({ dimensions: [] }),
       ]);
+      const [programmes, posts, people, dimensions] = settled;
+      // Discover IS the programmes and the stories. If neither read
+      // answered there is nothing to show, so fall through to the cache.
+      if (programmes.status === 'rejected' && posts.status === 'rejected') {
+        throw programmes.reason;
+      }
       const payload = {
         ...empty,
-        programmes: programmes ?? [],
-        people: people ?? [],
-        dimensions: dimensions?.dimensions ?? [],
-        posts: posts ?? [],
-        cursor: nextCursor(posts),
+        programmes: programmes.value?.programmes ?? [],
+        posts: posts.value?.posts ?? [],
+        people: people.value?.people ?? [],
+        dimensions: dimensions.value?.dimensions ?? [],
+        cursor: posts.value?.cursor ?? null,
       };
-      if (!cursor) await writeCachedHub(uid, payload);
+      await writeCachedHub(uid, payload);
       return payload;
     }
-    const posts = await callCommunity('community_feed', { _cursor: cursor, _limit: limit });
-    const payload = { ...empty, posts: posts ?? [], cursor: nextCursor(posts) };
+    const page = await loadFeed({ cursor, limit });
+    const payload = { ...empty, posts: page.posts, cursor: page.cursor };
     if (!cursor) await writeCachedHub(uid, payload);
     return payload;
   } catch (e) {
@@ -96,43 +137,58 @@ export async function loadHub(segment = 'following', { cursor = null, limit = DE
   }
 }
 
-/** The server's paging cursor rides on the last row it returned. */
-function nextCursor(rows) {
-  if (!Array.isArray(rows) || !rows.length) return null;
-  const last = rows[rows.length - 1];
-  return last?.cursor ?? last?.created_at ?? null;
-}
-
+/** @returns {Promise<{posts: Array, cursor: (string|null)}>} */
 export async function loadFeed({ cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
-  return callCommunity('community_feed', { _cursor: cursor, _limit: limit });
+  return listPage(await callCommunity('community_feed', { _cursor: cursor, _limit: limit }), 'posts');
 }
 
+/** @returns {Promise<{posts: Array, cursor: (string|null)}>} */
 export async function loadDiscoverPosts({ cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
-  return callCommunity('community_discover_posts', { _cursor: cursor, _limit: limit });
+  return listPage(await callCommunity('community_discover_posts', { _cursor: cursor, _limit: limit }), 'posts');
 }
 
+/** @returns {Promise<{people: Array, cursor: (string|null)}>} */
 export async function searchPeople(q, { limit = 20 } = {}) {
-  return callCommunity('community_search_people', { _q: String(q ?? '').trim(), _limit: limit });
+  return listPage(
+    await callCommunity('community_search_people', { _q: String(q ?? '').trim(), _limit: limit }),
+    'people',
+  );
 }
 
+/** @returns {Promise<{programmes: Array, cursor: (string|null)}>} */
 export async function searchProgrammes(q, { style = null, cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
-  return callCommunity('community_search_programmes', {
+  return listPage(await callCommunity('community_search_programmes', {
     _q: String(q ?? '').trim(), _style: style, _cursor: cursor, _limit: limit,
-  });
+  }), 'programmes');
 }
 
+/** @returns {Promise<{people: Array, cursor: (string|null)}>} */
 export async function suggestedPeople({ limit = 10 } = {}) {
-  return callCommunity('community_suggested_people', { _limit: limit });
+  return listPage(await callCommunity('community_suggested_people', { _limit: limit }), 'people');
 }
 
+/** @returns {Promise<{dimensions: Array, cursor: (string|null)}>} */
 export async function myDimensions() {
-  return callCommunity('community_dimensions_me', {});
+  return listPage(await callCommunity('community_dimensions_me', {}), 'dimensions');
 }
 
+/**
+ * One dimension page: its label and count, the people in it and the
+ * programmes published in it.
+ *
+ * @returns {Promise<{label: (string|null), count: number, people: Array,
+ *   programmes: Array, cursor: (string|null)}>}
+ */
 export async function loadDimension(kind, key, { cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
-  return callCommunity('community_dimension', {
+  const data = await callCommunity('community_dimension', {
     _kind: kind, _key: key, _cursor: cursor, _limit: limit,
   });
+  return {
+    label: data?.label ?? null,
+    count: Number(data?.count ?? 0),
+    ...listPage(data, 'people'),
+    programmes: Array.isArray(data?.programmes) ? data.programmes : [],
+  };
 }
 
 // ─── Programmes ──────────────────────────────────────────────────────
@@ -153,12 +209,17 @@ export async function recordProgrammeUse(id, mode) {
   return callCommunity('community_record_programme_use', { _id: id, _mode: mode });
 }
 
+/** @returns {Promise<{programmes: Array, cursor: (string|null)}>} */
 export async function myProgrammes() {
-  return callCommunity('community_my_programmes', {});
+  return listPage(await callCommunity('community_my_programmes', {}), 'programmes');
 }
 
+/** @returns {Promise<{programmes: Array, cursor: (string|null)}>} */
 export async function discoverProgrammes({ style = null, cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
-  return callCommunity('community_discover_programmes', { _style: style, _cursor: cursor, _limit: limit });
+  return listPage(
+    await callCommunity('community_discover_programmes', { _style: style, _cursor: cursor, _limit: limit }),
+    'programmes',
+  );
 }
 
 // ─── Posts, reactions and comments ───────────────────────────────────
@@ -195,8 +256,9 @@ export async function deleteComment(id) {
   return callCommunity('community_delete_comment', { _id: id });
 }
 
+/** @returns {Promise<{comments: Array, cursor: (string|null)}>} */
 export async function listComments(targetKind, targetId, { cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
-  return callCommunity('community_list_comments', {
+  return listPage(await callCommunity('community_list_comments', {
     _target_kind: targetKind, _target_id: targetId, _cursor: cursor, _limit: limit,
-  });
+  }), 'comments');
 }

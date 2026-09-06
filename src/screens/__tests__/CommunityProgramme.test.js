@@ -14,7 +14,11 @@
  *    ruling 2): "Adapt for me" leads as the `primary` with `options-outline`,
  *    "Use as-is" is the `secondary`, and neither is emphatic;
  *  - "Use as-is" confirms before it copies, then copies, records the use and
- *    lands on the new plan.
+ *    lands on the new plan;
+ *  - a REPORTED COMMENT is reported as a comment. Filing it against the
+ *    programme leaves the comment in place, never counts toward the
+ *    three-reporter auto-hide, and hands the moderator the wrong row
+ *    (product review 2026-09-06, finding 6).
  *
  * The Community client library is mocked at its barrel: this suite is about
  * the screen, and the library has its own suites.
@@ -56,6 +60,7 @@ jest.mock('../../components/community/ReportSheet', () => () => null);
 
 jest.mock('../../lib/community', () => ({
   getCommunityProgramme: jest.fn(),
+  REPORT_REASONS: {},
   recordProgrammeUse: jest.fn(() => Promise.resolve({})),
   listComments: jest.fn(() => Promise.resolve({ comments: [], cursor: null })),
   addComment: jest.fn(() => Promise.resolve({})),
@@ -332,6 +337,56 @@ describe('when Community cannot be reached', () => {
     expect(text).toContain('Volyume could not reach Community just now.');
     expect(text).toContain('Try again');
     expect(text).not.toContain('offline');
+    act(() => { tree.unmount(); });
+  });
+});
+
+describe('reporting', () => {
+  /** The mocked ReportSheet renders nothing, so it is found by the props
+   * the screen hands it: that IS what this test is about. */
+  function reportSheet(tree) {
+    return tree.root.findAll((n) => n.props && 'targetKind' in n.props && 'visible' in n.props)[0];
+  }
+
+  function commentRow(tree, comment) {
+    const list = tree.root.findAll((n) => n.type === 'FlatList')[0];
+    let row = null;
+    act(() => { row = create(list.props.renderItem({ item: comment })); });
+    return row;
+  }
+
+  const COMMENT = {
+    id: 'cmt1',
+    body: 'Nice structure.',
+    created_at: Date.now(),
+    mine: false,
+    author: { user_id: 'u9', handle: 'priya_kb', display_name: 'Priya K' },
+  };
+
+  test('the flag on a comment reports THE COMMENT, not the programme', async () => {
+    const tree = await mount();
+    const row = commentRow(tree, COMMENT);
+    const flag = row.root.findAll((n) => n.props?.accessibilityLabel === 'Report this comment')[0];
+
+    await act(async () => { flag.props.onPress(); });
+
+    expect(reportSheet(tree).props).toEqual(expect.objectContaining({
+      visible: true, targetKind: 'comment', targetId: 'cmt1',
+    }));
+    act(() => { row.unmount(); tree.unmount(); });
+  });
+
+  test('the header menu still reports the programme', async () => {
+    const tree = await mount();
+    const menu = tree.root.findAll(
+      (n) => n.props?.accessibilityLabel === 'Report this programme',
+    )[0];
+
+    await act(async () => { menu.props.onPress(); });
+
+    expect(reportSheet(tree).props).toEqual(expect.objectContaining({
+      visible: true, targetKind: 'programme', targetId: 'prog1',
+    }));
     act(() => { tree.unmount(); });
   });
 });

@@ -50,6 +50,21 @@ const ACTION_LABELS = {
   unsuspend_account: 'Remove the suspension',
 };
 
+// The queue is read by a person, so the target is named in words, not by
+// the column's enum value.
+const TARGET_LABELS = {
+  profile: 'Profile',
+  post: 'Story',
+  comment: 'Comment',
+  programme: 'Programme',
+};
+
+/** "1 report" / "4 reports". */
+export function reportCountLabel(count) {
+  const n = Number(count) || 0;
+  return n === 1 ? '1 report' : `${n} reports`;
+}
+
 function whenLabel(createdAt) {
   const ms = typeof createdAt === 'number' ? createdAt : Date.parse(createdAt);
   return Number.isFinite(ms) ? calendarRelativeLabel(ms) : '';
@@ -136,7 +151,7 @@ export default function CommunityModerationScreen() {
               <View style={styles.reportTop}>
                 <Chip label={REPORT_REASONS[item.reason] ?? item.reason} accessibilityRole="text" />
                 {item.priority ? <Chip label="Priority" selected accessibilityRole="text" /> : null}
-                <Chip label={item.target_kind} accessibilityRole="text" />
+                <Chip label={TARGET_LABELS[item.target_kind] ?? 'Content'} accessibilityRole="text" />
               </View>
               {item.preview ? (
                 <Text
@@ -153,7 +168,7 @@ export default function CommunityModerationScreen() {
               ) : null}
               <Text style={[styles.meta, { ...t.type.caption, color: t.colors.textMuted }]}>
                 {[
-                  item.report_count ? `${item.report_count} reports` : null,
+                  item.report_count ? reportCountLabel(item.report_count) : null,
                   whenLabel(item.created_at),
                   item.resolution ? `Resolution: ${item.resolution}` : null,
                 ].filter(Boolean).join(' · ')}

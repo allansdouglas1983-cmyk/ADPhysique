@@ -45,7 +45,7 @@ import useTheme from '../hooks/useTheme';
 import useCommunityMe from '../hooks/useCommunityMe';
 import { colors, spacing, type, circle } from '../styles/theme';
 import {
-  getProfile, listFollows, profileUrl, reactToPost, unblockUser,
+  getProfile, listFollows, profileUrl, reactToPost, unblockUser, relationships,
 } from '../lib/community';
 
 /**
@@ -62,6 +62,23 @@ function normalisePostRow(row, fallbackAuthor) {
     author: row.author ?? post.author ?? fallbackAuthor ?? null,
     myReaction: !!(row.my_reaction ?? post.my_reaction),
   };
+}
+
+/**
+ * The card for this person in the reader's own blocked list, or null.
+ * Never throws: a relationships read that fails simply leaves the screen
+ * saying the profile is not available, which is still true.
+ */
+async function findInMyBlocked({ handle, userId }) {
+  try {
+    const out = await relationships();
+    const rows = Array.isArray(out?.blocked) ? out.blocked : [];
+    return rows
+      .map((row) => row?.card ?? row)
+      .find((c) => (userId && c?.user_id === userId) || (handle && c?.handle === handle)) ?? null;
+  } catch (_e) {
+    return null;
+  }
 }
 
 export default function CommunityProfileScreen({ navigation, route }) {
@@ -82,6 +99,7 @@ export default function CommunityProfileScreen({ navigation, route }) {
   const [followsKind, setFollowsKind] = useState(null);
   const [follows, setFollows] = useState([]);
   const [error, setError] = useState(null);
+  const [blockedCard, setBlockedCard] = useState(null);
 
   const card = data?.card ?? null;
   const isMe = !!card && card.user_id === me?.profile?.user_id;
@@ -93,8 +111,17 @@ export default function CommunityProfileScreen({ navigation, route }) {
       const out = await getProfile({ handle, userId });
       setData(out);
       setError(null);
+      setBlockedCard(null);
     } catch (e) {
-      setError(e?.code ?? 'unavailable');
+      const code = e?.code ?? 'unavailable';
+      setError(code);
+      // `community_get_profile` raises `not_found` for a block in EITHER
+      // direction, so the read alone cannot tell "I blocked them" from
+      // "they blocked me" or "no such handle". The blocked list is the
+      // reader's OWN record, so it answers the one case we can state
+      // honestly: a person the reader blocked gets the blocked state and
+      // the way out of it, and nothing else claims to know why.
+      setBlockedCard(code === 'not_found' ? await findInMyBlocked({ handle, userId }) : null);
     } finally {
       setLoading(false);
     }
@@ -107,8 +134,8 @@ export default function CommunityProfileScreen({ navigation, route }) {
     setFollowsKind(kind);
     setFollows([]);
     try {
-      const rows = await listFollows(card.user_id, kind, { limit: 30 });
-      setFollows(Array.isArray(rows) ? rows : []);
+      const page = await listFollows(card.user_id, kind, { limit: 30 });
+      setFollows(page.people);
     } catch (_e) {
       setFollows([]);
     }
@@ -146,6 +173,7 @@ export default function CommunityProfileScreen({ navigation, route }) {
   const headerRight = card && !isMe ? (
     <Pressable
       onPress={() => setMenuOpen(true)}
+      hitSlop={spacing.sm}
       style={[styles.headerBtn, { backgroundColor: t.colors.surface2, borderColor: t.colors.border }]}
       accessibilityRole="button"
       accessibilityLabel="Profile options"
@@ -239,15 +267,7 @@ export default function CommunityProfileScreen({ navigation, route }) {
             size="sm"
             fullWidth={false}
             title="Unblock"
-            onPress={async () => {
-              try {
-                await unblockUser(card.user_id);
-                toast.show('Unblocked');
-                load();
-              } catch (_e) {
-                toast.show('Could not do that just now.', { variant: 'error' });
-              }
-            }}
+            onPress={() => unblock(card.user_id)}
             accessibilityLabel={`Unblock @${card.handle}`}
           />
         </View>
@@ -276,15 +296,49 @@ export default function CommunityProfileScreen({ navigation, route }) {
 
   const listData = !card || !viewable ? [] : (segment === 'posts' ? posts : programmes);
 
+  async function unblock(targetId) {
+    try {
+      await unblockUser(targetId);
+      toast.show('Unblocked');
+      load();
+    } catch (_e) {
+      toast.show('Could not do that just now.', { variant: 'error' });
+    }
+  }
+
   const empty = loading ? (
     <View style={styles.loading}><ActivityIndicator color={t.colors.primary} /></View>
+  ) : blockedCard ? (
+    <EmptyState
+      icon="ban-outline"
+      title="You have blocked this person"
+      text="Neither of you can see the other in Community."
+      actionLabel="Unblock"
+      onAction={() => unblock(blockedCard.user_id)}
+      actionAccessibilityLabel={blockedCard.handle ? `Unblock @${blockedCard.handle}` : 'Unblock this person'}
+    />
+  ) : error === 'offline' ? (
+    <EmptyState
+      icon="cloud-offline-outline"
+      title="You are offline"
+      text="Community needs a connection. Your training is unaffected."
+      actionLabel="Try again"
+      onAction={load}
+      actionAccessibilityLabel="Try loading this profile again"
+    />
+  ) : error === 'not_found' ? (
+    // No "Try again": the read has answered, and repeating it cannot
+    // change the answer.
+    <EmptyState
+      icon="person-outline"
+      title="Profile not available"
+      text="This profile is not available."
+    />
   ) : error ? (
     <EmptyState
       icon="cloud-offline-outline"
-      title={error === 'offline' ? 'You are offline' : 'Could not open this profile'}
-      text={error === 'offline'
-        ? 'Community needs a connection. Your training is unaffected.'
-        : 'This profile is not available right now.'}
+      title="Could not open this profile"
+      text="Try that again in a moment."
       actionLabel="Try again"
       onAction={load}
       actionAccessibilityLabel="Try loading this profile again"
@@ -328,7 +382,6 @@ export default function CommunityProfileScreen({ navigation, route }) {
             myReaction={item.myReaction}
             onPress={() => navigation.navigate('CommunityPost', { id: item.post.id })}
             onReact={() => react(item)}
-            onOpenAuthor={() => {}}
           />
         ) : (
           <ProgrammeTile
@@ -394,9 +447,20 @@ export default function CommunityProfileScreen({ navigation, route }) {
               }}
             />
           )) : (
-            <Text style={[styles.sheetEmpty, { ...t.type.bodySm, color: t.colors.textSecondary }]}>
-              Nobody yet.
-            </Text>
+            <EmptyState
+              compact
+              icon="people-outline"
+              title="Nobody yet"
+              text={followsKind === 'following'
+                ? 'Nobody followed yet. Search for someone you train with.'
+                : 'No followers yet. Search for someone you train with.'}
+              actionLabel="Find people"
+              onAction={() => {
+                setFollowsKind(null);
+                navigation.navigate('CommunitySearch');
+              }}
+              actionAccessibilityLabel="Find people to follow"
+            />
           )}
         </View>
       </BottomSheet>
@@ -429,5 +493,4 @@ const styles = StyleSheet.create({
   loading: { paddingVertical: spacing.xxl, alignItems: 'center' },
   sheet: { gap: spacing.md, paddingBottom: spacing.md },
   sheetTitle: { ...type.h3, color: colors.textPrimary },
-  sheetEmpty: { ...type.bodySm, color: colors.textSecondary },
 });

@@ -14,7 +14,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Card from '../Card';
-import { spacing, type, colors, iconSize } from '../../styles/theme';
+import { spacing, type, colors, iconSize, circle } from '../../styles/theme';
 import useTheme from '../../hooks/useTheme';
 
 const GLYPH = {
@@ -24,10 +24,11 @@ const GLYPH = {
   area: 'location-outline',
 };
 
-/** "6 people" / "1 person". The count is other people, never including you. */
+/** "6 lifters" / "1 lifter" (blueprint section 6). The count is other
+ * people, never including you. */
 export function peopleLine(count) {
   const n = Number(count) || 0;
-  return n === 1 ? '1 person' : `${n} people`;
+  return n === 1 ? '1 lifter' : `${n} lifters`;
 }
 
 export default function DimensionRow({ dimension, onPress }) {
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
   glyph: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: circle(36),
     alignItems: 'center',
     justifyContent: 'center',
   },

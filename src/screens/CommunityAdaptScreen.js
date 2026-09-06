@@ -12,7 +12,8 @@
  * `capabilityChecked` is false. An unreadable capability state is NOT "no
  * restrictions", so this screen offers no Save at all in that case and says
  * why, rather than quietly serving an unadapted copy as if it had been
- * checked.
+ * checked. It does offer the two actions that line names: "Use as-is" (the
+ * plain copy, which claims no adaptation) and "Try again".
  *
  * Lead visual review 2026-09-06, ruling 1: reasons render in `textPrimary`,
  * never amber. Ruling 2 puts the emphatic fill here, on "Save to my plans",
@@ -27,6 +28,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import SectionLabel from '../components/SectionLabel';
+import { appAlert } from '../components/AppAlert';
 import { useToast } from '../components/Toast';
 import useTheme from '../hooks/useTheme';
 import useAppStore from '../store/useAppStore';
@@ -37,6 +39,7 @@ import { navigateCrossTab } from '../navigation/navigateCrossTab';
 import {
   getCommunityProgramme, recordProgrammeUse, notifyCommunityEvent,
   loadAdaptationContext, planAdaptation, applyAdaptation, ADAPT_REASON, snapshotStats,
+  importSnapshotAsPlan,
 } from '../lib/community';
 
 export const CAPABILITY_UNREADABLE_LINE = 'Volyume could not read your limitations just now, so nothing was changed. Use as-is or try again.';
@@ -135,6 +138,47 @@ export default function CommunityAdaptScreen({ navigation, route }) {
     }
   }
 
+  // The same copy the programme screen offers, in the one state where
+  // adapting cannot proceed. The wording is that screen's, unchanged: a
+  // reader who expects a copy and gets their live plan replaced has lost
+  // real work.
+  function handleUseAsIs() {
+    if (!programme || !user?.id || savingRef.current) return;
+    haptics.selection();
+    appAlert(
+      'Copy this programme?',
+      'It goes to your plans as a new programme. Nothing is activated and your current plan is untouched.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Copy to my plans',
+          onPress: async () => {
+            savingRef.current = true;
+            setSaving(true);
+            try {
+              const copied = await importSnapshotAsPlan(user.id, programme.snapshot, {
+                communityId: programme.id, mode: 'use',
+              });
+              if (!copied?.plan?.id) throw new Error('Import failed.');
+              recordProgrammeUse(programme.id, 'use').catch(() => {
+                // Best effort: the copy belongs to this user either way.
+              });
+              notifyCommunityEvent('programme_used', programme.owner_id, programme.id);
+              toast.show('Added to your plans', { variant: 'success' });
+              navigateCrossTab(navigation, 'PlansTab', 'PlanDetail', { planId: copied.plan.id });
+            } catch (e) {
+              logError('CommunityAdaptScreen.handleUseAsIs', e, { programmeId: programme.id });
+              toast.show('That did not copy. Please try again.', { variant: 'error' });
+            } finally {
+              savingRef.current = false;
+              setSaving(false);
+            }
+          },
+        },
+      ],
+    );
+  }
+
   const stats = programme?.snapshot ? snapshotStats(programme.snapshot) : null;
   const capabilityUnreadable = result?.capabilityChecked === false;
   const changes = Array.isArray(result?.changes) ? result.changes : [];
@@ -220,21 +264,45 @@ export default function CommunityAdaptScreen({ navigation, route }) {
             ) : null}
           </ScrollView>
 
-          {!capabilityUnreadable ? (
-            <View style={[styles.footer, { borderTopColor: t.colors.borderSubtle }]}>
-              <Button
-                variant="emphatic"
-                title="Save to my plans"
-                size="lg"
-                onPress={handleSave}
-                loading={saving}
-                disabled={saving}
-              />
-              <Text style={[styles.footerNote, { color: t.colors.textMuted }]}>
-                {ORIGINAL_UNCHANGED_LINE}
-              </Text>
-            </View>
-          ) : null}
+          <View style={[styles.footer, { borderTopColor: t.colors.borderSubtle }]}>
+            {capabilityUnreadable ? (
+              // Fail closed on the adaptation, but never on the screen: the
+              // line names two actions, so both are here. Nothing adapted is
+              // offered to save, because nothing was checked.
+              <>
+                <Button
+                  variant="secondary"
+                  title="Use as-is"
+                  size="lg"
+                  onPress={handleUseAsIs}
+                  loading={saving}
+                  disabled={saving}
+                  accessibilityLabel="Copy this programme as it is"
+                />
+                <Button
+                  variant="tertiary"
+                  title="Try again"
+                  onPress={load}
+                  disabled={saving}
+                  accessibilityLabel="Read my limitations again"
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="emphatic"
+                  title="Save to my plans"
+                  size="lg"
+                  onPress={handleSave}
+                  loading={saving}
+                  disabled={saving}
+                />
+                <Text style={[styles.footerNote, { color: t.colors.textMuted }]}>
+                  {ORIGINAL_UNCHANGED_LINE}
+                </Text>
+              </>
+            )}
+          </View>
         </>
       )}
     </SafeAreaView>

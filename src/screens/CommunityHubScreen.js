@@ -10,7 +10,9 @@
  * Nobody is in Community until they create a profile, but the value is
  * visible before that: with no profile the hero explains what this is,
  * carries the privacy receipt, and Discover renders read-only beneath
- * it (SD-04).
+ * it (SD-04). "Browse first" collapses that hero to one slim line so
+ * Discover is what the screen shows, and the same line offers the way
+ * back to joining; the reads that need a profile are not made at all.
  *
  * Offline is a first-class state, not an error: the hub payload is
  * cached per user, so an offline open shows the last thing the user saw
@@ -39,6 +41,7 @@ import ProfileCard from '../components/community/ProfileCard';
 import ProgrammeTile from '../components/community/ProgrammeTile';
 import DimensionRow from '../components/community/DimensionRow';
 import PrivacyReceipt from '../components/community/PrivacyReceipt';
+import ProfileAvatarMark from '../components/ProfileAvatarMark';
 import useTheme from '../hooks/useTheme';
 import useCommunityMe from '../hooks/useCommunityMe';
 import { navigateCrossTab } from '../navigation/navigateCrossTab';
@@ -107,14 +110,17 @@ export default function CommunityHubScreen({ navigation, route }) {
 
   // Someone without a profile only ever sees Discover (SD-04), so the
   // segment follows the profile rather than the other way round.
-  const shown = joined && !browsing ? segment : 'discover';
+  const shown = joined ? segment : 'discover';
 
   const load = useCallback(async (opts = {}) => {
     if (!opts.quiet) setLoading(true);
-    const out = await loadHub(shown, { limit: PAGE });
+    // `joined` is passed through: the suggestions and dimensions reads are
+    // about the reader's own profile and raise `no_profile` without one,
+    // which is exactly the state Discover has to render for (SD-04).
+    const out = await loadHub(shown, { limit: PAGE, joined });
     setHub(out);
     setLoading(false);
-  }, [shown]);
+  }, [shown, joined]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -139,7 +145,7 @@ export default function CommunityHubScreen({ navigation, route }) {
     if (paging || !hub?.cursor) return;
     setPaging(true);
     try {
-      const next = await loadHub(shown, { cursor: hub.cursor, limit: PAGE });
+      const next = await loadHub(shown, { cursor: hub.cursor, limit: PAGE, joined });
       setHub((prev) => (prev ? {
         ...prev,
         posts: [...(prev.posts ?? []), ...(next.posts ?? [])],
@@ -148,7 +154,7 @@ export default function CommunityHubScreen({ navigation, route }) {
     } finally {
       setPaging(false);
     }
-  }, [hub, paging, shown]);
+  }, [hub, paging, shown, joined]);
 
   const posts = useMemo(
     () => (hub?.posts ?? []).map(normalisePostRow).filter(Boolean),
@@ -159,7 +165,11 @@ export default function CommunityHubScreen({ navigation, route }) {
   const dimensions = (hub?.dimensions ?? [])
     .filter((d) => Number(d?.count ?? 0) >= COMMUNITY_DIMENSION_MIN_FOR_HUB);
 
-  const offline = hub?.error === 'offline' || (hub?.fromCache && hub?.error);
+  // The quiet line is about CACHED content: it is only true when there is
+  // something on screen that was read earlier. A failure with no cache is
+  // an empty state, not a caption.
+  const offline = !!hub?.fromCache && !!hub?.error;
+  const failed = !!hub?.error && !hub?.fromCache;
 
   function openProfile(card) {
     if (card?.handle) navigation.navigate('CommunityProfile', { handle: card.handle });
@@ -193,8 +203,24 @@ export default function CommunityHubScreen({ navigation, route }) {
 
   const headerRight = (
     <View style={styles.headerActions}>
+      {joined ? (
+        <Pressable
+          onPress={() => navigation.navigate('CommunityProfile', { userId: me?.profile?.user_id })}
+          hitSlop={spacing.sm}
+          style={styles.headerAvatar}
+          accessibilityRole="button"
+          accessibilityLabel="Your profile"
+        >
+          <ProfileAvatarMark
+            presetKey={me?.profile?.avatar_preset ?? null}
+            displayName={me?.profile?.display_name || me?.profile?.handle || ''}
+            size={30}
+          />
+        </Pressable>
+      ) : null}
       <Pressable
         onPress={() => navigation.navigate('CommunitySearch')}
+        hitSlop={spacing.sm}
         style={[styles.headerBtn, { backgroundColor: t.colors.surface2, borderColor: t.colors.border }]}
         accessibilityRole="button"
         accessibilityLabel="Search Community"
@@ -204,6 +230,7 @@ export default function CommunityHubScreen({ navigation, route }) {
       {joined ? (
         <Pressable
           onPress={() => navigation.navigate('CommunityActivity')}
+          hitSlop={spacing.sm}
           style={[styles.headerBtn, { backgroundColor: t.colors.surface2, borderColor: t.colors.border }]}
           accessibilityRole="button"
           accessibilityLabel={hasUnseen(me) ? 'Activity, new activity' : 'Activity'}
@@ -248,7 +275,23 @@ export default function CommunityHubScreen({ navigation, route }) {
         </Card>
       ) : null}
 
-      {!joined ? (
+      {!joined && browsing ? (
+        <View style={styles.browsingRow}>
+          <Text style={[styles.browsingLine, { ...t.type.caption, color: t.colors.textMuted }]}>
+            Not joined yet
+          </Text>
+          <Button
+            variant="tertiary"
+            size="sm"
+            fullWidth={false}
+            title="Create my profile"
+            onPress={() => setBrowsing(false)}
+            accessibilityLabel="Show how to create my Community profile"
+          />
+        </View>
+      ) : null}
+
+      {!joined && !browsing ? (
         <Card elevated style={styles.block}>
           <Text style={[styles.heroTitle, { ...t.type.h2, color: t.colors.textPrimary }]}>
             Programmes, training stories and people
@@ -270,14 +313,16 @@ export default function CommunityHubScreen({ navigation, route }) {
             accessibilityLabel="Browse Community first"
           />
         </Card>
-      ) : (
+      ) : null}
+
+      {joined ? (
         <SegmentedControl
           options={[{ label: 'Following', value: 'following' }, { label: 'Discover', value: 'discover' }]}
           value={shown}
           onChange={setSegment}
           accessibilityLabel="Community view"
         />
-      )}
+      ) : null}
 
       {offline ? (
         <Text style={[styles.offline, { ...t.type.caption, color: t.colors.textMuted }]}>
@@ -364,6 +409,18 @@ export default function CommunityHubScreen({ navigation, route }) {
     <View style={styles.loading}>
       <ActivityIndicator color={t.colors.primary} />
     </View>
+  ) : failed ? (
+    // A read that did not answer is never reported as an empty community.
+    <EmptyState
+      icon="cloud-offline-outline"
+      title={hub.error === 'offline' ? 'You are offline' : 'Could not load Community'}
+      text={hub.error === 'offline'
+        ? 'Community needs a connection. Your training is unaffected.'
+        : 'Try that again in a moment.'}
+      actionLabel="Try again"
+      onAction={() => load()}
+      actionAccessibilityLabel="Try loading Community again"
+    />
   ) : shown === 'following' ? (
     <EmptyState
       icon="people-outline"
@@ -377,7 +434,7 @@ export default function CommunityHubScreen({ navigation, route }) {
     <EmptyState
       icon="sparkles-outline"
       title="You are early"
-      text="Be the first to publish a programme or post a training story. Volyume's own programmes are below."
+      text="Be the first to publish a programme or post a training story. Volyume's own programmes are above."
     />
   );
 
@@ -423,7 +480,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   header: { gap: spacing.lg, marginBottom: spacing.md },
-  headerActions: { flexDirection: 'row', gap: spacing.sm },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  headerAvatar: { alignItems: 'center', justifyContent: 'center' },
   headerBtn: {
     width: 34,
     height: 34,
@@ -442,6 +500,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   block: { gap: spacing.md },
+  browsingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  browsingLine: { ...type.caption, color: colors.textMuted },
   blockTitle: { ...type.bodyStrong, color: colors.textPrimary },
   blockBody: { ...type.bodySm, color: colors.textSecondary },
   blockActions: { flexDirection: 'row', gap: spacing.sm },

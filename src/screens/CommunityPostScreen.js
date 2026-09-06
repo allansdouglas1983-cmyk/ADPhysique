@@ -41,6 +41,17 @@ import {
 
 export const POST_OFFLINE_LINE = 'Volyume could not reach Community just now. Check your connection and try again.';
 
+/** The calm line when a comment or a Respect is refused. A reader with no
+ * Community profile is told the actual reason and what fixes it, rather
+ * than "try again" for something trying again cannot fix. */
+export function postActionErrorLine(code) {
+  if (code === 'offline') return POST_OFFLINE_LINE;
+  if (code === 'no_profile') return 'Create your Community profile first, then post this.';
+  if (code === 'content_not_allowed') return 'Some of that wording is not allowed in Community. Please reword it.';
+  if (code === 'rate_limited') return 'That is a lot of comments for one hour. Try again a bit later.';
+  return 'That comment did not send. Please try again.';
+}
+
 export function postErrorLine(code) {
   if (code === 'offline') return POST_OFFLINE_LINE;
   if (code === 'not_found') return 'This story is no longer here.';
@@ -60,7 +71,11 @@ export default function CommunityPostScreen({ navigation, route }) {
   const [myReaction, setMyReaction] = useState(false);
   const [comments, setComments] = useState([]);
   const [cursor, setCursor] = useState(null);
-  const [reportVisible, setReportVisible] = useState(false);
+  // What the report sheet is aimed at: the story from the header menu, or
+  // one comment from its own flag. A report filed against the wrong row
+  // leaves the reported thing untouched and never counts toward the
+  // three-reporter auto-hide, so the target travels with the sheet.
+  const [reportTarget, setReportTarget] = useState(null);
 
   const load = useCallback(async () => {
     if (!id) { setLoading(false); setErrorCode('not_found'); return; }
@@ -127,7 +142,12 @@ export default function CommunityPostScreen({ navigation, route }) {
           reaction_count: Math.max(0, Number(prev.post.reaction_count ?? 0) + (next ? -1 : 1)),
         },
       } : prev));
-      toast.show('That did not save. Please try again.', { variant: 'error' });
+      toast.show(
+        _e?.code === 'no_profile'
+          ? 'Create your Community profile first, then react to this.'
+          : 'That did not save. Please try again.',
+        { variant: 'error' },
+      );
     }
   }
 
@@ -141,10 +161,7 @@ export default function CommunityPostScreen({ navigation, route }) {
       setCursor(page?.cursor ?? null);
       return true;
     } catch (e) {
-      toast.show(
-        e?.code === 'offline' ? POST_OFFLINE_LINE : 'That comment did not send. Please try again.',
-        { variant: 'error' },
-      );
+      toast.show(postActionErrorLine(e?.code), { variant: 'error' });
       return false;
     }
   }
@@ -204,7 +221,7 @@ export default function CommunityPostScreen({ navigation, route }) {
       <SectionLabel style={styles.commentsLabel}>Comments</SectionLabel>
       {comments.length === 0 ? (
         <Text style={[styles.noComments, { color: t.colors.textMuted }]}>
-          No comments yet. Say something useful about the training.
+          No comments yet. Anything useful about the training is welcome here.
         </Text>
       ) : null}
     </View>
@@ -216,7 +233,7 @@ export default function CommunityPostScreen({ navigation, route }) {
         title="Story"
         right={post ? (
           <TouchableOpacity
-            onPress={() => { haptics.selection(); if (mine) handleDeletePost(); else setReportVisible(true); }}
+            onPress={() => { haptics.selection(); if (mine) handleDeletePost(); else setReportTarget({ targetKind: 'post', targetId: post.id }); }}
             hitSlop={hitSlop}
             style={styles.headerAction}
             accessibilityRole="button"
@@ -262,17 +279,17 @@ export default function CommunityPostScreen({ navigation, route }) {
                   userId: item.author.user_id, handle: item.author.handle,
                 })
                 : undefined}
-              onReport={item.mine ? undefined : () => setReportVisible(true)}
+              onReport={item.mine ? undefined : () => setReportTarget({ targetKind: 'comment', targetId: item.id })}
             />
           )}
           ListFooterComponent={<CommentComposer onSubmit={handleAddComment} />}
         />
       )}
       <ReportSheet
-        visible={reportVisible}
-        onClose={() => setReportVisible(false)}
-        targetKind="post"
-        targetId={post?.id ?? null}
+        visible={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        targetKind={reportTarget?.targetKind ?? 'post'}
+        targetId={reportTarget?.targetId ?? null}
       />
     </SafeAreaView>
   );

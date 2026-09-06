@@ -193,15 +193,20 @@ export default function CommunityJoinScreen({ navigation, route }) {
 
         <View style={styles.field}>
           <SectionLabel>Who can follow you</SectionLabel>
-          <SegmentedControl
-            options={[
-              { label: 'Anyone', value: 'public' },
-              { label: 'People I approve', value: 'followers' },
-            ]}
-            value={isMinor ? 'followers' : visibility}
-            onChange={setVisibility}
-            accessibilityLabel="Who can follow you"
-          />
+          {/* An under-18 profile is followers-only, server-side. A control
+              that cannot change anything is not offered: the note carries
+              the reason instead (product review 2026-09-06). */}
+          {isMinor ? null : (
+            <SegmentedControl
+              options={[
+                { label: 'Anyone', value: 'public' },
+                { label: 'People I approve', value: 'followers' },
+              ]}
+              value={visibility}
+              onChange={setVisibility}
+              accessibilityLabel="Who can follow you"
+            />
+          )}
           <Text style={[styles.hint, { ...t.type.caption, color: t.colors.textMuted }]}>
             {visibility === 'public' && !isMinor
               ? 'Anyone signed in can follow you and see what you post.'

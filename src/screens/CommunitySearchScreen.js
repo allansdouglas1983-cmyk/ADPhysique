@@ -47,11 +47,11 @@ export default function CommunitySearchScreen({ navigation, route }) {
     if (!q.trim()) { setResults([]); setLoading(false); setError(null); return; }
     setLoading(true);
     try {
-      const rows = which === 'programmes'
+      const page = which === 'programmes'
         ? await searchProgrammes(q, { limit: PAGE })
         : await searchPeople(q, { limit: PAGE });
       if (seqRef.current !== seq) return;
-      setResults(Array.isArray(rows) ? rows : []);
+      setResults(which === 'programmes' ? page.programmes : page.people);
       setError(null);
     } catch (e) {
       if (seqRef.current !== seq) return;
@@ -88,7 +88,7 @@ export default function CommunitySearchScreen({ navigation, route }) {
     <EmptyState
       icon="people-outline"
       title="No one by that name yet"
-      text="Handles are exact. Try the start of their handle or their display name."
+      text="Try the start of their handle, or their display name."
     />
   ) : (
     <EmptyState
