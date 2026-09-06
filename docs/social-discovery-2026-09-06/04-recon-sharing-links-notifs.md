@@ -58,31 +58,25 @@ mandatory Facebook App ID); OS share sheet presented AS a Story share via
 icon framing only (`ShareCardScreen.js:42-47,530-537,783-805`).
 
 **Privacy rules (code-enforced):**
-- Standard share cards: "Name, bodyweight, measurements and private notes are
-  never included." — displayed privacy note
-  (`ShareCardScreen.js:776-780`); no bodyweight field appears in any of
-  pr/milestone/session param builders (`ShareCardScreen.js:200-277`).
-- Weekly recap: separate privacy line ("Only this week's progress, lifts and
-  sessions are shown...") because it DOES carry weight-progress content
-  (`ShareCardScreen.js:777-779`), gated by `suppress`.
-- **ED/calm-mode suppression, weekly recap:** `usePhotoSuppression()` hook
-  (fail-closed, starts suppressed before async read resolves, suppresses on
-  read failure) OR-ed with a caller-passed `suppressParam`
-  (`ShareCardScreen.js:84-93`). When suppressed, progress toggles are hidden
-  entirely (`ShareCardScreen.js:767`) and `buildWeeklyRecapParams` strips all
-  progress language (`ShareCardScreen.js:210-214`).
-- **Before/after card:** WITHHELD ENTIRELY (component returns `null`, no
-  compose/encode/share path reachable) under `usePhotoSuppression()`
+- Standard cards: "Name, bodyweight, measurements and private notes are never
+  included" (`ShareCardScreen.js:776-780`); no bodyweight field in any
+  pr/milestone/session param builder (`:200-277`).
+- Weekly recap: separate privacy line (carries real progress content),
+  gated by `suppress` (`:777-779`).
+- **ED/calm-mode, weekly recap:** `usePhotoSuppression()` hook (fail-closed,
+  starts suppressed pre-resolve, suppresses on read failure) OR-ed with a
+  caller `suppressParam` (`:84-93`); suppressed ⇒ progress toggles hidden
+  and `buildWeeklyRecapParams` strips all progress language (`:117-121,
+  210-214,767-774`).
+- **Before/after card:** WITHHELD ENTIRELY (returns `null`, no compose/
+  encode/share path reachable) under `usePhotoSuppression()`
   (`BeforeAfterShareSheet.js:12-16,185,463`). Weight-on-card is a
-  **founder-approved exception** to the locked "never include bodyweight"
-  rule (progress-photos §3.8, DECISIONS #2 per header comment,
-  `BeforeAfterShareSheet.js:17-21`) — explicit opt-in toggle per export
-  (`BeforeAfterShareSheet.js:160,584-596`), still bounded by the suppression
-  withhold above; name/measurements/private notes stay banned
-  (`BeforeAfterShareSheet.js:621-623`).
-- One-time confirm dialog before first-ever export ("You're making an image
-  from your photos...", AsyncStorage flag `progressShareConfirmed`,
-  `BeforeAfterShareSheet.js:104-106,363-383`).
+  **founder-approved exception** to "never include bodyweight" (progress-
+  photos §3.8, DECISIONS #2, `:17-21`) — opt-in toggle per export, still
+  bounded by the suppression withhold; name/measurements/private notes stay
+  banned (`:160,584-596,621-623`).
+- One-time confirm dialog before first export (AsyncStorage flag
+  `progressShareConfirmed`, `:104-106,363-383`).
 
 **Entry points (`navigation.navigate('ShareCard', {...})`):**
 - `src/screens/WorkoutSummaryScreen.js:1058` (session + PR), `:1148`, `:1164`
@@ -100,33 +94,27 @@ icon framing only (`ShareCardScreen.js:42-47,530-537,783-805`).
 
 ### A2. Share text / link generation
 
-- **Partner invite links** (the only outbound share-text/link generator in
-  the repo today): `src/lib/partners/link.js:26-34` builds both
+- **Partner invite links** (only outbound share-text/link generator in the
+  repo): `src/lib/partners/link.js:26-34` builds both
   `volyume://partner/<CODE>` and `https://volyume.app/partner/<CODE>`;
-  `link.js:57-59` builds the out-of-band invite MESSAGE (house voice, states
-  what will/won't be visible) that carries the web link. Consumed by
-  Partners UI (owned by another agent) — noted here only as the share-text
-  precedent to extend.
-- **Share-to-partner "wins"** (text-only update, no image): `src/lib/
-  partners/shareWins.js` defines 4 shareable moment types (`workout_summary`,
-  `personal_record`, `block_milestone`, `progress_card`) each with an
-  explicit `shared` vs `private` field list (`shareWins.js:1-26`), a
-  forbidden-field blacklist enforced by `shareWinDraftHasForbiddenFields`
-  (`shareWins.js:71-92,207-210`), and a preview/review-receipt builder
-  (`shareWins.js:220-246`). This is a **partner-facing text summary**, never
-  the rendered image itself — confirmed by `progress_card`'s own summary
-  text: "The image itself is never sent." (`shareWins.js:23`). This is the
-  closest existing analogue to a "post an update" primitive a social feed
-  would need, though it is currently one-recipient, ask-every-time, no-feed
-  by design (`SHARE_WIN_POLICY`, `shareWins.js:28-32`).
-- No `volyume.app/<other-path>` share link exists elsewhere in `src/` (grep
-  confirmed only `partner/`, `privacy`, and `support@volyume.app` email
-  references — `src/screens/PrivacyPolicyScreen.js:118,137`,
-  `src/screens/ProUpgradeScreen.js:653`, `src/screens/CreditsScreen.js:99`).
-- RN core `Share` API (distinct from `expo-sharing`) is used only in
-  `src/screens/DebugLogScreen.js`, `PartnerScreen.js`, `SettingsAboutScreen.
-  js`, `MealPlanScreen.js`, `src/lib/errorLog.js` — none of these are
-  share-card paths; share cards use `expo-sharing` exclusively (see A1).
+  `:57-59` builds the out-of-band invite MESSAGE carrying the web link.
+  Partners-owned UI; noted only as the share-text precedent to extend.
+- **Share-to-partner "wins"** (text-only, no image): `src/lib/partners/
+  shareWins.js` defines 4 moment types (`workout_summary`, `personal_record`,
+  `block_milestone`, `progress_card`), each with explicit `shared`/`private`
+  field lists (`:1-26`), a forbidden-field blacklist
+  (`shareWinDraftHasForbiddenFields`, `:71-92,207-210`), and a preview/
+  review-receipt builder (`:220-246`). `progress_card`'s own text confirms
+  "The image itself is never sent" (`:23`) — the closest existing analogue
+  to a "post an update" primitive, though one-recipient/ask-every-time/
+  no-feed by design (`SHARE_WIN_POLICY`, `:28-32`).
+- No `volyume.app/<other-path>` share link exists elsewhere in `src/` (only
+  `partner/`, `privacy`, `support@volyume.app` — `PrivacyPolicyScreen.js:
+  118,137`, `ProUpgradeScreen.js:653`, `CreditsScreen.js:99`).
+- RN core `Share` API (distinct from `expo-sharing`) used only in
+  `DebugLogScreen.js`, `PartnerScreen.js`, `SettingsAboutScreen.js`,
+  `MealPlanScreen.js`, `errorLog.js` — not share-card paths (those use
+  `expo-sharing` exclusively, see A1).
 
 ---
 
@@ -161,80 +149,66 @@ Total: **7 distinct link targets** across 6 tabs, all inside the signed-in
 `MainTabs` tree — no route from the welcome/onboarding/article-9 stacks is
 addressable by URL.
 
-**Cold vs warm handling:** the linking config is declarative
-(react-navigation's own cold-start URL resolution + `Linking` event
-listener); no separate custom queue mechanism was found in `src/lib/
-linking*` or `deepLinks*` (no such files exist — only `authDeepLink.js` and
-`partners/link.js`, both pure builders/parsers, not navigators).
+**Cold vs warm handling:** declarative only (react-navigation's own
+cold-start URL resolution + `Linking` listener); no `src/lib/linking*` or
+`deepLinks*` files exist — only `authDeepLink.js` and `partners/link.js`,
+both pure builders/parsers, not navigators.
 
-**Auth gating is IMPLICIT, not queued** (`RootNavigator.js:812-822`, code
-comment): the linking config only names screens inside `MainTabs`. When
-signed out or mid-onboarding, those routes don't exist in the active
-navigator, so react-navigation silently fails to resolve the URL and the
-user stays on whichever stack is mounted (Welcome/Onboarding) — **there is
-no persisted "resume this link after sign-in" queue**. Grepped explicitly
-for `pendingDeepLink|queuedLink|deferredLink|pendingLink` across `src/` —
-zero matches. This is a genuine gap if a social feature needs
-"tap an invite link while signed out, land on it after signing in."
+**Auth gating is IMPLICIT, not queued** (`RootNavigator.js:812-822`): the
+linking config only names screens inside `MainTabs`, so a URL tapped while
+signed out / mid-onboarding simply fails to resolve and the user stays on
+whichever stack is mounted — **no persisted "resume this link after
+sign-in" queue exists**. Grepped `pendingDeepLink|queuedLink|deferredLink|
+pendingLink` across `src/` — zero matches. Genuine gap if a social feature
+needs "tap an invite link signed out, land on it after signing in."
 
-**Auth callback deep link is a SEPARATE mechanism**
-(`src/lib/authDeepLink.js`, `App.js` wiring per
-`src/__tests__/authDeepLink.guard.test.js:8-9`): `isVolyumeLink()`
-(`authDeepLink.js:15-20`) validates scheme/host, `parseAuthParams()`
-(`:22-48`) parses query+hash, then three exchange mechanisms (token_hash/OTP,
-code exchange, implicit access+refresh token) each independently verify
-server identity before installing a session (`:70-184`). Guarded by
-`src/__tests__/deepLinkOrigin.guard.test.js` (exact-host match, no
-`startsWith` — `:6-9`) and `authDeepLink.guard.test.js` (all three exchange
-paths check `error` before proceeding — `:12-16`).
+**Auth callback deep link is a SEPARATE mechanism** (`src/lib/
+authDeepLink.js`): `isVolyumeLink()` (`:15-20`) validates scheme/host,
+`parseAuthParams()` (`:22-48`), then three exchange mechanisms (token_hash/
+OTP, code, implicit access+refresh) each independently verify server
+identity before installing a session (`:70-184`). Guarded by
+`deepLinkOrigin.guard.test.js` (exact-host match, no `startsWith`, `:6-9`)
+and `authDeepLink.guard.test.js` (`:12-16`).
 
-**Notification-tap routing is ALSO separate** from both of the above —
-`navigationRef.navigate` in an `onTap` effect, driven by
-`src/lib/notifications/notificationRoute.js` (`routeForNotificationType`),
-independent of the URL `linking` config (comment at `RootNavigator.js:823
--825`; see C5 below).
+**Notification-tap routing is ALSO separate** — `navigationRef.navigate` in
+an `onTap` effect driven by `notificationRoute.js`
+(`routeForNotificationType`), independent of the URL `linking` config
+(`RootNavigator.js:823-825`; see C5).
 
-**Tests:**
-- `src/navigation/__tests__/linkingConfig.test.js` — resolves every path
-  above through the REAL `safeGetStateFromPath` + the real config (not a
-  copy), asserting both route AND param names (`:1-24`; guards against the
-  `:id`/`planId` class of bug and the unwired-invite-path class, "A2").
-- `src/__tests__/universalLinksPreparation.test.js` — AASA path allowlist
-  (`:10-19`) and the email-bridge `safeCallbackTarget` origin checks
-  (`:21-38`, in `public/auth/confirm/security.js`).
-- `src/__tests__/deepLinkOrigin.guard.test.js`,
-  `src/__tests__/authDeepLink.guard.test.js` — source-level regression
-  guards on `authDeepLink.js` (see above).
+**Tests:** `linkingConfig.test.js` resolves every path above through the
+REAL `safeGetStateFromPath` + real config, asserting route AND param names
+(guards the `:id`/`planId` and unwired-invite-path bug classes);
+`universalLinksPreparation.test.js` pins the AASA path allowlist (`:10-19`)
+and email-bridge `safeCallbackTarget` origin checks (`:21-38`);
+`deepLinkOrigin.guard.test.js` + `authDeepLink.guard.test.js` are
+source-level guards on `authDeepLink.js`.
 
 ### B4. Web presence for link previews
 
 - `public/.well-known/apple-app-site-association` — `appID:
   "K79JA5JUF8.app.volyume"`, paths `["/partner/*", "/auth/callback",
-  "/auth/callback/"]` (file contents read directly). Only 3 paths
-  registered — **no path for any of the other 7 in-app deep-link targets**
-  (workout/start, diary, routine, progress, coach, checkin, active-workout);
-  those are `volyume://`-only today, not universal-link-verified.
-- `public/.well-known/assetlinks.json` — Android App Links verification;
-  `package_name: "app.volyume"`, but `sha256_cert_fingerprints` are BOTH
-  still the literal placeholder strings `REPLACE_WITH_SHA256_OF_PLAY_APP_
-  SIGNING_KEY_CERT` / `..._UPLOAD_KEY_CERT` — **Android App Links
-  verification is not actually live** (observed: placeholder text in the
-  file; not independently confirmed against the Play Console).
-- A full web app exists at `web/apps/web/` (Next.js, `web/apps/web/src/app/`)
-  with routes for `(auth)/sign-in`, `(app)/plan`, `/progress`, `/account`,
-  `/coaching`, `/settings`, `/marketing`, `/dashboard`, plus `app/auth/
-  callback` and `app/page.tsx`. **No `/partner/*` route exists in this web
-  app** — grepped `web/` for `*partner*`, zero files. This contradicts the
-  comment in `src/lib/partners/link.js:10-12` ("The universal link lands on
-  a web page (web/) that states the derived-signals-only promise... for a
-  partner who does not have the app yet") — observed: the stated web
-  landing page does not exist in the repo today, so a tapped
-  `https://volyume.app/partner/<CODE>` link from someone without the app
-  currently has nowhere real to land (AASA registers the path for the
-  NATIVE app only; no fallback web page ships it). `web/apps/web/vercel.json`
-  confirms Vercel is the deploy target for whatever does exist there.
-- No link-preview (Open Graph / oEmbed) metadata generation found anywhere
-  in `web/apps/web/src/app` for `/partner` or any per-invite/per-share page.
+  "/auth/callback/"]`. Only 3 paths registered — **no path for any of the
+  other 7 in-app deep-link targets** (workout/start, diary, routine,
+  progress, coach, checkin, active-workout); those stay `volyume://`-only.
+- `public/.well-known/assetlinks.json` — `package_name: "app.volyume"`, but
+  `sha256_cert_fingerprints` are BOTH still literal placeholder strings
+  (`REPLACE_WITH_SHA256_OF_PLAY_APP_SIGNING_KEY_CERT` /
+  `..._UPLOAD_KEY_CERT`) — observed: Android App Links verification is not
+  actually live (placeholder text in the file; not confirmed against Play
+  Console).
+- A full web app exists at `web/apps/web/` (Next.js) with routes for
+  `(auth)/sign-in`, `(app)/plan`, `/progress`, `/account`, `/coaching`,
+  `/settings`, `/marketing`, `/dashboard`, `app/auth/callback`. **No
+  `/partner/*` route exists there** — grepped `web/` for `*partner*`, zero
+  files. This contradicts `src/lib/partners/link.js:10-12`'s comment ("The
+  universal link lands on a web page (web/) that states the derived-
+  signals-only promise... for a partner who does not have the app yet") —
+  observed: that landing page does not exist, so a tapped
+  `https://volyume.app/partner/<CODE>` from someone without the app has
+  nowhere real to land today. `web/apps/web/vercel.json` confirms Vercel as
+  the deploy target.
+- No link-preview (Open Graph/oEmbed) metadata generation found anywhere in
+  `web/apps/web/src/app`.
 
 ---
 
@@ -242,29 +216,22 @@ independent of the URL `linking` config (comment at `RootNavigator.js:823
 
 ### C5. Scheduler API, categories, quiet hours, budget, foreground suppression, ED suppression, settings screen
 
-**Scheduler API** (`src/lib/notifications/scheduler.js`, 2188 lines; every
-exported function, `scheduler.js` grep of `^export`):
-`scheduleMorningWeightNotification`, `scheduleEveningWeightReminder` +
-`cancelEveningWeightReminder`, `relayWeighInAfterTrainingReturn`,
-`scheduleMealReminders` + `cancelMealReminders`, `scheduleCheckinReminder`,
-`scheduleNextCheckinReminder`, `scheduleCascadeGateNotifications` +
-`cancelCascadeGateNotifications`, `scheduleTrialDay3Notification` +
-`cancelTrialDay3Notification`, `scheduleWinbackNotification` +
-`cancelWinbackNotification`, `scheduleMissedCheckinFollowups` +
-`cancelMissedCheckinFollowups`, `scheduleActivationNudge` +
-`cancelActivationNudge`, `scheduleReturnNudge` + `cancelReturnNudge`,
-`schedulePlannedMealConfirm` + `cancelPlannedMealConfirm`,
-`scheduleWeeklyCoachReady` + `cancelWeeklyCoachReady`,
-`scheduleBlockReadyToReview` + `cancelBlockReadyToReview` +
-`scheduleBlockReadyForActiveBlock`, `cancelMorningNotification`,
-`cancelCheckinNotification`, `cancelAllNotifications`,
-`refreshWeighInHorizonIfStale`, `rescheduleForTimezoneIfChanged`,
-`restoreNotifications` (bulk re-lay from prefs on boot/restore),
-`checkYearOfLiftsUnlock`, `checkMonthlyRecapReady`, `schedulePartnerBeats`
-(`scheduler.js:2048` — Partners-adjacent, noted only as the pattern to
-extend). A new social/community category should follow this exact
-`schedule*`/`cancel*` pair convention plus registration in `categories.js`
-(below) to get quiet-hours + budget + telemetry for free.
+**Scheduler API** (`src/lib/notifications/scheduler.js`, 2188 lines). Every
+category gets a `schedule*`/`cancel*` function pair (grep `^export`, ~30
+functions): e.g. `scheduleMorningWeightNotification` (`:147`),
+`scheduleEveningWeightReminder`/`cancelEveningWeightReminder` (`:340,357`),
+`scheduleMealReminders`/`cancelMealReminders` (`:482,495`),
+`scheduleCascadeGateNotifications`/`cancel...` (`:745,815`),
+`scheduleMissedCheckinFollowups`/`cancel...` (`:1052,1057`),
+`scheduleActivationNudge`/`cancel...` (`:1167,1171`),
+`scheduleReturnNudge`/`cancel...` (`:1287,1317`),
+`scheduleWeeklyCoachReady`/`cancel...` (`:1523,1572`),
+`restoreNotifications` (bulk re-lay from prefs on boot, `:1802`),
+`rescheduleForTimezoneIfChanged` (`:1788`), `schedulePartnerBeats`
+(`:2048`, Partners-adjacent, noted only as the pattern to extend). A new
+social/community category should follow this exact `schedule*`/`cancel*`
+pair convention plus registration in `categories.js` to get quiet-hours +
+budget + telemetry for free.
 
 **Category enum** (`src/lib/notifications/categories.js:17-56`, 21 live
 values): `WEEKLY_CHECKIN_REMINDER`, `CASCADE_GATE`,
