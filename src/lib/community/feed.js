@@ -1,0 +1,202 @@
+/**
+ * Feed, Discover, search and the programme surfaces (blueprint sections
+ * 3, 5.7; SD-06, SD-09, SD-10).
+ *
+ * Every list here is CHRONOLOGICAL. There is no engagement ranking
+ * anywhere in Community, by decision (SD-06): an engagement-ranked feed
+ * on a body-adjacent product is exactly what the ED-safety guidance
+ * warns against, and the loudest complaint about the closest comparable
+ * product is its uncurated ranked feed.
+ *
+ * The hub payload is cached per user under `@volyume_community_hub_<uid>`
+ * so an offline open shows the last thing the user saw with a quiet
+ * line, rather than an error. Cursors are opaque strings the server
+ * mints; nothing here interprets one.
+ */
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { callCommunity } from './transport';
+import { currentUserId } from './profile';
+
+export const HUB_CACHE_PREFIX = '@volyume_community_hub_';
+export const DEFAULT_PAGE_SIZE = 20;
+
+export function hubCacheKey(uid) {
+  return `${HUB_CACHE_PREFIX}${uid ?? 'unknown'}`;
+}
+
+async function readCachedHub(uid) {
+  if (!uid) return null;
+  try {
+    const raw = await AsyncStorage.getItem(hubCacheKey(uid));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+async function writeCachedHub(uid, payload) {
+  if (!uid) return;
+  try {
+    await AsyncStorage.setItem(hubCacheKey(uid), JSON.stringify(payload));
+  } catch (_e) { /* best effort: the cache is a convenience, never truth */ }
+}
+
+export async function clearCachedHub(uid) {
+  if (!uid) return;
+  try {
+    await AsyncStorage.removeItem(hubCacheKey(uid));
+  } catch (_e) { /* best effort */ }
+}
+
+/**
+ * Load one half of the hub.
+ *
+ * @param {'following'|'discover'} segment
+ * @param {{cursor?: string|null, limit?: number, userId?: string}} [opts]
+ * @returns {Promise<{segment: string, posts: Array, programmes: Array,
+ *   people: Array, dimensions: Array, cursor: (string|null),
+ *   fromCache: boolean, error: (string|null)}>} never throws.
+ */
+export async function loadHub(segment = 'following', { cursor = null, limit = DEFAULT_PAGE_SIZE, userId = null } = {}) {
+  const uid = userId ?? currentUserId();
+  const empty = {
+    segment, posts: [], programmes: [], people: [], dimensions: [], cursor: null,
+    fromCache: false, error: null,
+  };
+  try {
+    if (segment === 'discover') {
+      const [programmes, people, dimensions, posts] = await Promise.all([
+        callCommunity('community_discover_programmes', { _style: null, _cursor: cursor, _limit: limit }),
+        callCommunity('community_suggested_people', { _limit: 5 }),
+        callCommunity('community_dimensions_me', {}),
+        callCommunity('community_discover_posts', { _cursor: cursor, _limit: limit }),
+      ]);
+      const payload = {
+        ...empty,
+        programmes: programmes ?? [],
+        people: people ?? [],
+        dimensions: dimensions?.dimensions ?? [],
+        posts: posts ?? [],
+        cursor: nextCursor(posts),
+      };
+      if (!cursor) await writeCachedHub(uid, payload);
+      return payload;
+    }
+    const posts = await callCommunity('community_feed', { _cursor: cursor, _limit: limit });
+    const payload = { ...empty, posts: posts ?? [], cursor: nextCursor(posts) };
+    if (!cursor) await writeCachedHub(uid, payload);
+    return payload;
+  } catch (e) {
+    const cached = cursor ? null : await readCachedHub(uid);
+    if (cached && cached.segment === segment) return { ...cached, fromCache: true, error: e?.code ?? 'unavailable' };
+    return { ...empty, error: e?.code ?? 'unavailable' };
+  }
+}
+
+/** The server's paging cursor rides on the last row it returned. */
+function nextCursor(rows) {
+  if (!Array.isArray(rows) || !rows.length) return null;
+  const last = rows[rows.length - 1];
+  return last?.cursor ?? last?.created_at ?? null;
+}
+
+export async function loadFeed({ cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
+  return callCommunity('community_feed', { _cursor: cursor, _limit: limit });
+}
+
+export async function loadDiscoverPosts({ cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
+  return callCommunity('community_discover_posts', { _cursor: cursor, _limit: limit });
+}
+
+export async function searchPeople(q, { limit = 20 } = {}) {
+  return callCommunity('community_search_people', { _q: String(q ?? '').trim(), _limit: limit });
+}
+
+export async function searchProgrammes(q, { style = null, cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
+  return callCommunity('community_search_programmes', {
+    _q: String(q ?? '').trim(), _style: style, _cursor: cursor, _limit: limit,
+  });
+}
+
+export async function suggestedPeople({ limit = 10 } = {}) {
+  return callCommunity('community_suggested_people', { _limit: limit });
+}
+
+export async function myDimensions() {
+  return callCommunity('community_dimensions_me', {});
+}
+
+export async function loadDimension(kind, key, { cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
+  return callCommunity('community_dimension', {
+    _kind: kind, _key: key, _cursor: cursor, _limit: limit,
+  });
+}
+
+// ─── Programmes ──────────────────────────────────────────────────────
+
+export async function publishProgramme(payload) {
+  return callCommunity('community_publish_programme', { _p: payload });
+}
+
+export async function unpublishProgramme(id) {
+  return callCommunity('community_unpublish_programme', { _id: id });
+}
+
+export async function getCommunityProgramme(id) {
+  return callCommunity('community_get_programme', { _id: id });
+}
+
+export async function recordProgrammeUse(id, mode) {
+  return callCommunity('community_record_programme_use', { _id: id, _mode: mode });
+}
+
+export async function myProgrammes() {
+  return callCommunity('community_my_programmes', {});
+}
+
+export async function discoverProgrammes({ style = null, cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
+  return callCommunity('community_discover_programmes', { _style: style, _cursor: cursor, _limit: limit });
+}
+
+// ─── Posts, reactions and comments ───────────────────────────────────
+
+export async function createPost({
+  kind, payload, caption = null, programmeId = null, visibility = 'public',
+}) {
+  return callCommunity('community_create_post', {
+    _kind: kind, _payload: payload, _caption: caption,
+    _programme_id: programmeId, _visibility: visibility,
+  });
+}
+
+export async function deletePost(id) {
+  return callCommunity('community_delete_post', { _id: id });
+}
+
+export async function getPost(id) {
+  return callCommunity('community_get_post', { _id: id });
+}
+
+/** One "Respect" tap, on or off. */
+export async function reactToPost(postId, on) {
+  return callCommunity('community_react', { _post_id: postId, _on: !!on });
+}
+
+export async function addComment(targetKind, targetId, body) {
+  return callCommunity('community_comment', {
+    _target_kind: targetKind, _target_id: targetId, _body: body,
+  });
+}
+
+export async function deleteComment(id) {
+  return callCommunity('community_delete_comment', { _id: id });
+}
+
+export async function listComments(targetKind, targetId, { cursor = null, limit = DEFAULT_PAGE_SIZE } = {}) {
+  return callCommunity('community_list_comments', {
+    _target_kind: targetKind, _target_id: targetId, _cursor: cursor, _limit: limit,
+  });
+}

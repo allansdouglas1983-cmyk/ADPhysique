@@ -114,6 +114,20 @@ export const SENSITIVE_KEY_PATTERNS = Object.freeze([
   /^signals[._-]?json$/i,
   /^signals$/i,
   /^ed[._-]?pattern/i,
+
+  // Community (social-discovery campaign 2026-09-06, blueprint section 2).
+  // A handle, a display name, a bio, a caption and a comment body are
+  // user-authored content that identifies a person to anyone who can
+  // read it. None of it is needed to diagnose a crash, and a breadcrumb
+  // carrying "@somehandle said ..." is a person's words leaving the
+  // device. `^body$` is the comment body column specifically; the
+  // measurement patterns above already cover body_weight/body_fat.
+  /^handle/i,
+  /^display[._-]?name/i,
+  /^bio$/i,
+  /^caption/i,
+  /^comment/i,
+  /^body$/i,
 ]);
 
 // ────────────────────────────────────────────────────────────────────
@@ -140,6 +154,11 @@ export const SENSITIVE_VALUE_SUBSTRINGS = Object.freeze([
   'capability_constraints',
   'session_constraint_effects',
   'capability_data_consent',
+  // Community (social-discovery campaign 2026-09-06): one substring
+  // covers every `community_*` table and RPC name, so a PostgREST error
+  // string or a Supabase breadcrumb naming the table cannot carry a
+  // handle, a caption or a comment body out with it.
+  'community_',
 ]);
 
 // ────────────────────────────────────────────────────────────────────
