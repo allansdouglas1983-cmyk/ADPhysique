@@ -1,7 +1,7 @@
 /**
  * Source-level regression guard for X-SAFETY-06 (Campaign 21 Step 12
  * hostile review, SCREEN/PERSISTENCE lane, GAP B): the fail-closed
- * ED/calm suppression pattern repeated at five independent sites in
+ * ED/calm suppression pattern repeated at four independent sites in
  * scheduler.js, only one of which (the winback push, exercised in
  * scenarios.conflict.test.js) had any behavioural coverage before this
  * suite. scheduler.js pulls in the full expo-notifications/AsyncStorage/
@@ -20,13 +20,14 @@
  *      CLOSED: a transient read failure suppresses, it never silently
  *      allows the push through).
  *   2. `if (edFlag)` immediately follows, retiring/cancelling the relevant
- *      notification(s) (four sites) or bare-returning (schedulePartnerBeats,
- *      which has no per-notification cancel helper -- see its site entry
- *      below) before any push is scheduled.
+ *      notification(s) before any push is scheduled. A fifth site,
+ *      schedulePartnerBeats, suppressed by bare return; it went with the
+ *      Partners feature (SD-03, retired 2026-09-06), so there is no partner
+ *      push left to gate.
  *
  * scheduleWinbackNotification additionally reads calm mode
  * (getWellbeingMode/isCalm) as a second, ORed suppression input (C6 R-17 /
- * D97-22): this is the only one of the five sites where a calm-mode read
+ * D97-22): this is the only one of these sites where a calm-mode read
  * exists, and its OWN failure mode is pinned separately below -- the
  * surrounding try/catch treats a THROWN calm read as suppression too (the
  * catch cancels and returns), not as "calm mode off".
@@ -110,19 +111,11 @@ describe('scheduler.js: getOpenEdPatternFlag fail-closed wrapping, all five X-SA
     );
   });
 
-  test('schedulePartnerBeats (site :1813): read fails closed and suppresses via a bare return', () => {
-    const body = functionBody('schedulePartnerBeats');
-    expect(body).toMatch(
-      /const edFlag = await db\.getOpenEdPatternFlag\(userId\)\.catch\(\(\) => 'read_failed'\);/,
-    );
-    // No per-notification cancel helper exists for partner beats (three
-    // distinct notification IDs, no shared "cancel all beats" function), so
-    // this site suppresses by returning before any of the three beats are
-    // evaluated, rather than cancelling something already laid.
-    expect(body).toContain('if (edFlag) return;');
-    expect(body.indexOf('const edFlag = ')).toBeLessThan(
-      body.indexOf('scheduleCheckedNotification('),
-    );
+  test('schedulePartnerBeats is gone with the Partners feature, not silently ungated', () => {
+    // SD-03 (2026-09-06): the partner beats were removed outright rather
+    // than left scheduling without their ED gate. Pinned here so the site
+    // cannot come back without a gate and a test.
+    expect(SRC).not.toMatch(/schedulePartnerBeats/);
   });
 });
 

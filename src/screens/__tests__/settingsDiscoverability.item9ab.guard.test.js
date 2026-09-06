@@ -16,8 +16,7 @@
  *     NotificationSettings, and reuses the copied crossLink/crossLinkTitle/
  *     crossLinkSub style trio rather than inventing new styles.
  *
- * Per repo convention (source-level guards, not a render test, matching
- * CoachingRemindersScreen.partnerCheers.guard.test.js).
+ * Per repo convention (source-level guards, not a render test).
  */
 const fs = require('fs');
 const path = require('path');

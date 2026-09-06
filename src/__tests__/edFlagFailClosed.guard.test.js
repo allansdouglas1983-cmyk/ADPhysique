@@ -12,7 +12,7 @@
  * vulnerable user.
  *
  * The fix (already used by the correct siblings — HomeScreen :737/:794,
- * partners/moments.js:90, useWeeklyStreak.js:83, coachReport.js:259,
+ * useWeeklyStreak.js:83, coachReport.js:259,
  * CoachOutputScreen's contest countdown :1075) reads the flag with
  * `.catch(() => 'read_failed')` and treats the truthy sentinel as flag-OPEN
  * (`!!flag`), or — for the two notification helpers — returns `true`
@@ -36,7 +36,6 @@ const FILES = {
   coachOutput: read('../screens/CoachOutputScreen.js'),
   home: read('../screens/HomeScreen.js'),
   proSetupComplete: read('../screens/ProSetupCompleteScreen.js'),
-  weekSignalWriter: read('../lib/partners/weekSignalWriter.js'),
   widgetWriter: read('../lib/widgets/writer.js'),
 };
 
@@ -57,7 +56,7 @@ const FAIL_CLOSED_SENTINEL = /getOpenEdPatternFlag\([^)]*\)\.catch\(\(\)\s*=>\s*
 
 describe('ED-safety: getOpenEdPatternFlag reads on safety surfaces fail CLOSED', () => {
   // No fail-open `.catch(() => null)` ED-flag read survives anywhere in the
-  // eight touched files.
+  // remaining touched files.
   Object.entries(FILES).forEach(([name, src]) => {
     test(`${name}: no getOpenEdPatternFlag read fails open to null`, () => {
       expect(src).not.toMatch(FAIL_OPEN_NULL);
@@ -83,16 +82,20 @@ describe('ED-safety: getOpenEdPatternFlag reads on safety surfaces fail CLOSED',
     expect(body).not.toMatch(/catch \(_\) \{\s*return false;\s*\}/);
   });
 
-  test('scheduler: all eight ED-gated push reads use the read_failed sentinel', () => {
-    // trial-day-3, win-back, missed-checkin, activation-nudge, planned-meal,
-    // partner-beats — each gates a weight/food/notification push — plus the
-    // meal-log reminders (Campaign 1 adversarial review blocker 2: they
-    // were the ONE food-adjacent category with no ED gate), plus the D142
-    // welcome-back note (return_nudge), gated the same fail-closed way.
+  test('scheduler: all seven ED-gated push reads use the read_failed sentinel', () => {
+    // trial-day-3, win-back, missed-checkin, activation-nudge, planned-meal
+    // — each gates a weight/food/notification push — plus the meal-log
+    // reminders (Campaign 1 adversarial review blocker 2: they were the ONE
+    // food-adjacent category with no ED gate), plus the D142 welcome-back
+    // note (return_nudge), gated the same fail-closed way. This was EIGHT
+    // until the partner beats were removed with the Partners feature
+    // (SD-03, retired 2026-09-06); that push no longer exists, so its gate
+    // does not either. Nothing was weakened: the seven that remain carry
+    // the same fail-closed shape.
     const matches = FILES.scheduler.match(
       /getOpenEdPatternFlag\([^)]*\)\.catch\(\(\)\s*=>\s*'read_failed'\)/g,
     ) || [];
-    expect(matches.length).toBe(8);
+    expect(matches.length).toBe(7);
   });
 
   // 3. DiaryScreen — the banking carve-out feed.
@@ -145,13 +148,7 @@ describe('ED-safety: getOpenEdPatternFlag reads on safety surfaces fail CLOSED',
     expect(FILES.proSetupComplete).not.toMatch(/getOpenEdPatternFlag\(user\.id\)\.catch\(\(\)\s*=>\s*null\)/);
   });
 
-  // 8. partners/weekSignalWriter — the outbound partner-signal freeze feed.
-  test('weekSignalWriter ED-flag read fails closed', () => {
-    expect(FILES.weekSignalWriter).toMatch(FAIL_CLOSED_SENTINEL);
-    expect(FILES.weekSignalWriter).toMatch(/edSuppressed = !!edFlag/);
-  });
-
-  // 9. widgets/writer — the persisted widget snapshot's suppressed bit.
+  // 8. widgets/writer — the persisted widget snapshot's suppressed bit.
   test('widgets/writer ED-flag read fails closed', () => {
     expect(FILES.widgetWriter).toMatch(FAIL_CLOSED_SENTINEL);
     expect(FILES.widgetWriter).toMatch(/edFlagOpen:\s*!!edFlag/);

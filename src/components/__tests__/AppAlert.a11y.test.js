@@ -1,6 +1,6 @@
 /**
  * AX-3 (whole-app failure register, 2026-07-04): AppAlert, the shared dialog
- * behind every high-stakes confirmation (delete workout, unpair partner,
+ * behind every high-stakes confirmation (delete workout,
  * cancel subscription, discard changes), had no focus management and an
  * unlabelled full-screen backdrop. Screen-reader focus landed on the
  * backdrop first, announced nothing, and (because the backdrop wrapped the

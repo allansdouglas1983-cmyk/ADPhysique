@@ -290,7 +290,7 @@ describe('C15-8 nothing ships without an entry in the contract', () => {
     'ed_pattern_flags',                                 // D92-11 holds
     'tier_history', 'profiles',                         // billing / identity
     'notification_preferences',                         // the projection, contracted above
-    'partner_signals', 'plan_folders',
+    'plan_folders',
     'exercise_user_notes', 'exercise_goals',
     'workout_notes', 'workout_notes_v2',
     'food_swaps', 'progress_scan_classification_history', 'session_resolutions',

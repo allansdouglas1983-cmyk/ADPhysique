@@ -50,7 +50,7 @@ describe('the emphatic set is curated: committing actions only', () => {
   test('every emphatic usage is on the reviewed list', () => {
     const allowed = new Set([
       'screens/WelcomeScreen.js', 'components/auth/AuthSheet.js', 'screens/ProOnboardingScreen.js',
-      'screens/ProSetupCompleteScreen.js', 'screens/PlanPreviewScreen.js', 'screens/PartnerScreen.js',
+      'screens/ProSetupCompleteScreen.js', 'screens/PlanPreviewScreen.js',
       'screens/HowYouTrainAddScreen.js', 'screens/ManualBuilderScreen.js', 'screens/PlansScreen.js',
       'screens/ImportScreen.js', 'screens/GoalLockConsentScreen.js', 'screens/PlanDetailScreen.js',
       'components/PlanPreviewSheet.js', 'screens/BuildWorkoutScreen.js',

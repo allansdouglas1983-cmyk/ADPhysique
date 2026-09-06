@@ -42,6 +42,7 @@ export const CATEGORY = Object.freeze({
   MONTHLY_RECAP: 'monthly_recap', // COMP-005
   TRIAL_DAY3: 'trial_day3', // COMP-023
   WINBACK: 'winback', // COMP-025-A
+  // Retired feature (Partners, SD-03 2026-09-06); kept so old pushes resolve.
   PARTNER_CHEER: 'partner_cheer', // NEW-002
   CHECKIN_MISSED: 'checkin_missed', // OPP-C03 ghost prevention
   PLANNED_MEAL_CONFIRM: 'planned_meal_confirm', // F3: confirm planned meals
@@ -147,6 +148,7 @@ export const CATEGORY_CHANNELS = Object.freeze({
   // foregrounded. While an ED/wellbeing flag is open the delivery downgrades to
   // in-app-only (handled at send time, §5) — pushing at a flagged user is the
   // harm pattern, exactly as ED_PATTERN_LOCKOUT/FFM_FLOOR_HOLD.
+  // Retired feature (Partners, SD-03 2026-09-06); kept so old pushes resolve.
   [CATEGORY.PARTNER_CHEER]: [CHANNEL.PUSH, CHANNEL.IN_APP], // NEW-002
   // OPP-C03: the missed check-in follow-ups. Push only; ED-flag
   // suppression and the never-shame copy rule live in the scheduler
@@ -228,6 +230,8 @@ export function categoryForDataType(type) {
     case 'cascade_gate': return CATEGORY.CASCADE_GATE;
     case 'trial_day3': return CATEGORY.TRIAL_DAY3;
     case 'winback': return CATEGORY.WINBACK;
+    // Retired feature (Partners, SD-03 2026-09-06); the three partner types
+    // below stay mapped so a push already in the tray still counts and routes.
     case 'partner_cheer': return CATEGORY.PARTNER_CHEER;
     // C7 release audit F3: these two server pushes carried data.type
     // values with no enum mapping, so the daily/weekly event budget

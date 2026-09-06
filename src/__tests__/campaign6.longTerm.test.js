@@ -128,10 +128,10 @@ describe('ADDENDUM: anti-anthropomorphism and anti-manipulative retention (D97)'
   test('no app-voice surface claims feelings, human understanding, or manipulative retention', () => {
     // The app's own voice must never imply emotions, consciousness or
     // human observation, threaten loss, or invent personalisation
-    // percentages. The ONE legitimate "proud" in the tree is the
-    // partner cheer set (lib/partners/acknowledgements.js): a HUMAN
-    // partner's words to a human, founder-authored, closed enum - a
-    // person may be proud; the engine may not.
+    // percentages. The one legitimate exemption used to be the partner
+    // cheer set (a HUMAN's words to a human); it left the tree with the
+    // Partners feature (SD-03, retired 2026-09-06), so nothing is exempt
+    // now: the engine may never claim feelings.
     const BANNED = [
       /we're proud of you/i, /i'm proud of you/i, /i know you\b/i,
       /i missed you/i, /we know your body/i, /your body loves/i,
@@ -144,7 +144,6 @@ describe('ADDENDUM: anti-anthropomorphism and anti-manipulative retention (D97)'
     const roots = ['screens', 'components', 'lib'].map((d) => path2.join(__dirname, '..', d));
     for (const root of roots) {
       for (const file of walk(root)) {
-        if (file.endsWith('partners/acknowledgements.js')) continue;
         const src = fs2.readFileSync(file, 'utf8')
           .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
         for (const re of BANNED) {
@@ -458,7 +457,7 @@ describe('M-13 (D97-24): the reflection ledger rows reach every account (D137, f
   });
 });
 
-describe('T-lane fixes (D97-24): clock, caps, partner truth, photo honesty', () => {
+describe('T-lane fixes (D97-24): clock, caps, photo honesty', () => {
   // RE-PINNED (Today truth repair): T-1 pinned a DST-safe week-key grid
   // inside the streak resolver, which is DELETED with the rejected weekly
   // run/streak construct. The DST concern it guarded lives on in the shared
@@ -496,15 +495,10 @@ describe('T-lane fixes (D97-24): clock, caps, partner truth, photo honesty', () 
     expect(hits).toBe(0);
   });
 
-  test('T-12: partner cheers pull newest-first with a cap', () => {
-    expect(read('lib/sync/tables/partners.js')).toMatch(/\.order\('created_at', \{ ascending: false \}\)\.limit\(200\)/);
-  });
-
-  test('T-18: both partner week signals are scoped to THIS week', () => {
-    const src = read('hooks/usePartners.js');
-    expect(src).toMatch(/getPartnerWeekSignal\(partnership\.id, partnerId, thisWeek\)/);
-    expect(src).toMatch(/getPartnerWeekSignal\(partnership\.id, userId, thisWeek\)/);
-  });
+  // T-12 (partner cheer pull cap) and T-18 (both partner week signals
+  // scoped to this week) pinned files that were deleted with the Partners
+  // feature (SD-03, retired 2026-09-06). Nothing reads or writes those
+  // tables from the client any more, so there is no behaviour left to pin.
 
   test('T-16: the photo FAQ states impermanence alongside privacy', () => {
     const src = read('screens/SettingsFaqScreen.js');

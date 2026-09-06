@@ -41,9 +41,6 @@ import { claimMilestones } from '../lib/milestones';
 import { selection as hapticSelection, prAchieved as hapticMilestone } from '../lib/haptics';
 import { MilestoneBurst } from '../components/PRCelebration';
 import ProgressPhotoPrompt from '../components/ProgressPhotoPrompt';
-import usePartners from '../hooks/usePartners';
-import { ticksLabel } from '../lib/partners/signals';
-import { getVisibleMoments, markMomentSeen } from '../lib/partners/moments';
 import { calculateWeeklyVolume, calculateExcludedWeeklyVolume, getVolumeStatus, MUSCLE_DISPLAY_NAMES, runAdaptiveEngine } from '../lib/algorithms';
 import { getEffectiveLandmarks } from '../lib/effectiveLandmarks';
 import { getVolumeInsight, getVolumeWhy } from '../lib/volumeInsightCopy';
@@ -69,17 +66,6 @@ const RATING_LABELS = {
   fatigueLevel: ['', 'Fresh', 'Mild', 'Moderate', 'High', 'Exhausted'],
   jointDiscomfort: ['None', 'Slight', 'Moderate', 'Significant'],
 };
-
-function formatPartnerWinDate(value) {
-  const n = Number(value);
-  const date = new Date(Number.isFinite(n) ? n : Date.now());
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function partnerRecordLabel(pr = {}) {
-  if (pr.type === 'heaviest_weight') return 'New heaviest weight';
-  return 'New rep best';
-}
 
 /**
  * CC33 W3 (D112 R5, closes audit T2-07/T2-22): the post-workout quiet line
@@ -109,22 +95,6 @@ function buildConstraintSummaryLine(substituted, omitted, userChosen = 0) {
     return `Today worked around your temporary change: ${omitted} exercise${omitted === 1 ? '' : 's'} left out, with nothing forced in their place.`;
   }
   return null;
-}
-
-function partnerCheerFailureMessage(error) {
-  if (error === 'not_active' || error === 'partner_syncing') {
-    return 'This partner link is still being prepared. Partners is refreshing it now; try again in a moment.';
-  }
-  if (error === 'insert_failed' || error === 'server_misconfigured' || error === 'cheers_unavailable') {
-    return 'Partner cheers are not available right now. Try again later.';
-  }
-  if (error === 'partner_update_needed') {
-    return 'Partner cheers need the latest app update before they can send. Refresh Partners, then try again.';
-  }
-  if (error === 'partner_auth_required' || error === 'offline') {
-    return 'Volyume could not reach Partners online just now. Refresh Partners, then try once more.';
-  }
-  return 'Could not send that cheer. Refresh Partners, then try once more.';
 }
 
 
@@ -195,10 +165,6 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
   const t = useTheme();
   const live = buildLiveStyles(t);
   const toast = useToast();
-  // NEW-002 rebuild: the post-workout partner beat (Duolingo's post-lesson
-  // nudge is the highest-value re-engagement moment). Renders only when
-  // paired, live path, and not calm/ED-suppressed.
-  const partners = usePartners(user?.id);
   // Renamed to feedbackSheet to avoid clashing with the per-set
   // feedback state below (sessionDifficulty, overallPump, etc.).
   // Both live in the same scope, JS doesn't let two consts share a
@@ -272,19 +238,6 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
   // cards (the programme-arc strip + the phase-completion card). Set once from
   // the shared wellbeing read in loadVolumeAndHistory.
   const [calmSuppressed, setCalmSuppressed] = useState(false);
-  // C3 milestone moment for the post-workout partner beat: when the engine has a
-  // moment for one of the active pairs, that pair's beat row shows its calm line
-  // (with the same inline cheer) instead of the generic tick line. Keyed by
-  // pairId so a Pro user with 2-3 paired partners (L06-F4) gets its own moment
-  // per pair, never just the single "primary" one. getVisibleMoments already
-  // applies the fail-closed ED/calm/SCOFF suppression and the frequency caps, so
-  // this holds {} under any suppressed state. Marked seen on cheer or unmount.
-  const [partnerMomentsByPair, setPartnerMomentsByPair] = useState({});
-  // Per-pair in-flight guard (keyed by pairId): each paired partner is its own
-  // private world (DESIGN-SPEC B2), so a cheer in flight to one partner never
-  // blocks sending to another.
-  const [sendingCheerPairIds, setSendingCheerPairIds] = useState({});
-  const partnerMomentsRef = useRef({});
   // Keep the completion state calm: the workout is done, and the primary
   // actions must be visible immediately. These optional answers still feed the
   // coaching loop, but only open when the lifter deliberately rates the session.
@@ -436,51 +389,6 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
     })();
     return () => { cancelled = true; };
   }, [user?.id, workoutId]);
-
-  // The post-workout beat surfaces EVERY currently active/resting paired
-  // partner (L06-F4 fix), not just the single "primary" pair usePartners kept
-  // for the legacy single-pair consumers. Never read-only, never under
-  // calm/ED suppression — the same gating the single-partner beat always had,
-  // just applied per pair instead of to one partnership.
-  const activeBeatPairs = (!readOnly && !calmSuppressed)
-    ? (partners.pairs || []).filter((pp) => pp.rowState === 'active' || pp.rowState === 'resting')
-    : [];
-  const beatEligible = activeBeatPairs.length > 0;
-  const activeBeatPairIds = activeBeatPairs.map((pp) => pp.id).join('|');
-
-  // C3 milestone moments: only when the beat itself would render. getVisibleMoments
-  // is fail-closed and additionally suppresses internally, so this is a second
-  // gate, never the safety boundary. Keeps the ref in step for the unmount
-  // mark-seen. One fetch covers every visible pair; each moment is matched back
-  // to its own pairId so a pair without a moment simply falls back to its tick
-  // line while a sibling pair's moment still shows.
-  useEffect(() => {
-    let cancelled = false;
-    if (!beatEligible || !user?.id || !activeBeatPairIds) {
-      setPartnerMomentsByPair({});
-      partnerMomentsRef.current = {};
-      return undefined;
-    }
-    const idSet = new Set(activeBeatPairIds.split('|'));
-    getVisibleMoments(user.id).then((moments) => {
-      if (cancelled) return;
-      const byPair = {};
-      for (const m of (moments || [])) {
-        if (m?.pairId && idSet.has(m.pairId)) byPair[m.pairId] = m;
-      }
-      setPartnerMomentsByPair(byPair);
-      partnerMomentsRef.current = byPair;
-    }).catch(() => { /* fail quiet: the beat falls back to the tick line */ });
-    return () => { cancelled = true; };
-  }, [beatEligible, user?.id, activeBeatPairIds]);
-
-  // Mark every still-shown moment seen on unmount (the user saw the whole
-  // beat). Cheering a given pair marks that pair's own moment seen too.
-  useEffect(() => () => {
-    for (const m of Object.values(partnerMomentsRef.current || {})) {
-      if (m?.id) markMomentSeen(m.id).catch(() => {});
-    }
-  }, []);
 
   // Contextual feedback prompt, fires ONCE after the user has
   // completed their first ~3 sessions. Suppressed thereafter via
@@ -1072,77 +980,6 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
     navigateCrossTab(navigation, 'ProgressTab', 'LiftProgress');
   }
 
-  // pairId, when known, routes straight to that partner's Send-an-update sheet
-  // (PartnerScreen already reads route.params.pairId/partnerPairId) so choosing
-  // "Preview win" under a specific paired partner's own beat row never re-opens
-  // Partners' "choose who receives it" picker for a pair the user already
-  // picked here.
-  function handlePreviewPartnerWin(pairId) {
-    const firstPr = detectedPRs.length > 0 ? detectedPRs[0] : null;
-    const completedAt = formatPartnerWinDate(endedAt || startedAt || Date.now());
-    if (firstPr) {
-      navigateCrossTab(navigation, 'ProgressTab', 'Partner', {
-        source: 'workout_summary_partner_win',
-        shareWinType: 'personal_record',
-        pairId: pairId || undefined,
-        shareWinPayload: {
-          liftName: firstPr.exerciseName || firstPr.exercise || 'A lift',
-          recordLabel: partnerRecordLabel(firstPr),
-        },
-      });
-      return;
-    }
-    navigateCrossTab(navigation, 'ProgressTab', 'Partner', {
-      source: 'workout_summary_partner_win',
-      shareWinType: 'workout_summary',
-      pairId: pairId || undefined,
-      shareWinPayload: {
-        workoutName: shareSessionName(routineName, exerciseNames),
-        completedAt,
-      },
-    });
-  }
-
-  // Per-pair cheer send (L06-F4): `pair` is one entry of partners.pairs, so
-  // every currently paired partner gets its own independent send, its own
-  // reciprocal-tick read and its own in-flight/rate-limit state.
-  async function handlePostWorkoutCheer(pair) {
-    const pairId = pair?.id;
-    if (!pair?.cheerEnabled || !pairId || sendingCheerPairIds[pairId]) {
-      if (pair?.cheerEnabled && !pairId) toast.show('Refresh Partners and try again.', { variant: 'error' });
-      return;
-    }
-    setSendingCheerPairIds((prev) => ({ ...prev, [pairId]: true }));
-    try {
-      const reciprocal = pair.partnerWeek?.weekMet || (pair.partnerWeek?.done > 0);
-      const result = await partners.cheer(pairId, undefined, !!reciprocal);
-      if (result?.ok || result?.error === 'already_cheered') {
-        const moment = partnerMomentsRef.current?.[pairId];
-        if (moment?.id) {
-          markMomentSeen(moment.id).catch(() => {});
-          delete partnerMomentsRef.current[pairId];
-          setPartnerMomentsByPair((prev) => {
-            const next = { ...prev };
-            delete next[pairId];
-            return next;
-          });
-        }
-        toast.show(result?.error === 'already_cheered' ? 'Cheer already sent today' : 'Cheer sent', { variant: 'success' });
-        return;
-      }
-      logError('WorkoutSummaryScreen.postWorkoutCheer', new Error(result?.error || 'unknown'), { userId: user?.id, pairId });
-      toast.show(partnerCheerFailureMessage(result?.error), {
-        variant: result?.error === 'partner_syncing' || result?.error === 'not_active' ? 'warning' : 'error',
-      });
-    } finally {
-      setSendingCheerPairIds((prev) => {
-        const next = { ...prev };
-        delete next[pairId];
-        return next;
-      });
-    }
-  }
-
   // D2 (decision 4b: share artefacts are FREE): a 2-tap share of the early-win
   // milestone, reusing ShareCard's generic milestone layout. No Pro gate.
   function handleShareMilestone() {
@@ -1417,62 +1254,9 @@ export default function WorkoutSummaryScreen({ navigation, route }) {
           <StatBox icon="time-outline" value={`${durationMinutes || 0} min`} label="Duration" animateOrder={2} />
         </View>
 
-        {/* NEW-002 rebuild, widened under L06-F4: the post-workout partner
-            beat, where a cheer is most natural (you just trained; here is
-            where your partner stands). One row per currently active/resting
-            paired partner, so a Pro user with 2-3 paired partners gets a
-            cheer affordance for EACH of them, not just one "primary" pair.
-            Paired + live path only; inherits calm/ED suppression; a resting
-            partner never reads as a fail. */}
-        {activeBeatPairs.map((pair) => {
-          const moment = partnerMomentsByPair[pair.id];
-          const sending = !!sendingCheerPairIds[pair.id];
-          const partnerName = pair.partnerFirstName || 'Your partner';
-          return (
-            <RevealSection key={pair.id} delay={1130}>
-              <Card style={styles.partnerBeatRow}>
-                <View style={styles.partnerBeatTop}>
-                  <Ionicons name="people-outline" size={18} color={t.colors.primary} />
-                  <Text style={[styles.partnerBeatText, live.partnerBeatText]}>
-                    {moment
-                      ? moment.line
-                      : pair.rowState === 'resting'
-                        ? `${partnerName} is resting this week.`
-                        : `${partnerName}: ${ticksLabel({ done: pair.partnerWeek?.done, planned: pair.partnerWeek?.planned })} this week.`}
-                  </Text>
-                </View>
-                <View style={styles.partnerBeatActions}>
-                  <Button
-                    title="Preview win"
-                    icon="trophy-outline"
-                    variant="outline"
-                    size="sm"
-                    fullWidth={false}
-                    onPress={() => handlePreviewPartnerWin(pair.id)}
-                    style={[styles.partnerWinBtn, live.partnerWinBtn]}
-                    textStyle={[styles.partnerCheerText, live.partnerCheerText]}
-                    accessibilityLabel={`Preview this workout win for ${partnerName}`}
-                  />
-                  <Button
-                    title={sending ? 'Sending' : pair.cheerEnabled ? 'Cheer' : 'Sent'}
-                    icon={sending ? 'hourglass-outline' : 'hand-left-outline'}
-                    variant="tertiary"
-                    size="sm"
-                    fullWidth={false}
-                    onPress={() => handlePostWorkoutCheer(pair)}
-                    disabled={!pair.cheerEnabled || sending}
-                    style={[styles.partnerCheerBtn, live.partnerCheerBtn, (!pair.cheerEnabled || sending) && [styles.partnerCheerBtnDone, live.partnerCheerBtnDone]]}
-                    textStyle={[styles.partnerCheerText, live.partnerCheerText, (!pair.cheerEnabled || sending) && [styles.partnerCheerTextDone, live.partnerCheerTextDone]]}
-                    accessibilityLabel={sending ? `Sending cheer to ${partnerName}` : pair.cheerEnabled ? `Send a cheer to ${partnerName}` : 'Cheer sent'}
-                  />
-                </View>
-              </Card>
-            </RevealSection>
-          );
-        })}
-
         {/* Community entry point 6 (social-discovery blueprint section 1):
-            where the Partners "share with your partner" beat sits, because
+            where the retired Partners "share with your partner" beat used
+            to sit, because
             this is the moment a session is worth telling someone about.
             Always shown: CommunityCompose routes to Join first when there is
             no profile yet. The read-only re-open of an old summary is not a
@@ -2279,33 +2063,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: withAlpha(colors.primary, 0.376),
   },
-  // NEW-002 post-workout partner beat
-  partnerBeatRow: {
-    gap: spacing.md,
-  },
-  partnerBeatTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  partnerBeatText: { ...type.bodySm, flex: 1, color: colors.textPrimary },
-  partnerBeatActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  // D3: amber tint, not a second amber fill, the hero numeral is this
-  // screen's one amber object.
-  partnerWinBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    backgroundColor: colors.surface2, borderRadius: radius.full,
-    borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, minHeight: 40,
-  },
-  partnerCheerBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    backgroundColor: colors.primaryBg, borderRadius: radius.full,
-    borderWidth: 1, borderColor: withAlpha(colors.primary, alpha.edge),
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, minHeight: 40,
-  },
-  partnerCheerBtnDone: {
-    backgroundColor: withAlpha(colors.border, alpha.edge),
-    borderColor: colors.border,
-  },
-  partnerCheerText: { ...type.label, color: colors.primary, fontSize: fontSize.xs },
-  partnerCheerTextDone: { color: colors.textSecondary },
   // D2 programme-arc strip wrapper, surface card matching the other summary
   // sections, holding the reused BlockShapeCard (dots + effort word).
   blockArcSection: {
@@ -2621,12 +2378,6 @@ function buildLiveStyles(t) {
     phaseActionBtn: { borderColor: withAlpha(t.colors.primary, 0.376) },
     phaseActionText: { fontSize: t.fontSize.sm, color: t.colors.primary },
     phaseShareBtn: { borderColor: withAlpha(t.colors.primary, 0.376) },
-    partnerBeatText: { ...t.type.bodySm, color: t.colors.textPrimary },
-    partnerWinBtn: { backgroundColor: t.colors.surface2, borderColor: t.colors.border },
-    partnerCheerBtn: { backgroundColor: t.colors.primaryBg, borderColor: withAlpha(t.colors.primary, alpha.edge) },
-    partnerCheerBtnDone: { backgroundColor: withAlpha(t.colors.border, alpha.edge), borderColor: t.colors.border },
-    partnerCheerText: { ...t.type.label, color: t.colors.primary, fontSize: t.fontSize.xs },
-    partnerCheerTextDone: { color: t.colors.textSecondary },
     blockArcName: { fontSize: t.fontSize.sm, color: t.colors.textPrimary },
     heroValue: { ...t.type.num('display'), color: t.colors.primary },
     heroValueLabel: { ...t.type.caption, color: t.colors.textSecondary },

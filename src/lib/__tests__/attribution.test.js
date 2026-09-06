@@ -131,9 +131,11 @@ describe('C8 wiring pins (source-level)', () => {
 
   test('App.js captures passively as the FIRST action on every incoming link', () => {
     const APP = read('App.js');
-    // Capture sits inside the single deep-link entry point, before the
-    // partner/auth handlers can consume the link.
-    expect(APP).toMatch(/function handleIncomingDeepLink\(url\) \{\s*\n\s*if \(!url\) return;\s*\n[^\n]*\n[^\n]*\n\s*captureFirstTouch\(url\)\.catch\(\(\) => \{\}\);\s*\n\s*if \(handlePartnerDeepLink\(url\)\)/);
+    // Capture sits inside the single deep-link entry point, before the auth
+    // handler can consume the link. (The partner intercept that used to sit
+    // between them went with the retired Partners feature, SD-03 2026-09-06;
+    // capture is now immediately followed by the auth path.)
+    expect(APP).toMatch(/function handleIncomingDeepLink\(url\) \{\s*\n\s*if \(!url\) return;\s*\n[^\n]*\n[^\n]*\n\s*captureFirstTouch\(url\)\.catch\(\(\) => \{\}\);\s*\n\s*const supabase = getSupabaseClient\(\);/);
     // The cache is warmed at startup, before the initial URL is read, so the
     // workout-finish path can read synchronously.
     expect(APP).toMatch(/warmFirstTouch\(\)\.catch\(\(\) => \{\}\);\s*\n\s*Linking\.getInitialURL\(\)/);

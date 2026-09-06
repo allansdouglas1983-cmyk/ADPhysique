@@ -20,7 +20,7 @@
  *  - The fail-closed neutral wiring in the gatherer is pinned at source
  *    level: a failed ED-flag or body-profile read must produce the neutral
  *    variant, never the fuller one, and a positive SCOFF screen joins the
- *    suppression trio exactly as the streak/partner/countdown surfaces do.
+ *    suppression trio exactly as the streak/countdown surfaces do.
  *  - No em dash anywhere in the artefact (voice rule; the lint gate cannot
  *    see src/lib template strings, so it is pinned here).
  * Distinctive fixture values (82.4 kg, -137 kcal, sentinel prose) make the

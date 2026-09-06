@@ -74,7 +74,8 @@ contract must not delegate its authority to a superseded audit.
     (job 3, `*/15 * * * *`, had been live); `cascade_advance_due_users()`
     remains defined; ledger 20260904082135.
   - **Applied to EU-Dublin production is now 001-048, 050-071, 073-154,
-    156-157.** 155 is PENDING on a client prerequisite (below). 049 HELD.
+    156-157.** 155 is PENDING (below: the client prerequisite is now met in
+    source, pending a shipped build). 049 HELD.
     150 RETIRED.
 - **155 BLOCKED on a client fix (found 2026-09-04 during the batch
   audit).** The new INSERT policy requires `sent_on` to equal the
@@ -86,15 +87,21 @@ contract must not delegate its authority to a superseded audit.
   rejection to "partner not active". The client fallback must stamp the
   UTC date and that build must be in users' hands before 155 runs.
   **155 update (2026-09-06, Community campaign):** the blocking client
-  fallback (`insertCheerDirectly`) is scheduled for deletion with the whole
-  Partners surface under SD-03
-  (`docs/social-discovery-2026-09-06/40-DECISIONS.md`), in the Partners
-  retirement lane that runs AFTER Community lands. That deletion has NOT
-  happened yet, so as of today 155 is still blocked by exactly the fallback
-  described above. Once Partners is retired and that build is in users'
-  hands, nothing in the client can stamp a local date any more and 155 is no
-  longer blocked. It stays NOT APPLIED either way until the founder
-  authorises it.
+  fallback (`insertCheerDirectly`) has now BEEN DELETED. The whole Partners
+  surface was retired under SD-03
+  (`docs/social-discovery-2026-09-06/40-DECISIONS.md`,
+  `docs/social-discovery-2026-09-06/30-BLUEPRINT.md` section 9) on this
+  branch: `src/lib/partners/` is gone, including `service.js` and its
+  `insertCheerDirectly` fallback, so nothing in the client can write a
+  `partner_cheers` row at all, let alone stamp a local date. The only
+  writer left is the deployed `partner-cheer` Edge Function, which already
+  stamps the UTC date (pinned by
+  `src/lib/__tests__/partnerCheerRateBoundary.guard.test.js`).
+  So 155 is unblocked ONCE a build WITHOUT Partners is in users' hands.
+  Until that build ships, an older binary still on a user's phone carries
+  the local-date fallback, and applying 155 before then would give those
+  users the "partner not active" mapping around UTC midnight. 155 is still
+  NOT APPLIED, and stays that way until the founder authorises it.
 - **160 WRITTEN, NOT APPLIED (Community; founder gate).**
   `migrate_160_community.sql` is the complete Community schema (SD-01 to
   SD-16, blueprint section 3): fourteen `community_*` tables, all with RLS

@@ -94,6 +94,8 @@ export const CATEGORY_PREFS = Object.freeze({
     legacyKey: null,
     defaultEnabled: true,
   },
+  // Retired feature (Partners, SD-03 2026-09-06); the pref stays so an old
+  // server-sent partner push still respects a user's stored choice.
   [CATEGORY.PARTNER_CHEER]: {
     blobField: 'partnerCheerEnabled',
     legacyKey: null,

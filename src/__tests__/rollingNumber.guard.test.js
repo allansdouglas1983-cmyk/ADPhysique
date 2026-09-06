@@ -4,8 +4,8 @@
  *   - the HARD ED RULE (03b): the body-weight number NEVER ticks. The
  *     weight surfaces must not reference RollingNumber, ever — not under a
  *     flag, not under calm mode. Absolute.
- *   - the commissioned surfaces are exactly WorkoutSummary, MacroRings
- *     (Diary remaining-kcal hero) and Partner (shared-streak hero); anywhere
+ *   - the commissioned surfaces are exactly WorkoutSummary and MacroRings
+ *     (Diary remaining-kcal hero); anywhere
  *     else is scope creep to re-decide with the founder first. Analytics
  *     left this list under Campaign 23 (PROGRESS-UX-SPEC.md §27): its
  *     ticking numeral (the Training Load hero) demoted off the Progress
@@ -42,11 +42,9 @@ const COMMISSIONED = [
   // RollingNumber -- extending the commission to a new screen is exactly the
   // "scope creep to re-decide with the founder first" this suite's header
   // warns against, so Stage 2 did not make that call unasked.
-  // Partner shared-streak hero (DESIGN-SPEC B2, orchestrator-fixed 2026-07-03):
-  // the "N weeks running, together" count on PartnerScreen is a deliberately
-  // commissioned RollingNumber surface — the sanctioned streak-increment roll.
-  // The hard ED rule is untouched: no weight number ticks here.
-  'src/screens/PartnerScreen.js',
+  // The Partner shared-streak hero was the third commissioned surface; it
+  // left with the Partners feature (SD-03, retired 2026-09-06). The hard ED
+  // rule is untouched either way: no weight number ticks anywhere.
 ];
 
 function walk(dir) {

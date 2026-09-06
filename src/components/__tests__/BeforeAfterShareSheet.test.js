@@ -29,7 +29,6 @@ import {
   orderPair,
   defaultPair,
   buildBeforeAfterParams,
-  buildProgressCardSharePayload,
   formatCardDate,
   formatShareScanRange,
 } from '../BeforeAfterShareSheet';
@@ -239,34 +238,5 @@ describe('buildBeforeAfterParams', () => {
       expect(p.before).not.toHaveProperty(banned);
       expect(p.after).not.toHaveProperty(banned);
     }
-  });
-});
-
-describe('buildProgressCardSharePayload', () => {
-  test('summarises only receipt-level details for partner preview', () => {
-    const payload = buildProgressCardSharePayload({
-      aspect: 'portrait',
-      before: { date: '5 Jan 2026', weight: '', scanRange: 'Defined index 54' },
-      after: { date: '20 Jun 2026', weight: '', scanRange: 'Lean index 66' },
-    });
-    expect(payload).toEqual({
-      label: 'Progress photo image',
-      dateRange: '5 Jan 2026 to 20 Jun 2026',
-      format: 'Portrait',
-      includesWeight: false,
-      includesScanScore: true,
-    });
-    expect(Object.keys(payload)).not.toEqual(expect.arrayContaining(['uri', 'photoUri', 'imageUri', 'imageBase64']));
-  });
-
-  test('only marks weight as included when a visible card weight exists', () => {
-    const payload = buildProgressCardSharePayload({
-      aspect: 'story',
-      before: { date: '5 Jan 2026', weight: '82.4 kg' },
-      after: { date: '20 Jun 2026', weight: '' },
-    });
-    expect(payload.format).toBe('Story');
-    expect(payload.includesWeight).toBe(true);
-    expect(payload.includesScanScore).toBe(false);
   });
 });

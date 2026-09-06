@@ -434,11 +434,9 @@ export default function NotificationSettingsScreen({ navigation }) {
   // SD-15: Community follows/activity have no local schedule to lay or
   // cancel -- the community-notify Edge Function sends them off a live
   // follow/reaction/comment/programme-use event and reads the projection
-  // row at that moment, exactly like partner cheers (#12,
-  // CoachingRemindersScreen.handlePartnerCheerToggle). So there is no
-  // schedule/cancel call here, only the one authority write plus an
-  // immediate projection push so an opt-out takes effect before the next
-  // ordinary sync.
+  // row at that moment. So there is no schedule/cancel call here, only
+  // the one authority write plus an immediate projection push so an
+  // opt-out takes effect before the next ordinary sync.
   async function handleCommunityFollowToggle(value) {
     setCommunityFollowEnabled(value);
     try {
@@ -634,7 +632,7 @@ export default function NotificationSettingsScreen({ navigation }) {
           <View style={{ flex: 1 }}>
             <Text style={[styles.crossLinkTitle, live.crossLinkTitle]}>Coaching reminders</Text>
             <Text style={[styles.crossLinkSub, live.crossLinkSub]}>
-              Weigh-in and check-in times, check-in follow-ups, meal-plan reminders and partner cheers.
+              Weigh-in and check-in times, check-in follow-ups and meal-plan reminders.
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={iconSize.sm} color={t.colors.textMuted} />

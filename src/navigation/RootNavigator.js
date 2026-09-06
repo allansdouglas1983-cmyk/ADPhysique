@@ -251,7 +251,6 @@ const NutritionTargetsScreen = lazyScreen(() => require('../screens/NutritionTar
 const MealNamesScreen = lazyScreen(() => require('../screens/MealNamesScreen').default);
 const BodyMetricsScreen      = lazyScreen(() => require('../screens/BodyMetricsScreen').default);
 const ProgressPhotosScreen   = lazyScreen(() => require('../screens/ProgressPhotosScreen').default);
-const PartnerScreen          = lazyScreen(() => require('../screens/PartnerScreen').default);
 const CoachOutputScreen      = lazyScreen(() => require('../screens/CoachOutputScreen').default);
 const WeeklyStoryScreen      = lazyScreen(() => require('../screens/WeeklyStoryScreen').default);
 const ProGoalSetupScreen     = lazyScreen(() => require('../screens/ProGoalSetupScreen').default);
@@ -562,7 +561,6 @@ function ProgressStack({ navigation }) {
       <Stack.Screen name="ProgressPhotos" component={ProgressPhotosScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LiftProgress" component={LiftProgressScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Consistency" component={ConsistencyScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} options={heroZoomOptions({ headerShown: false })} />
       <Stack.Screen name="YearOfLifts" component={YearOfLiftsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RecapStory" component={YearOfLiftsScreen} options={{ headerShown: false }} />
@@ -862,7 +860,7 @@ function ProOnboardingStack() {
 // Notification-tap routing (navigationRef.navigate in the onTap effect above)
 // is a SEPARATE mechanism and is untouched by this config.
 // The legacy partner invite path (volyume://partner/<CODE> and
-// https://volyume.app/partner/<CODE>, minted by src/lib/partners/link.js and
+// https://volyume.app/partner/<CODE>, minted by the retired Partners feature and
 // already sitting in people's share messages) now lands on Community, which
 // shows the "Partner invites have moved" card (blueprint section 1).
 //

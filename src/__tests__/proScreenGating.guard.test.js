@@ -5,7 +5,7 @@
  * free/pro gating (CLAUDE.md pre-D137 rule) no longer applies. Every screen
  * that used to ship wrapped in `withProGuard` / `withReadOnlyProGuard`
  * (food diary, barcode, meal suggestions, targets, macros, check-ins,
- * Precision Coaching, division plans, training partners, progress-photos/
+ * Precision Coaching, division plans, progress-photos/
  * body-metrics history) is now a plain, ungated registration like any other
  * screen in RootNavigator.js -- see that file's own "Formerly Pro-only
  * screens" comment. `ProGate.js` (the guard HOCs) stays on disk DORMANT and
@@ -104,7 +104,6 @@ const FORMERLY_CRITICAL_ROUTES = [
   { component: 'CoachingRemindersScreen', routes: ['CoachingReminders'] },
   { component: 'BodyMetricsScreen', routes: ['BodyMetrics'] },
   { component: 'ProgressPhotosScreen', routes: ['ProgressPhotos'] },
-  { component: 'PartnerScreen', routes: ['Partner'] },
 ];
 
 describe('Formerly-critical Pro routes: no guard, registered via the plain screen component', () => {

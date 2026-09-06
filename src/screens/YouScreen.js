@@ -208,9 +208,10 @@ function buildPendingCoachCopy(readiness) {
 }
 
 export default function YouScreen({ navigation }) {
-  // `tier` left this selector with the Partners row (blueprint section 1,
-  // entry point 2): it was read only to pass through to usePartners, and
-  // nothing on this screen consults tier now (fully-free product, D137).
+  // `tier` left this selector with the retired Partners row (blueprint
+  // section 1, entry point 2): it was read only to pass through to the
+  // partner hook, and nothing on this screen consults tier now (fully-free
+  // product, D137).
   const { user, userProfile } = useAppStore(useShallow(s => ({
     user: s.user,
     userProfile: s.userProfile,
@@ -362,8 +363,8 @@ export default function YouScreen({ navigation }) {
 
   // Community (blueprint section 1, entry point 2): the Support row that
   // used to open Partners now opens Community, which is where following
-  // people, sharing programmes and training stories live. The rest of the
-  // partner code stays where it is; retiring it is its own lane.
+  // people, sharing programmes and training stories live. Partners itself
+  // was retired on 2026-09-06 (SD-03).
   const openCommunity = useCallback(() => {
     navigateCrossTab(navigation, 'HomeTab', 'Community');
   }, [navigation]);

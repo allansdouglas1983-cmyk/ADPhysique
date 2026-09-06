@@ -3770,18 +3770,12 @@ export default function ActiveWorkoutScreen({ navigation, route }) {
         }
       } catch (_) { /* tolerate */ }
       // COMP-019: refresh the home-screen widget snapshot (consistency
-      // tick) and NEW-002: push my own week signal to active partners.
-      // Both fire-and-forget; neither blocks the finish flow.
+      // tick). Fire-and-forget; it never blocks the finish flow.
       try {
         const uid2 = useAppStore.getState().user?.id;
         if (uid2) {
           // eslint-disable-next-line global-require
           require('../lib/widgets/writer').writeWidgetSnapshot(uid2).catch(() => {});
-          // Pass the sender's SCOFF score so an outbound freeze (§5)
-          // fires on SCOFF >= 2 with no open flag exactly as on an open
-          // flag; the writer applies the Number.isFinite && >= 2 rule.
-          // eslint-disable-next-line global-require
-          require('../lib/partners/weekSignalWriter').writeOwnWeekSignals(uid2, useAppStore.getState().userProfile?.scoffScore).catch(() => {});
           // S6: a session just landed, so lay the next activation-nudge
           // stage (or clear it once activated). Self-guarding and
           // best-effort; never blocks the finish flow.

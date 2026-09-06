@@ -53,7 +53,6 @@ export {
   scheduleWeeklyCoachReady,
   cancelWeeklyCoachReady,
   scheduleMissedCheckinFollowups,
-  schedulePartnerBeats,
   cancelMissedCheckinFollowups,
   schedulePlannedMealConfirm,
   cancelPlannedMealConfirm,

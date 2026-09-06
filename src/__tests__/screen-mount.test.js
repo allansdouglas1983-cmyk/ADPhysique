@@ -618,7 +618,6 @@ const SCREENS_TO_SWEEP = [
   'CoachReviewScreen',
   'CoachingRemindersScreen',
   'ConsistencyScreen',
-  'PartnerScreen',
   'DebugLogScreen',
   // FirstRunScreen and FreeStarterScreen were deleted (founder decision:
   // Volyume is fully free, no Free/Pro split; ProOnboardingScreen's
