@@ -308,69 +308,55 @@ here, out of this agent's scope).
 time_pref)` table per `docs/NOTIFICATIONS_LOCKED.md:209`; this is the
 per-category on/off store a new social category would slot into.
 
-**`docs/NOTIFICATIONS_LOCKED.md` — 10 locked rules (summarised from the
-file):**
-1. Provider stack: Expo Push (mobile) + custom in-app banner/toast + no
-   client-facing email at v1 (`:5-10`).
-2. ED-pattern flag NEVER fires via push or email — in-app surfacing only
-   (`:16-18`).
+**`docs/NOTIFICATIONS_LOCKED.md` — 10 locked rules:**
+1. Provider stack: Expo Push + custom in-app banner/toast, no client email
+   at v1 (`:5-10`).
+2. ED-pattern flag NEVER fires via push/email — in-app only (`:16-18`).
 3. Every push respects quiet hours, default 22:00-07:00 local (`:19-20`).
 4. One notification per topic per day max; no drip campaigns (`:21`).
 5. Every push has a one-tap unsubscribe/disable path (`:22-23`).
-6. Timing is locale-aware — local time, never server/UTC assumed (`:24-25`).
-7. Global cap: at most 2 event-class pushes/day, 8/week
-   (`:301`); habit reminders and transactional pushes sit outside this cap
-   (`:302-309`).
-8. Collision priority is fixed and documented; equal priority never evicts,
-   the loser is dropped not requeued (`:314-337`).
-9. Global suppression: open ED/wellbeing flag suppresses every event push
-   at schedule time (respectful default); quiet hours and one-per-topic
-   rules always win (`:341-348`).
-10. Shame copy is banned — e.g. "you missed" never appears in missed-checkin
-    copy (`:352-354`). Separately, the rest-finished alert is an explicit,
-    documented EXCEPTION to quiet-hours/budget/ED-copy-review (session-scoped,
-    user just started it) — `:369-394`.
+6. Locale-aware timing — local time, never server/UTC (`:24-25`).
+7. Global cap: 2 event-class pushes/day, 8/week; habit + transactional
+   pushes sit outside the cap (`:301-309`).
+8. Fixed collision priority; equal priority never evicts, loser dropped not
+   requeued (`:314-337`).
+9. Open ED/wellbeing flag suppresses every event push at schedule time;
+   quiet hours + one-per-topic always win (`:341-348`).
+10. Shame copy banned ("you missed" never appears, `:352-354`). Rest-
+    finished alert is an explicit, documented exception to quiet-hours/
+    budget/ED-copy-review (session-scoped) — `:369-394`.
 
 ### C6. Remote push pipeline
 
 **YES — a full Expo push token pipeline exists, end-to-end:**
 - Client: `src/lib/notifications/pushToken.js`. `getExpoPushToken()`
-  (`:76-99`) calls `Notifications.getExpoPushTokenAsync({ projectId })`,
-  requires notification permission granted and an EAS `projectId`.
-  `registerPushToken(userId)` (`:108-137`) upserts a
-  `device_push_tokens` row (`user_id, expo_push_token, platform`) via
-  Supabase after sign-in; `unregisterPushToken(userId)` (`:147-173`) deletes
-  the row on sign-out before local wipe.
+  (`:76-99`) calls `getExpoPushTokenAsync({projectId})`, requires
+  permission granted + an EAS `projectId`. `registerPushToken(userId)`
+  (`:108-137`) upserts `device_push_tokens(user_id, expo_push_token,
+  platform)` via Supabase after sign-in; `unregisterPushToken(userId)`
+  (`:147-173`) deletes the row on sign-out before local wipe.
 - Cloud table: `supabase/migrate_053_device_push_tokens.sql` — composite PK
-  `(user_id, expo_push_token)`, RLS scoped to `auth.uid()`, applied
-  **remotely in production** (header status block: "Applied remotely: YES —
-  EU-Dublin production (2026-07-27...)").
+  `(user_id, expo_push_token)`, RLS on `auth.uid()`, **applied remotely in
+  production** (2026-07-27, per header status block).
 - Edge function: `supabase/functions/send-push/index.ts` — service-role-only
-  (401 without the service-role key, `:16-21`), reads `device_push_tokens`
-  for a `user_id`, fans out via `https://exp.host/--/api/v2/push/send`
-  (`:48-57`), self-prunes dead tokens on an Expo `DeviceNotRegistered`
-  receipt (`:33-37`).
-- Callers: `supabase/functions/play-billing-rtdn` (subscription payment
-  failure — the original reason this pipeline exists, `send-push/index.
-  ts:7-14`) and **`supabase/functions/partner-cheer/index.ts`** — an
-  authenticated, user-facing endpoint that sends a one-tap "cheer" to a
-  training partner (`partner-cheer/index.ts:1-27`): verifies caller JWT,
-  rate-limits to one/UTC-day via a UNIQUE constraint (429 on duplicate),
-  checks the recipient's open ED flag with the service role and downgrades
-  to in-app-only if open (never blocks sending, only push delivery,
-  `:9-14`), otherwise calls `send-push`. **This is the closest existing
-  template for a social "like/reaction/follow" push** — same
-  auth-then-service-role-check-then-fan-out shape a social notification
-  would need.
-- **Observed discrepancy:** `pushToken.js:22-25`'s own comment says "The
-  project has no projectId at time of writing... until the founder adds one
-  this module logs once and no-ops" — but `app.json:8` currently DOES
-  carry `"projectId": "2f60a6ed-8b37-4cd6-8057-60ee04e39ea8"`. Observed: the
-  comment is stale relative to the current `app.json`; this recon does not
-  independently confirm whether remote push is actually flowing in
-  production today (that would require a device/log check, out of scope for
-  a read-only repo recon) — flagging the discrepancy rather than asserting
-  either "remote push works" or "remote push is broken."
+  (401 without it, `:16-21`), reads `device_push_tokens` for a `user_id`,
+  fans out via Expo's push API (`:48-57`), self-prunes dead tokens on
+  `DeviceNotRegistered` (`:33-37`).
+- Callers: `play-billing-rtdn` (payment failure, the original reason this
+  exists) and **`supabase/functions/partner-cheer/index.ts`** — an
+  authenticated endpoint sending a one-tap partner "cheer": verifies JWT,
+  rate-limits one/UTC-day (UNIQUE constraint, 429 on duplicate), checks the
+  recipient's ED flag with the service role and downgrades to in-app-only if
+  open (never blocks sending, only push delivery, `:9-14`), else calls
+  `send-push`. **Closest existing template for a social "like/reaction/
+  follow" push** — same auth → service-role-check → fan-out shape.
+- **Observed discrepancy:** `pushToken.js:22-25` comment says "no projectId
+  at time of writing... this module logs once and no-ops" but `app.json:8`
+  currently DOES carry a projectId
+  (`2f60a6ed-8b37-4cd6-8057-60ee04e39ea8`) — the comment is stale relative
+  to current `app.json`. Not independently confirmed whether remote push is
+  actually flowing in production (would need a device/log check, out of
+  scope here) — flagging the discrepancy, not asserting either way.
 
 ### C7. In-app notification centre / inbox
 

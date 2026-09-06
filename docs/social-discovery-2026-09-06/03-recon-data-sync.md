@@ -22,7 +22,7 @@ Every claim carries `file:line`. Quotes are verbatim.
 - **049 HELD** — destructive `drop peak_week_plans`, client prerequisite not landed, "must not be applied" (`supabase/README.md:63-66`).
 - **150 RETIRED, NEVER TO BE RUN** — founder no-outside-party law + Q4 ruling; file kept as a no-op for numbering (`supabase/README.md:424`).
 - **155 BLOCKED on a client fix** — its new INSERT policy requires `sent_on` to equal the DB's UTC date, but `src/lib/partners/service.js` `insertCheerDirectly` stamps `todayLocalKey()` (local). "The client fallback must stamp the UTC date and that build must be in users' hands before 155 runs." (`supabase/README.md:80-89`). **Directly relevant to social: any per-day rate key must be server/UTC-stamped, never client-local.**
-- **072** deliberately never applied (`supabase/README.md:70-72`).
+- **072** never applied and never will be; its content shipped inside 118 (`supabase/README.md:267`, `:348`).
 
 **Numbering.** Files are `supabase/migrate_NNN_snake_name.sql`, numeric order.
 Highest existing number is **159** (`supabase/migrate_159_workout_set_evidence_class.sql`). Gaps: 011, 026, 082, 083 never used; **085 is used twice** (`migrate_085_food_quality_telemetry.sql`, `migrate_085_notification_preferences_checkin_missed.sql`) and **152 twice** (`migrate_152_capability_adaptation_mode.sql`, `migrate_152_p0_restrict_internal_security_definer_execute.sql`). A new social migration starts at **160**.

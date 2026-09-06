@@ -1,442 +1,303 @@
 # Research: Boostcamp, Fitbod, Caliber, and training communities
 
-Founder brief 2026-09-06. Read-only research; competitive/community landscape
-for programme sharing, discovery, creator ecosystems, gym-social, and
-ED-safe progress sharing. WebSearch/WebFetch used throughout.
+Founder brief 2026-09-06. Read-only research on programme sharing,
+discovery, creator ecosystems, gym-social, and ED-safe progress sharing.
 
-**Access note:** WebSearch worked for all queries. Direct WebFetch of
-`reddit.com` and `old.reddit.com` pages failed outright (tool refuses to
-fetch that host from this environment) — subreddit rule text below comes
-from WebSearch snippets and general knowledge, and is flagged **unverified
-(exact wording)** where I could not confirm literal rule text against the
-live wiki page. Everything else is search-sourced with a URL.
+**Access note:** WebSearch worked throughout. Direct WebFetch of
+`reddit.com`/`old.reddit.com` was refused by the tool for this host —
+subreddit specifics below are WebSearch-derived/general-knowledge and
+flagged **unverified (exact wording)** where I couldn't confirm literal
+rule text against a live wiki page. Everything else has a source URL.
 
 ---
 
-## 1. Boostcamp — programme library, creators, sharing, customisation
+## 1. Boostcamp — library, creators, sharing, customisation
 
-- Free tier: library of 11,000+ programmes, 130+ of them "expert"
-  programmes built by named coaches (Dr Eric Helms, Alex Bromley, Cody
-  Lefever/GZCL, Geoffrey Verity Schofield, Alberto Nuñez, Bryce Lewis, Greg
-  Nuckols, Jonnie Candito, 50+ more) — real competitive athletes/researchers,
-  not generic influencers. [BarBend](https://barbend.com/boostcamp-review/),
-  [Garage Gym Reviews](https://www.garagegymreviews.com/boostcamp-review)
-- The remaining ~10,000 are **community programmes** — routines built and
-  shared by ordinary lifters, sitting alongside the coach-authored ones in
-  the same library. [BarBend](https://barbend.com/boostcamp-review/)
-- Programmes are browsable by **goal, experience level, and schedule**
-  (2–6 days/week, home or gym). [Boostcamp](https://www.boostcamp.app/)
-- **Creator/coach model:** coaches are credited by name on their programmes;
-  no evidence found of a follow-a-creator subscription mechanic or
-  creator-level review/rating aggregation distinct from the programme's own
-  star rating — reviews/ratings appear to attach to the programme, not a
-  creator profile. Unverified whether creators get a dashboard or earn
-  anything from usage.
-- **Programme sharing between users:** users fork/build a custom programme,
-  then share it as a link; the recipient opens the link, taps save, and it
-  copies into their own account/profile in about 10 seconds — "you stay in
-  control of who has it." [Boostcamp](https://www.boostcamp.app/share)
-- Beyond private link-sharing, a user can **publish a custom programme to
-  the wider Boostcamp community**, making it discoverable by all users (this
-  is presumably the source of the 10,000+ community programmes above).
+- Free tier: 11,000+ programmes; 130+ "expert" ones built by named
+  competitive coaches (Eric Helms, Alex Bromley, Cody Lefever/GZCL, Geoffrey
+  Verity Schofield, Alberto Nuñez, Bryce Lewis, Greg Nuckols, Jonnie
+  Candito, 50+ more). Remaining ~10,000 are community-built routines
+  sitting in the same library, browsable by goal/level/schedule
+  (2–6 days/week, home or gym). [BarBend](https://barbend.com/boostcamp-review/),
+  [Garage Gym Reviews](https://www.garagegymreviews.com/boostcamp-review),
+  [Boostcamp](https://www.boostcamp.app/)
+- Creators are credited by name on programmes; no evidence of a
+  follow-a-creator mechanic or creator-level rating distinct from the
+  programme's own rating — ratings attach to the programme, not a profile.
+- **Sharing:** fork/build a programme, share as a link — recipient opens
+  it, taps save, it copies to their account in ~10 seconds ("you stay in
+  control of who has it"). Separately, a user can publish a custom
+  programme to the wider community, making it discoverable by everyone —
+  presumably the source of the ~10,000 community programmes.
   [Boostcamp](https://www.boostcamp.app/share)
-- **Customise-after-import behaviour:** users can fork ANY existing
-  programme (coach or community) and edit it — supersets, drop sets,
-  training maxes, and weekly waves are all editable inside a forked copy.
-  This is manual editing, not automatic re-fit to the user. [Boostcamp
-  tips](https://www.boostcamp.app/blogs/tips-and-tricks-to-using-boostcamp-app),
-  [customise guide](https://www.boostcamp.app/blogs/how-to-customize-your-powerlifting-program)
-- **Does it adapt to schedule/equipment automatically?** Only via a
-  separate, Pro-gated AI program builder: a short questionnaire (goal,
-  experience, weekly schedule, equipment) generates a fresh periodised
-  starter plan tuned to those inputs. This is generation, not adaptation of
-  an imported programme — importing someone else's programme does not
-  auto-retune it to your equipment; you manually edit exercises instead.
-  [Boostcamp Pro](https://www.boostcamp.app/pro)
-- **Community features:** a 2026-introduced "Community" tab adds a social
-  feed — follow friends, see/share completed workouts. This is a feed of
-  completed-workout activity, not comment threads or forums attached to
-  individual programmes. No evidence of a discussion/comments layer on a
-  programme page itself. [BarBend](https://barbend.com/boostcamp-review/)
-- **What a non-user sees on a shared programme link:** not confirmed from
-  search results (Boostcamp's own copy focuses on the logged-in save flow,
-  "they open it, tap save, and run it in the app" implies the link either
-  requires the app/account or funnels straight to an install/signup screen
-  before the recipient can act on it). Flagged for direct testing rather
-  than asserted.
+- **Customise-after-import = manual fork-and-edit only**: supersets, drop
+  sets, training maxes, weekly waves are all editable on a forked copy;
+  nothing auto-adapts on import. [Tips](https://www.boostcamp.app/blogs/tips-and-tricks-to-using-boostcamp-app),
+  [Customise guide](https://www.boostcamp.app/blogs/how-to-customize-your-powerlifting-program)
+- **Auto-adapt to equipment/schedule** exists only as a separate, Pro-gated
+  AI *generator* (questionnaire → fresh plan) — it is generation, not
+  re-fitting of an imported programme. [Boostcamp Pro](https://www.boostcamp.app/pro)
+- **Community tab** (2026) = a social feed of completed workouts /
+  follow-friends activity, NOT comments/forums on a programme page — no
+  evidence of programme-level discussion threads.
+- **Non-user link preview:** not confirmed by search; Boostcamp's own copy
+  ("open it, tap save, run it") implies the link funnels toward
+  app/account rather than a pre-signup preview — flag for direct testing.
 
 ## 2. Fitbod — social layer, sharing, adaptation mechanics
 
-- **Social layer:** no evidence of any social/community feature in current
-  marketing or help-centre material — no feed, no following, no comments.
-  Search results explicitly contrast this with Hevy/Strong, describing
-  Fitbod as algorithm-first rather than community-first. [Fitbod best AI
-  apps
+- **No social layer found**: no feed/following/comments in current
+  marketing or help-centre material; search explicitly contrasts Fitbod
+  (algorithm-first) with Hevy/Strong (community-first). [Fitbod
   2026](https://fitbod.me/blog/best-ai-fitness-apps-2026-the-complete-guide-to-ai-powered-muscle-building-apps/)
-- **Sharing:** no dedicated workout-share-card feature found in current
-  Fitbod material (unlike Hevy, which explicitly has shareable images/links
-  — see §6). Treat "no share cards" as an absence-of-evidence finding, not
-  a confirmed non-feature.
-- **Adaptation mechanics (not marketing):**
-  - Each muscle group carries a computed **recovery percentage (0–100%)**
-    derived from recent training history; the algorithm favours exercises
-    hitting muscles that haven't been heavily trained in the last 48–72
-    hours. [Fitbod
-    algorithm](https://fitbod.me/blog/fitbod-algorithm/), [Fitbod
-    recovery](https://fitbod.me/blog/tracking-volume-intensity-and-recovery-with-fitbod/)
-  - **Equipment gating is a hard filter, not a soft preference:** Fitbod
-    "will only recommend exercises for the equipment you have selected" —
-    a home/dumbbell-only profile never surfaces a barbell back squat; adding
-    a cable machine to the gym profile makes cable exercises "immediately
-    eligible for your next session." [Fitbod
-    algorithm](https://fitbod.me/blog/fitbod-algorithm/)
-  - The model is trained/tuned against Fitbod's own aggregate logged-set
-    corpus (claimed 150M+ logged workouts) plus the individual user's
-    training history, goal, recovery state and equipment access to select
-    each session's exercises and loads. [Fitbod
-    algorithm](https://fitbod.me/blog/fitbod-algorithm/)
-- **Sharing generated workouts:** not evidenced either way in current
-  material; Fitbod's own content emphasises solo, session-by-session
-  generation rather than a shareable programme object at all — there may
-  be no stable "programme" artefact to share, only a rolling
-  session-by-session output.
+- **No dedicated share-card feature found** (unlike Hevy) — absence of
+  evidence, not a confirmed non-feature.
+- **Adaptation mechanics:** each muscle carries a computed recovery
+  percentage (0–100%) from recent training history; the algorithm favours
+  muscles not heavily trained in the last 48–72h. Equipment gating is a
+  **hard filter**: only exercises matching selected equipment are ever
+  shown (no barbell squat on a dumbbell-only profile; adding a cable
+  machine makes cable moves eligible next session). Tuned against Fitbod's
+  own aggregate logged-set corpus (claimed 150M+ workouts) plus the
+  individual's history/goal/recovery/equipment. [Fitbod
+  algorithm](https://fitbod.me/blog/fitbod-algorithm/), [Fitbod
+  recovery](https://fitbod.me/blog/tracking-volume-intensity-and-recovery-with-fitbod/)
+- **Sharing generated workouts:** not evidenced; Fitbod has no stable
+  "programme" object — each session is freshly generated, so there may be
+  nothing durable to share.
 
 ## 3. Caliber — coach-client, group coaching, community, messaging
 
-- **Coach-client core model:** client is assigned a human coach who
-  programs training based on goals/experience/lifestyle inside the Caliber
-  app, reviews logged sessions, adjusts the plan over time, and
-  communicates through in-app messaging — programme and log sit in one
-  shared interface the coach edits and the client executes.
-  [corahealth.app](https://www.corahealth.app/compare/caliber)
-- **Programme templates:** 120+ coach-designed structured plans by
-  goal/experience/schedule sit alongside fully bespoke 1:1 programming.
-  [corahealth.app](https://www.corahealth.app/compare/caliber)
-- **Messaging model:** direct 1:1 coach chat (reachable "through the
-  messaging feature in the app"), PLUS a **weekly asynchronous video
-  check-in** — the coach records a Loom-style video reviewing the past
-  week and setting next week's goals. This is a scheduled, structured
-  cadence layered on top of free-form chat, not pure open chat.
-  [Garage Gym
-  Reviews](https://www.garagegymreviews.com/caliber-app-review), [BarBend
-  Caliber review](https://barbend.com/caliber-fitness-app-review/)
-- **Group coaching:** a distinct, cheaper tier ($19/mo cited) gives access
-  to a **group chat shared with other participants and a coach** — i.e.
-  many-to-one coaching with peer visibility, cheaper than 1:1.
-  [sports-nerd.com](https://sports-nerd.com/brand/caliber/)
-- **Community/feed features:** separate from coaching entirely — interest-
-  based community groups (examples cited: Camping & Hiking, Cycling,
-  Running, Swimming, "Gym Playlist" for music) plus the option to form
-  private groups to train with friends. This reads as a lightweight
-  affinity-group/forum layer bolted onto the coaching product, not a
-  programme-discovery feed. [sports-nerd.com](https://sports-nerd.com/brand/caliber/)
-- **What's shared between coach and client:** the live programme object
-  itself (coach edits, client trains from the same record), the client's
-  logged session history, and the weekly video review — i.e. object-linked
-  context, not a blank chat thread with no shared artefact.
-- Pricing context (why the model works): Standard ~$50/mo up to $150–300+/mo
-  for higher-touch tiers — group coaching is the low-friction/low-price
-  entry point specifically because it substitutes shared coach attention
-  for 1:1 attention. [sports-nerd.com](https://sports-nerd.com/brand/caliber/)
+- **Coach-client model:** assigned human coach programs training inside
+  the app based on goals/experience/lifestyle, reviews logged sessions,
+  adjusts the plan, and messages the client — programme and log sit in one
+  shared, coach-editable record. [corahealth.app](https://www.corahealth.app/compare/caliber)
+- **Templates:** 120+ coach-designed structured plans by
+  goal/experience/schedule, alongside bespoke 1:1 programming.
+- **Messaging:** 1:1 in-app chat PLUS a scheduled **weekly async video
+  check-in** (Loom-style, reviewing the week and setting next week's
+  goals) — a structured cadence layered on top of free chat, not pure
+  open-ended messaging. [Garage Gym
+  Reviews](https://www.garagegymreviews.com/caliber-app-review), [BarBend](https://barbend.com/caliber-fitness-app-review/)
+- **Group coaching** ($19/mo cited): shared group chat with peers + a
+  coach — many-to-one, cheaper than 1:1. [sports-nerd.com](https://sports-nerd.com/brand/caliber/)
+- **Community groups** are separate from coaching: interest-based groups
+  (Camping & Hiking, Cycling, Running, Swimming, "Gym Playlist"), plus
+  private groups to train with friends — a lightweight affinity-group
+  layer, not a programme-discovery feed.
+- **What's shared coach↔client:** the live programme object itself
+  (coach-edited, client-executed), logged session history, and the weekly
+  video — object-linked context, never a bare chat thread. Pricing:
+  Standard ~$50/mo up to $150–300+/mo for higher-touch tiers; group
+  coaching is the low-friction entry point precisely because it
+  substitutes shared for 1:1 attention.
 
-## 4. Training communities — what people actually do, and moderation norms
+## 4. Training communities — behaviour and moderation norms
 
-*(Reddit could not be fetched directly this session; the below is
-WebSearch-derived and general-knowledge-informed. Where I list specific
-rule wording, treat it as directionally right but** unverified against the
-live wiki**, and confirm before quoting it as fact in any outward-facing
-doc.)*
+*(Reddit unfetchable this session; specifics below are WebSearch-derived/
+general-knowledge and should be confirmed before quoting as fact.)*
 
-- **r/Fitness** (~12.6M members, largest general lifting subreddit) runs
-  on a curated **wiki/FAQ** (`thefitness.wiki`) that front-loads recommended
-  routines, nutrition basics and FAQs so that "what programme should I run"
-  gets answered by a static resource before it becomes a repeat thread —
-  the wiki explicitly funnels newcomers to routines rather than open-ended
-  advice threads. [thefitness.wiki](https://thefitness.wiki/)
-- **r/bodyweightfitness** (~2M+) centres on a single canonical "Recommended
-  Routine" (maintained since 2012, iterated since) plus a Minimalist and a
-  gentle "Primer" on-ramp for absolute beginners — a strong pattern of ONE
-  default path with named easier/harder forks rather than an open menu.
-  Recurring scheduled threads exist for specific content types:
-  "Technique Thursday" (form) and "Theory Thursday" (training principles),
-  plus monthly physique/progress threads — i.e. content is time-boxed into
-  themed slots rather than free-for-all. Community ethos line: "we're all
-  gonna make it" (inclusive, anti-gatekeeping tone); "we do not frown on
-  weights or barbells" makes explicit that cross-modality questions are
-  welcome, not treated as off-topic. [redditbwf.github.io](https://redditbwf.github.io/),
-  [GitHub mirror of Recommended
-  Routine](https://github.com/NearHuscarl/recommended-routine)
-- **Recurring moderation patterns across lifting subreddits** (general
-  knowledge, consistent with the thread-format evidence above): no medical
-  diagnosis (pain/injury questions are redirected to "see a
-  doctor/physio", not diagnosed in-thread); no explicit body-shaming or
-  "just eat less" pile-ons; progress-pic threads are typically corralled
-  into a fixed cadence (weekly/monthly megathread) rather than allowed as
-  standalone daily posts, specifically to stop the feed becoming a stream
-  of body photos; self-promotion (coaching sales, program sales, referral
-  links) is restricted to designated threads/tags; minors are barred from
-  posting body/progress photos of themselves; sexual/suggestive content
-  involving anyone who appears to be a minor is a platform-wide Reddit
-  ToS violation, not just a subreddit rule. [Reddit
+- **r/Fitness** (~12.6M) runs on a curated wiki/FAQ (`thefitness.wiki`)
+  that front-loads recommended routines and nutrition basics so "what
+  programme should I run" gets answered by a static resource before
+  becoming a repeat thread. [thefitness.wiki](https://thefitness.wiki/)
+- **r/bodyweightfitness** (~2M+) centres on ONE canonical "Recommended
+  Routine" (since 2012) plus named easier (Minimalist, Primer) and harder
+  forks — a single default path, not an open menu. Recurring themed
+  threads: "Technique Thursday" (form), "Theory Thursday" (principles),
+  monthly progress threads — content is time-boxed into slots rather than
+  free-for-all. Ethos: "we're all gonna make it" (inclusive); "we do not
+  frown on weights or barbells" (cross-modality welcome).
+  [redditbwf.github.io](https://redditbwf.github.io/), [Recommended
+  Routine mirror](https://github.com/NearHuscarl/recommended-routine)
+- **Recurring moderation patterns** across lifting subs (general
+  knowledge): no medical diagnosis (pain redirected to "see a doctor/
+  physio," not diagnosed in-thread); no body-shaming pile-ons;
+  progress-pic posts corralled into a fixed weekly/monthly megathread
+  rather than standalone daily posts; self-promotion restricted to
+  designated threads; minors barred from posting their own body/progress
+  photos; sexual/suggestive content involving anyone appearing to be a
+  minor is a platform-wide Reddit ToS violation. [Reddit
   policy](https://support.reddithelp.com/hc/en-us/articles/360043075352-Do-not-share-sexual-or-suggestive-content-involving-minors-or-engage-in-any-predatory-or-inappropriate-behavior-with-minors)
-- **What's valued vs noise (consistent pattern across the subs
-  researched):** valued — specific programme questions ("should I run X or
-  Y given Z constraint"), form-check videos with a specific question
-  attached, structured progress posts (measurements/photos on a fixed
-  cadence with context), and troubleshooting plateaus with actual training
-  logs attached. Treated as noise/removed — vague "how do I get big" posts
-  with no context, unsolicited unsolicited-advice pile-ons on other
-  people's form checks, transformation posts with no training info attached
-  (pure before/after with zero method), and any post that's actually a
-  disguised programme/product advertisement.
-- **Discord communities (Boostcamp, Hevy):** searches did not surface a
-  confirmed official Boostcamp or Hevy Discord with documented rules/
-  activity; Hevy's positioning explicitly frames "community as inspiration
-  and accountability" as a differentiator versus Boostcamp's
-  methodology-first design, which suggests Hevy invests more in social
-  proof/accountability mechanics as product strategy, not necessarily via
-  Discord specifically. [push-pull.app
-  comparison](https://push-pull.app/blog/hevy-vs-boostcamp)
-- **Barbell Medicine** runs its own hosted forum (`forum.barbellmedicine.com`)
-  rather than relying on Reddit/Discord — i.e. established coaching brands
-  sometimes own their community surface outright rather than living inside
-  a third-party platform. [Barbell Medicine
-  Forum](https://forum.barbellmedicine.com/)
-- Jeff Nippard and similar creators route audience community into their own
-  Discords advertised from YouTube/TikTok (e.g. free programme + Discord
-  link in bio), i.e. the community lives adjacent to the content, not
-  inside a training app. No rules/activity detail could be confirmed for
-  these Discords from search.
-- StrongLifts 5x5: positioned as a long-running, simple single-programme
-  product ("3M+ lifters since 2007") rather than a community platform; no
-  evidence of an active dedicated forum/Discord surfaced in search.
+- **Valued vs noise (consistent pattern):** valued = specific programme
+  questions with constraints, form-check videos with a specific question,
+  progress posts on a fixed cadence with context, plateau troubleshooting
+  with an actual log attached. Noise = vague "how do I get big," pile-on
+  unsolicited advice, before/after posts with zero method, disguised
+  product ads.
+- **Discord (Boostcamp/Hevy):** no confirmed official Discord with
+  documented rules found for either. Hevy's own positioning explicitly
+  frames "community as inspiration/accountability" as its differentiator
+  vs Boostcamp's methodology-first design. [push-pull.app](https://push-pull.app/blog/hevy-vs-boostcamp)
+- **Barbell Medicine** runs its own hosted forum
+  (`forum.barbellmedicine.com`) rather than Reddit/Discord — established
+  coaching brands sometimes own their community surface outright.
+- Jeff Nippard-style creators route audiences to their own Discords via
+  bio links; community lives adjacent to content, not inside a training
+  app — no rules/activity detail confirmed. StrongLifts 5x5 shows no
+  evidence of an active dedicated community surface at all.
 
 ## 5. Programme-sharing UX best practice — preview, copy, "adapt to me"
 
-- **Boostcamp's link-share flow** is the cleanest "preview → copy" example
-  found: sender shares a link, "your training partner gets the same thing
-  the second you share the link... they open it, tap save, and run it" —
-  friction is deliberately minimised to "10 seconds," and the sender
-  explicitly "stays in control of who has it" (i.e. it's not published to
-  everyone by sending it to one person). [Boostcamp](https://www.boostcamp.app/share)
-- **Structure-first, weights-never at share time** is implied rather than
-  directly confirmed for Boostcamp: programmes are described/browsed by
-  weeks, days/week, level, equipment and goal — metadata that is entirely
-  about structure, never about a specific person's working weights, which
-  matches "structure travels, load doesn't" as the safe default for a
-  shared programme object. [Boostcamp](https://www.boostcamp.app/)
-- **Fork-then-edit is the dominant "adapt to me" pattern** across the
-  products researched, NOT automatic re-fitting of an imported programme:
-  - Boostcamp: fork a programme, then manually edit exercises/sets/maxes
-    to fit your equipment — no auto-substitution on import.
-  - RP Hypertrophy app: choose from 45–100+ premade templates, but exercise
-    selection is user-chosen within the template up front (pick exercises
-    to fit your equipment when you start), and the ongoing adaptation is
+- **Boostcamp's link-share** is the cleanest preview→copy example: sender
+  shares a link, recipient opens/taps save/runs it in ~10 seconds, sender
+  "stays in control of who has it" (not broadcast just by sending once).
+  [Boostcamp](https://www.boostcamp.app/share)
+- **Structure-first, weights-never** at share time is the implied norm:
+  programme metadata browsed/shown is weeks/days/level/equipment/goal —
+  never a specific person's working weights.
+- **Fork-then-edit dominates "adapt to me"** — nobody researched
+  auto-rewrites a whole imported programme:
+  - Boostcamp: fork, then manually edit exercises/sets/maxes — no
+    auto-substitution.
+  - RP Hypertrophy app: 45–100+ templates; exercise selection is
+    user-chosen up front to fit equipment, then ongoing adaptation is
     feedback-driven volume/load autoregulation (pump quality, soreness) —
-    not equipment-driven exercise swapping mid-programme. [RP
-    Strength](https://rpstrength.com/pages/hypertrophy-app), [Dr
-    Muscle review](https://dr-muscle.com/rp-hypertrophy-app-for-strength-training-expert-review/)
-  - Juggernaut AI: closest to genuine automatic adaptation — a "Readiness
-    Rating" system adjusts the plan pre-session, intra-session, session-
-    to-session, week-to-week and block-to-block based on real-time
-    feedback (RPE-style input), AND has an explicit equipment-substitution
-    feature that swaps to an alternative exercise targeting the same
-    movement pattern/muscles when the required equipment isn't available.
-    This is the strongest "true adaptation, not just editing" example
-    found. [Toolify
-    summary](https://www.toolify.ai/ai-news/crafting-your-perfect-powerlifting-program-with-juggernaut-ai-1979159),
-    [Garage Gym
-    Experiment](https://garagegymexperiment.com/juggernaut-ai/)
-  - Fitbod is the outlier: it has no "programme" object to import/share at
-    all — every session is freshly generated from live recovery/equipment
-    state, so "adapt to me" is the entire product rather than a feature
-    layered on a shared artefact.
-- **Take for programme-object design:** the strongest products separate
-  three distinct things that competitors often conflate — (1) the
-  structural template (weeks/days/exercises/sets-reps scheme), (2) the
-  recipient's own working numbers (never inherited, always re-derived or
-  left blank on import), and (3) an explicit, visible equipment-substitution
-  step at import time rather than a silent swap.
+    not equipment-driven mid-programme swapping. [RP
+    Strength](https://rpstrength.com/pages/hypertrophy-app), [Dr Muscle
+    review](https://dr-muscle.com/rp-hypertrophy-app-for-strength-training-expert-review/)
+  - **Juggernaut AI is the strongest true-adaptation example**: a
+    "Readiness Rating" adjusts the plan pre/intra/session-to-session/
+    week-to-week/block-to-block from real-time RPE-style feedback, AND has
+    an explicit equipment-substitution feature swapping to an alternative
+    exercise on the same movement pattern when equipment is unavailable.
+    [Toolify](https://www.toolify.ai/ai-news/crafting-your-perfect-powerlifting-program-with-juggernaut-ai-1979159),
+    [Garage Gym Experiment](https://garagegymexperiment.com/juggernaut-ai/)
+  - Fitbod is the outlier: no programme object at all to import/share —
+    "adapt to me" IS the entire product, generated fresh each session.
+- **Design takeaway:** the strongest products separate three things
+  competitors often conflate — (1) structural template, (2) the
+  recipient's own working numbers (never inherited, re-derived or left
+  blank), (3) an explicit, visible equipment-substitution step at import
+  — no product does all three cleanly; Juggernaut (substitution) and
+  Boostcamp (structure-first metadata) are each half the answer.
 
 ## 6. Gym-based social products — mechanics, verification, failures
 
-- **Hevy's "gym leaderboard" is NOT gym-location-based** despite the name —
-  it ranks best lift on 38 exercises purely among people you follow, with
-  no physical-gym verification, no location data, and no duplicate/fake-
-  account handling documented anywhere in Hevy's own feature pages. It is
-  a friend-leaderboard wearing a "gym" label for marketing purposes.
-  [Hevy leaderboard
-  page](https://www.hevyapp.com/features/gym-leaderboard/)
-- Hevy's actual social stack: follow/followed feed, a separate "Discover"
-  feed of non-followed users' workouts, likes + comments (including
-  clickable links in comments), saving another user's completed workout as
-  a reusable routine or live session, shareable programme/folder links and
-  shareable workout images, private-profile follow-request gating, and a
-  "hide suggested users" privacy toggle. Media cap: 3 photos or 2 photos +
-  1 video per workout, visibility following profile privacy.
-  [Hevy social features](https://www.hevyapp.com/features/social-features/)
-- **GymRat / GymRats** (two distinct apps with confusingly similar names)
-  position themselves explicitly as "social workout log," "global fitness
-  community," and team-based accountability/challenge apps — both appear
-  currently live, not failed, per store listings, so no direct evidence of
-  shutdown found for either.
-- **Fitocracy — the clearest documented failure case of a fitness-social
-  product**, useful as a cautionary pattern:
-  - Launched 2011 as a heavily gamified (points/quests) fitness log with a
-    strong community; by the mid-2020s it is "technically not shut down"
-    but functionally dead — outdated app, unreliable uptime, inactive
-    forums, no shutdown announcement, just abandonment.
-  - **Root cause chain reported:** product stagnation (mobile UX didn't
-    keep pace with Strong/Strava/Fitbit) → users left → community thinned
-    → gamification (points, quests) stopped feeling meaningful without an
-    active community to perform it for → remaining users migrated to
-    Reddit/Discord/Facebook fitness communities instead, i.e. the SOCIAL
-    LAYER was the actual value, and once it hollowed out, the logging
-    features alone weren't enough to retain users.
-  - A pivot toward paid coaching also failed to gain traction, compounding
-    the funding problem.
-  - [the-titan-life.com retrospective](https://the-titan-life.com/2025/08/28/what-really-killed-fitocracy-the-mistakes-that-doomed-a-great-fitness-app/),
-    [medium.com founder
-    postmortem](https://medium.com/@captaincole/fitness-apps-are-hard-and-other-reasons-why-our-app-died-b39b461267ec)
-  - **Direct lesson for cold-start social:** gamification (points/badges)
-    does not substitute for a genuinely active peer community; if the
-    community thins, the game layer becomes hollow motion with nobody
-    watching, and users leave for platforms (Reddit/Discord) that were
-    never trying to be a workout tracker at all — they just had denser
-    people.
-- **ClassPass/Anytime Fitness/Gympass:** these are gym-ACCESS marketplaces
-  (booking/check-in across many physical studios), not gym-social products
-  in the Hevy sense; ClassPass copy mentions only "celebrate milestones and
-  share with friends" as its social surface — no leaderboard, no gym-
-  specific community found in current material. Not a useful mechanics
-  reference beyond confirming that access-marketplace apps generally do
-  NOT build gym-social layers themselves.
-- **No physical-gym verification mechanism was found in ANY product
-  researched** (Hevy included) — none of them confirm a user actually
-  trains at a claimed gym before attaching them to a "gym" leaderboard or
-  group. This is a real gap/risk: any Volyume "gym" or "your gym's people"
-  feature needs its OWN verification design (e.g. proof-of-membership,
-  geofenced check-in, or simply not claiming gym-verification and calling
-  it a "training circle" instead) rather than assuming an existing pattern
-  to copy.
+- **Hevy's "gym leaderboard" is NOT gym-location-based** despite the name
+  — ranks best lift on 38 exercises purely among people you follow; no
+  physical-gym verification, no location data, no duplicate/fake-account
+  handling documented anywhere. A friend-leaderboard wearing a "gym"
+  label. [Hevy leaderboard](https://www.hevyapp.com/features/gym-leaderboard/)
+- Hevy's full social stack: follow/feed + separate "Discover" feed of
+  non-followed users, likes + comments (with clickable links), saving
+  another's workout as a reusable routine/live session, shareable
+  programme/folder links and shareable images, private-profile follow-
+  gating, "hide suggested users" toggle. Media cap: 3 photos or 2+1 video
+  per workout, visibility follows profile privacy. [Hevy
+  social](https://www.hevyapp.com/features/social-features/)
+- **GymRat/GymRats** (two similarly-named apps) both market as social
+  workout log / global fitness community / team challenges; both appear
+  currently live per store listings — no shutdown evidence found.
+- **Fitocracy — the clearest documented failure case**, useful as a
+  cautionary pattern: launched 2011, heavily gamified (points/quests),
+  strong community; by the mid-2020s functionally dead (no shutdown
+  announcement, just abandonment — outdated app, unreliable uptime,
+  inactive forums). **Reported cause chain**: mobile UX stagnated vs
+  Strong/Strava/Fitbit → users left → community thinned → gamification
+  stopped feeling meaningful without an audience → remaining users
+  migrated to Reddit/Discord/Facebook instead. A pivot to paid coaching
+  also failed to gain traction. **Lesson:** gamification cannot carry a
+  social product once peer density thins — a small number of genuinely
+  active people matters more than points/badges on an empty room.
+  [Retrospective](https://the-titan-life.com/2025/08/28/what-really-killed-fitocracy-the-mistakes-that-doomed-a-great-fitness-app/),
+  [Founder postmortem](https://medium.com/@captaincole/fitness-apps-are-hard-and-other-reasons-why-our-app-died-b39b461267ec)
+- **ClassPass/Anytime Fitness/Gympass** are gym-ACCESS marketplaces
+  (booking/check-in across studios), not gym-social products; ClassPass's
+  only social mention is "celebrate milestones and share with friends" —
+  no leaderboard or gym-specific community found.
+- **No product researched has real physical-gym verification** — none
+  confirm a user actually trains at a claimed gym before attaching them to
+  a "gym" leaderboard/group. Any Volyume gym-flavoured feature needs its
+  own verification design (proof-of-membership, geofenced check-in) or an
+  honest rename (e.g. "training circle") rather than implying verification
+  that doesn't exist anywhere in the market.
 
-## 7. Progress-photo sharing conventions and ED-safety practice
+## 7. Progress-photo conventions and ED-safety practice
 
-- Reddit's platform-wide policy (confirmed directly, not subreddit-
-  specific) bans **any sexual or suggestive content involving minors or
-  anyone who appears to be a minor**, and separately requires **subject
-  consent** for posting nude/sexual images of real people at all — these
-  are Reddit-wide rules that any progress-photo-heavy subreddit (e.g.
-  r/progresspics) operates under as a floor, regardless of its own posted
-  rules. [Reddit minors
-  policy](https://support.reddithelp.com/hc/en-us/articles/360043075352-Do-not-share-sexual-or-suggestive-content-involving-minors-or-engage-in-any-predatory-or-inappropriate-behavior-with-minors),
-  [Reddit consent-for-nudes
-  policy](https://globalnews.ca/news/1847885/reddit-says-no-nude-sexual-photos-videos-without-subjects-consent)
-- I could not confirm r/progresspics' own specific posted rules (face
-  visibility requirements, exact minors wording, exact NSFW tagging rule)
-  from search or fetch this session — **flag as unverified**; r/progresspics
-  is broadly known (general knowledge, unverified here) to require
-  identifying context (stats/timeframe) alongside photos and to route
-  eating-disorder-recovery transformation posts under the same rules as
-  weight-loss ones, with community norms discouraging pure numbers-only
-  "before/after" posts with no method described — consistent with the
-  "valued vs noise" pattern found across r/Fitness-family subs in §4.
-- **Beat (UK eating disorder charity)** guidance on body image and social
-  media centres on curation and boundary-setting rather than moderation
-  mechanics: it recommends **unfollowing accounts that trigger comparison
-  or negative self-talk**, and explicitly frames body positivity as
-  "accepting your appearance most of the time" rather than a stronger
-  claim — i.e. Beat's own framing is deliberately modest, not "love your
-  body," which matches Volyume's existing calm/non-shame voice mandate.
-  [Beat body image
-  page](https://www.beateatingdisorders.org.uk/get-information-and-support/get-help-for-myself/self-help-and-self-care/body-image/)
-- Beat also publishes **media guidelines for reporting on eating
-  disorders** (aimed at journalists, but directly reusable for any
-  progress-photo/community feature): avoid detailed descriptions of
-  weight-loss methods or numbers presented as aspirational, avoid images
-  that could function as "thinspiration," and centre recovery/support
-  framing over transformation spectacle. [Beat media
+- Reddit's platform-wide policy (confirmed directly) bans sexual/
+  suggestive content involving minors or anyone appearing to be one, and
+  separately requires subject consent for posting nude/sexual images at
+  all — a floor under any progress-photo subreddit regardless of its own
+  rules. [Minors policy](https://support.reddithelp.com/hc/en-us/articles/360043075352-Do-not-share-sexual-or-suggestive-content-involving-minors-or-engage-in-any-predatory-or-inappropriate-behavior-with-minors),
+  [Consent policy](https://globalnews.ca/news/1847885/reddit-says-no-nude-sexual-photos-videos-without-subjects-consent)
+- r/progresspics' own specific posted rules (face-visibility, exact
+  wording) could not be confirmed this session — **flag unverified**;
+  generally understood (unverified here) to require stats/timeframe
+  context alongside photos, route ED-recovery transformations under the
+  same rules as weight-loss ones, and discourage numbers-only before/after
+  posts with no method — consistent with §4's valued-vs-noise pattern.
+- **Beat (UK ED charity)** body-image guidance favours curation over
+  moderation mechanics: recommends unfollowing accounts that trigger
+  comparison, and frames body positivity modestly as "accepting your
+  appearance most of the time" rather than a stronger claim — matches
+  Volyume's calm/non-shame voice mandate already. [Beat](https://www.beateatingdisorders.org.uk/get-information-and-support/get-help-for-myself/self-help-and-self-care/body-image/)
+- Beat's media guidelines (aimed at journalists, directly reusable here):
+  avoid detailed weight-loss-method/number descriptions presented as
+  aspirational, avoid "thinspiration"-functioning images, centre
+  recovery/support framing over transformation spectacle. [Beat
   guidelines PDF](https://beat.contentfiles.net/media/documents/Beat-Media_Guidelines.pdf)
-- No confirmed evidence of a technical **face-blurring feature** built
-  into any progress-photo community researched — face-blur/consent
-  practice in this space is user-driven convention (people crop or blur
-  their own photos before posting) rather than a platform-enforced
-  mechanic anywhere found. If Volyume wants an actual face-blur control,
-  that would be a genuine differentiator, not something to copy from an
-  existing pattern.
+- **No technical face-blurring feature found in any product researched**
+  — face/consent handling everywhere is user convention (crop/blur before
+  posting), not a platform mechanic. A built-in face-blur control would
+  be a genuine differentiator, not something to copy.
 
 ---
 
 ## What Volyume should take from this
 
-1. **Separate the shared object into three layers, always**: structural
-   template (weeks/days/exercises/scheme) vs the recipient's own working
-   numbers (never inherited on import) vs an explicit equipment-
-   substitution step. No product researched cleanly does all three;
-   Juggernaut AI's live substitution and Boostcamp's structure-first
-   metadata are each half the answer.
-2. **"Fork, don't merge" is the safe default for imported programmes** —
-   every credible competitor lets a recipient copy-then-edit rather than
-   silently auto-adapting; only Juggernaut AI does genuine automatic
-   re-fitting, and only for equipment substitution specifically, not for
-   whole-programme rewriting.
-3. **Make the equipment-substitution step visible and explicit at
-   import**, never silent — this is the one place a competitor (Juggernaut
-   AI) goes further than "just let them edit it," and it's a real UX
-   opportunity given Volyume's deterministic engine already knows the
-   user's equipment.
+1. **Separate the shared object into three layers**: structural template
+   vs the recipient's own working numbers (never inherited) vs an
+   explicit equipment-substitution step. No competitor does all three;
+   Juggernaut (substitution) and Boostcamp (structure-first) are each
+   half.
+2. **"Fork, don't merge" is the safe default for imports** — every
+   credible competitor lets a recipient copy-then-edit; only Juggernaut AI
+   auto-adapts, and only for equipment substitution, never whole-programme
+   rewriting.
+3. **Make equipment substitution visible and explicit at import, never
+   silent** — the one place Juggernaut AI beats "just let them edit it";
+   real opportunity given Volyume's engine already knows the user's
+   equipment.
 4. **Never inherit specific working weights across a share** — every
-   product that surfaces programme metadata publicly (Boostcamp) does so
-   in structural terms only (weeks/days/level/equipment/goal), consistent
-   with the brief's "structure travels, load doesn't" instinct.
+   product with public programme metadata (Boostcamp) keeps it structural
+   only (weeks/days/level/equipment/goal).
 5. **Creator model, now:** a named-coach layer (Boostcamp's model) is
-   low-risk and cold-start-friendly if Volyume can recruit even a handful
-   of credible named contributors — it solves the empty-library problem
-   without needing a large user base first, since coach-authored content
-   doesn't depend on network effects.
-6. **Creator model, later:** none of the products researched showed a
-   mature "follow a creator, get notified of new releases, creator
-   earns/ranks" mechanic distinct from the programme itself — this is
-   whitespace Volyume could build toward once there's a userbase, not a
-   pattern to copy wholesale from anywhere researched.
-7. **Community feed ≠ programme discussion** — Boostcamp's "Community" tab
-   is a completed-workout activity feed, NOT comments on programmes; none
-   of the researched apps put a comment thread ON a programme page. If
-   Volyume wants programme-level Q&A, that's a genuine gap to fill
-   deliberately, not an established pattern to mirror.
-8. **Cold-start lesson from Fitocracy's failure**: gamification cannot
-   carry a social product once the actual peer density thins — prioritise
-   getting a small number of real, active people conversing over adding
-   points/badges/streak mechanics on an empty room.
-9. **A "gym" label needs actual verification or an honest rename** — Hevy's
-   "gym leaderboard" is just a friend-leaderboard with no location or
-   membership check; if Volyume ever ships gym-flavoured social, either
-   build real verification (which nobody researched has done) or name the
-   feature honestly (e.g. "training circle") rather than implying
-   gym-verification that doesn't exist.
-10. **No product researched enforces face-blurring on progress photos** —
-    an actual face-blur/consent control at capture or share time would be
-    a genuine differentiator consistent with GDPR/Article 9 data
-    minimisation, not a "me too" feature.
-11. **Beat's own body-image framing is deliberately modest** ("accept your
-    appearance most of the time," not "love your body") — match that
-    register in any Volyume progress-sharing copy rather than upbeat
+   low-risk and cold-start-friendly — coach-authored content doesn't
+   depend on network effects, solving the empty-library problem before a
+   userbase exists.
+6. **Creator model, later:** no competitor has a mature follow-a-creator/
+   creator-earns mechanic distinct from the programme itself — real
+   whitespace, not a pattern to copy.
+7. **Community feed ≠ programme discussion** — Boostcamp's feed is
+   completed-workout activity, not comments on a programme; nobody
+   researched has programme-level Q&A. A deliberate gap to fill, not an
+   established pattern to mirror.
+8. **Cold-start lesson from Fitocracy:** gamification cannot carry a
+   social product once peer density thins — prioritise a small number of
+   genuinely active people over points/badges/streaks on an empty room.
+9. **A "gym" label needs real verification or an honest rename** — Hevy's
+   "gym leaderboard" is just a friend-leaderboard with no location check;
+   build actual verification or call it something honest like "training
+   circle."
+10. **No competitor enforces face-blurring on progress photos** — a
+    built-in face-blur/consent control at capture or share would be a
+    genuine, GDPR/Article-9-aligned differentiator.
+11. **Match Beat's modest register** ("accept your appearance most of the
+    time," not "love your body") in any progress-sharing copy, over
     transformation-spectacle language.
-12. **Beat's media guidance against numbers-as-aspiration and
-    "thinspiration" framing** should directly inform any progress-photo
-    share card copy and any programme-completion share card copy —
-    avoid presenting calorie/weight numbers as the achievement.
-13. **Time-box progress content into a fixed cadence/place**, mirroring
-    r/bodyweightfitness's themed-thread pattern (Technique Thursday /
-    monthly progress threads) — this is a proven mechanism for keeping a
-    body-photo-adjacent feature from dominating a general feed, directly
-    useful for calm-mode-aware feed design.
-14. **Coach-to-client shared object + scheduled async check-in (Caliber)**
-    is a reusable pattern IF Volyume ever adds any human-coach layer —
-    object-linked messaging (tied to the live programme) beats free-form
-    chat for keeping conversation on-topic and reviewable.
-15. **Structural rule for moderation design**: across every community
-    researched, the recurring "valued vs noise" line is specific-question-
-    plus-context (valued) vs numbers/photos-with-no-method (noise) — bake a
-    lightweight version of that distinction into any programme-question or
-    progress-post surface Volyume builds, rather than an open free-text box.
+12. **Apply Beat's anti-"thinspiration" media guidance** to any
+    progress-photo or programme-completion share card — never present
+    calorie/weight numbers as the achievement.
+13. **Time-box progress content into a fixed cadence/place** (mirroring
+    r/bodyweightfitness's themed-thread pattern) to stop a body-photo-
+    adjacent feature dominating a general feed — directly useful for
+    calm-mode-aware feed design.
+14. **Coach-client shared object + scheduled async check-in (Caliber)** is
+    reusable IF Volyume ever adds a human-coach layer — object-linked
+    messaging beats free-form chat for staying on-topic.
+15. **Moderation design rule:** across every community researched, valued
+    = specific-question-plus-context, noise = numbers/photos-with-no-
+    method — bake a lightweight version of that distinction into any
+    programme-question or progress-post surface, rather than an open
+    free-text box.
