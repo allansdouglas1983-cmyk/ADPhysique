@@ -1474,10 +1474,12 @@ const SCHEMA_MIGRATIONS = [
     'ALTER TABLE workouts ADD COLUMN sleep_quality INTEGER',
     'ALTER TABLE workouts ADD COLUMN energy_score INTEGER',
   ],
-  // NEW-002 training partners: the local mirror the partner row reads (offline-
-  // first — components never query Supabase). The pair-scoped sync handler
-  // (src/lib/sync/tables/partners.js) populates these from cloud migration 081.
-  // partner_blocks is a server-only write surface, not mirrored locally.
+  // NEW-002 training partners. Retained for wipe completeness; feature
+  // retired 2026-09-06 (SD-03). The tables stay because migrations are
+  // additive and never dropped, and because the wipe paths must keep
+  // clearing rows already on people's devices; nothing writes to them now
+  // (the pair-scoped sync handler was deleted with the feature).
+  // partner_blocks was a server-only write surface, never mirrored locally.
   [
     `CREATE TABLE IF NOT EXISTS partnerships (
       id             TEXT PRIMARY KEY NOT NULL,
@@ -6937,6 +6939,7 @@ export const FATAL_LOCAL_WIPE_TABLES = new Set([
   'progress_photo_meta',
   'progress_scan_sessions',
   'progress_scan_assets',
+  // Retained for wipe completeness; feature retired 2026-09-06.
   'partner_cheers',
   'partner_week_signals',
   'partner_shared_blocks',
@@ -6945,6 +6948,10 @@ export const FATAL_LOCAL_WIPE_TABLES = new Set([
   'partnerships',
 ]);
 
+// Retained for wipe completeness; feature retired 2026-09-06. The Partners
+// feature is gone (SD-03) but its six local tables stay in the schema, so
+// every wipe path must keep clearing them for anyone whose device still
+// holds rows.
 const PARTNER_LOCAL_WIPE_TABLES = [
   'partner_cheers',
   'partner_week_signals',

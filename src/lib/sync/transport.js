@@ -48,7 +48,6 @@ import { pushSessionConstraintEffects, pullSessionConstraintEffects } from './ta
 import { pushDailySteps, pullDailySteps } from './tables/dailySteps';
 import { pullCardioLog } from './tables/cardioLog';
 import { pushProfiles, pullProfiles } from './tables/profiles';
-import { pushPartners, pullPartners } from './tables/partners';
 import { pushMealPlans, pullMealPlans } from './tables/mealPlans';
 import { pushPlanFolders, pullPlanFolders } from './tables/planFolders';
 import { pushPerDayTargetOffsets, pullPerDayTargetOffsets } from './tables/perDayTargetOffsets';
@@ -99,7 +98,6 @@ export const MIGRATED_TABLES = Object.freeze([
   'tier_history',
   'daily_steps',
   'cardio_log',
-  'partner_signals',
   'meal_plans',
   'plan_folders',
   'perday_target_offsets',
@@ -121,7 +119,6 @@ const PUSH_HANDLERS = {
   profiles: pushProfiles,
   recipe_ingredients: pushRecipeIngredients,
   daily_steps: pushDailySteps,
-  partner_signals: pushPartners,
   meal_plans: pushMealPlans,
   plan_folders: pushPlanFolders,
   perday_target_offsets: pushPerDayTargetOffsets,
@@ -153,7 +150,6 @@ const PULL_HANDLERS = {
   recipe_ingredients: pullRecipeIngredients,
   daily_steps: pullDailySteps,
   cardio_log: pullCardioLog,
-  partner_signals: pullPartners,
   meal_plans: pullMealPlans,
   plan_folders: pullPlanFolders,
   perday_target_offsets: pullPerDayTargetOffsets,

@@ -219,22 +219,6 @@ export const SYNC_REGISTRY = [
     direction: 'bidirectional',
   },
   {
-    // NEW-002 training partners — the PAIR-SCOPED shape (not user-scoped). One
-    // registry entry drives all four local mirrors (partnerships,
-    // partner_week_signals, partner_cheers, partner_shared_blocks): pull both
-    // members' rows for my active pairs, push my own derived week signals.
-    // Cheers go via the partner-cheer edge function; shared-block writes are
-    // online ops in partners/service.js; partnership status is
-    // server-authoritative. Cloud migrations 081 + 100 (shared block).
-    // Handler: src/lib/sync/tables/partners.js.
-    table: 'partner_signals',
-    pk: ['pair_id', 'user_id', 'week_start'],
-    conflictStrategy: 'last_write_wins',
-    serverAuthoritative: false,
-    softDelete: false,
-    direction: 'bidirectional',
-  },
-  {
     // Theme G (2026-06-12): the assembled meal plan is computed on device
     // from the synced target + prefs, but the EXACT active plan (swaps,
     // coach edits, training-day answers) must survive a device change

@@ -1,0 +1,247 @@
+<title>Volyume Community Screens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--bg:#0D0D0D;--surface:#191917;--elev:#222220;--s2:#2A2A27;--s3:#343431;--border:#2E2E2C;--hair:#3A3A37;--amber:#F5A623;--amberFill:#E08C0B;--amberBg:rgba(245,166,35,.12);--text:#FFFFFF;--sec:#9E9E9E;--muted:#9C9C9C;--dis:#727272;--success:#7FB069;--page:#141412;--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+body{background:var(--page);color:var(--text);font-family:var(--font);margin:0;padding:24px;-webkit-font-smoothing:antialiased}
+h1.page{font-size:16px;font-weight:600;color:var(--sec);margin:0 0 16px;letter-spacing:.02em}
+.grid{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.phone{width:390px;height:844px;background:var(--bg);border-radius:32px;overflow:hidden;position:relative;border:1px solid #2a2a2a;flex:none;display:flex;flex-direction:column}
+.phone .cap{position:absolute;bottom:-22px;left:0;font-size:12px;color:var(--sec)}
+.status{height:44px}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px}
+.hdr .t{font-size:17px;font-weight:600}
+.hdr .back{width:40px;height:40px;display:flex;align-items:center;justify-content:flex-start;color:var(--text)}
+.hdr .icons{display:flex;gap:8px}
+.ibtn{width:34px;height:34px;border-radius:17px;background:var(--s2);border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;position:relative}
+.ibtn svg{width:18px;height:18px;stroke:var(--amber);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dot{position:absolute;top:-1px;right:-1px;width:8px;height:8px;border-radius:4px;background:var(--amber);border:2px solid var(--bg)}
+.scroll{padding:0 16px 24px;overflow:hidden;flex:1;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+.card.elev{background:var(--elev)}
+.h1{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0}
+.h2{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.15;margin:0}
+.h3{font-size:17px;font-weight:600;margin:0}
+.body{font-size:16px;line-height:1.45;color:var(--text)}
+.sub{font-size:13px;line-height:1.4;color:var(--sec)}
+.cap{font-size:11px;color:var(--muted)}
+.overline{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sec)}
+.label{font-size:13px;font-weight:600}
+.btn{height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;gap:8px}
+.btn.emph{background:var(--amberFill);color:#0D0D0D}
+.btn.prim{background:var(--s2);border:1px solid var(--hair);color:var(--text)}
+.btn.prim svg{stroke:var(--amber)}
+.btn.sec{background:transparent;border:1px solid var(--hair);color:var(--text)}
+.btn.sm{height:36px;font-size:14px;padding:0 14px;border-radius:10px}
+.btn svg{width:18px;height:18px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.row{display:flex;align-items:center;gap:12px}
+.col{display:flex;flex-direction:column;gap:4px}
+.avatar{width:40px;height:40px;border-radius:20px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--text);flex:none}
+.avatar.lg{width:64px;height:64px;border-radius:32px;font-size:22px}
+.avatar.a1{background:#3B4A6B}.avatar.a2{background:#5A3E2B}.avatar.a3{background:#2F4F3F}.avatar.a4{background:#4A3B5A}
+.handle{font-size:13px;color:var(--sec)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:500;padding:5px 10px;border-radius:999px;border:1px solid var(--hair);color:var(--text);background:transparent}
+.chip.v{border-color:var(--amberBg);background:var(--amberBg);color:var(--amber)}
+.seg{display:flex;background:transparent;border:1px solid var(--hair);border-radius:12px;padding:3px}
+.seg div{flex:1;text-align:center;font-size:14px;font-weight:600;padding:8px;border-radius:9px;color:var(--sec)}
+.seg .on{background:var(--amberFill);color:#0D0D0D}
+.divider{height:1px;background:var(--border)}
+.receipt{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.receipt .c{background:var(--s2);border-radius:12px;padding:12px}
+.receipt ul{margin:6px 0 0;padding-left:16px;font-size:12px;color:var(--sec);line-height:1.5}
+.receipt .k{font-size:12px;font-weight:600}
+.reasons{font-size:12px;font-weight:500;color:var(--text)}
+.stat{display:flex;gap:16px}
+.stat b{font-size:16px;font-weight:700}
+.stat span{font-size:12px;color:var(--sec)}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;min-width:220px;flex:none;display:flex;flex-direction:column;gap:8px}
+.hstrip{display:flex;gap:10px;overflow:hidden}
+.mini{font-size:12px;color:var(--sec)}
+.day{display:flex;flex-direction:column;gap:6px}
+.ex{display:flex;justify-content:space-between;font-size:14px;padding:6px 0}
+.ex span{color:var(--sec);font-size:13px}
+.circuit{border:1px solid var(--hair);border-radius:12px;padding:10px 12px;background:var(--s2)}
+.circuit .t{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px}.circuit .t::before{content:'';width:10px;height:10px;border:1.8px solid var(--amber);border-radius:50%;border-top-color:transparent;display:inline-block}
+.change{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-bottom:1px solid var(--border)}
+.change .from{font-size:13px;color:var(--sec);text-decoration:line-through}
+.change .to{font-size:15px;font-weight:600}
+.change .why{font-size:12px;color:var(--muted)}
+.input{height:48px;border-radius:12px;background:var(--s2);border:1px solid var(--hair);display:flex;align-items:center;padding:0 14px;font-size:16px;color:var(--text)}
+.input.ph{color:var(--dis)}
+.ok{font-size:12px;color:var(--success)}
+.post{display:flex;flex-direction:column;gap:10px}
+.post .body-pr{display:flex;flex-direction:column;gap:2px}
+.post .big{font-size:24px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.actions{display:flex;gap:18px;font-size:13px;color:var(--sec)}
+.actions svg{width:16px;height:16px;stroke:var(--sec);fill:none;stroke-width:1.8;vertical-align:-3px;margin-right:4px}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:12px 8px}
+.empty .ic{width:52px;height:52px;border-radius:26px;background:var(--s2);display:flex;align-items:center;justify-content:center}
+.empty .ic svg{width:24px;height:24px;stroke:var(--amber);fill:none;stroke-width:1.6}
+.tabbar{height:64px;border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;font-size:10px;color:var(--sec);flex:none}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabbar .on{color:var(--amber);background:var(--amberBg);padding:6px 14px;border-radius:999px}
+.tabbar svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7}
+.pagehdr{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 16px}
+.pagehdr .h1{font-size:32px}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:16px}
+</style>
+<h1 class="page">Volyume Community · key states at 390 × 844 · dark theme tokens from theme.js · lead visual review 2026-09-06</h1>
+<div class="grid">
+
+<!-- 1 Today root with header entry -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="pagehdr"><div class="h1">Today</div>
+  <div class="ibtn"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><div class="dot"></div></div></div>
+ <div class="scroll">
+  <div class="card elev"><div class="overline">Week 3 of 6</div><div class="h2" style="margin-top:6px">Upper A</div><div class="sub" style="margin-top:6px">6 exercises · about 55 min · Bench press moved up last time.</div><div class="btn emph" style="margin-top:14px">Start session</div></div>
+  <div class="card"><div class="label">Recovery</div><div class="sub" style="margin-top:4px">Sleep logged. Ready to train.</div></div>
+  <div class="card"><div class="label">This week</div><div class="sub" style="margin-top:4px">2 of 4 sessions done. Rest days never break it.</div></div>
+ </div>
+ <div class="tabbar"><div class="on"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Today</div><div><svg viewBox="0 0 24 24"><path d="M2 12h4M18 12h4M6 8v8M18 8v8M9 6v12M15 6v12M9 12h6"/></svg>Train</div><div><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Nutrition</div><div><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress</div><div><svg viewBox="0 0 24 24"><path d="M2 12h4l3-8 4 16 3-8h6"/></svg>Coach</div></div>
+ <div class="cap">1 · Today root: the Community entry replaces the brand mark, amber dot = unseen activity</div>
+</div>
+
+<!-- 2 Hub, no profile -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t">Community</div><div class="icons"><div class="ibtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></div></div></div>
+ <div class="scroll">
+  <div class="card elev">
+   <div class="h2">Programmes, training stories and people</div>
+   <div class="body" style="margin-top:8px;color:var(--sec);font-size:15px">Follow lifters you rate, share what you build, and use or adapt other people's programmes. Nothing about your body, food or coaching is ever shared.</div>
+   <div class="receipt" style="margin-top:14px">
+    <div class="c"><div class="k">Others can see</div><ul><li>Your handle and name</li><li>Styles, goal, gym and area you type</li><li>Programmes you publish</li><li>Stories you post</li></ul></div>
+    <div class="c"><div class="k">Never shared</div><ul><li>Bodyweight or body data</li><li>Food and nutrition</li><li>Progress Scan and photos</li><li>Injuries, coaching, check-ins</li></ul></div>
+   </div>
+   <div class="btn emph" style="margin-top:14px">Create my profile</div>
+   <div class="btn sec" style="margin-top:8px">Browse first</div>
+  </div>
+  <div class="overline">Programmes</div>
+  <div class="hstrip">
+   <div class="tile"><div class="h3">Minimal Push Pull Legs</div><div class="handle">@rowan_lifts</div><div class="chips"><span class="chip">Strength</span><span class="chip">3 days</span><span class="chip">14 exercises</span></div><div class="mini">Used by 4</div></div>
+   <div class="tile"><div class="h3">Kettlebell Foundations</div><div class="handle">By Volyume</div><div class="chips"><span class="chip v">Volyume</span><span class="chip">Kettlebell</span><span class="chip">3 days</span></div><div class="mini">Circuits</div></div>
+  </div>
+  <div class="overline">Around you</div>
+  <div class="nav"><div class="col"><div class="label">Kettlebell lifters</div><div class="sub">6 people</div></div><div class="sub">›</div></div>
+ </div>
+ <div class="cap">2 · Community hub, no profile yet: value is visible before commitment</div>
+</div>
+
+<!-- 3 Hub, Following (empty) with suggestions -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t">Community</div><div class="icons"><div class="ibtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></div><div class="ibtn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><div class="dot"></div></div></div></div>
+ <div class="scroll">
+  <div class="seg"><div class="on">Following</div><div>Discover</div></div>
+  <div class="card"><div class="empty"><div class="ic"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div><div class="h3">Nothing here yet</div><div class="sub">Follow a few people and their training stories will appear here.</div><div class="btn prim sm" style="margin-top:6px">Find people</div></div></div>
+  <div class="overline">People you may want to follow</div>
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+   <div class="row"><div class="avatar a1">RM</div><div class="col" style="flex:1"><div class="label">Rowan M</div><div class="handle">@rowan_lifts · Strength · Home gym</div><div class="reasons">Uses a programme you use · Lists Leeds</div></div><div class="btn prim sm">Follow</div></div>
+   <div class="divider"></div>
+   <div class="row"><div class="avatar a2">PK</div><div class="col" style="flex:1"><div class="label">Priya K</div><div class="handle">@priya.kb · Kettlebell</div><div class="reasons">Also trains kettlebell · Trains at PureGym Leeds</div></div><div class="btn prim sm">Follow</div></div>
+   <div class="divider"></div>
+   <div class="row"><div class="avatar a3">DA</div><div class="col" style="flex:1"><div class="label">Dan A</div><div class="handle">@dan_returns · Returning to training</div><div class="reasons">Same goal · Followed by 1 you follow</div></div><div class="btn prim sm">Follow</div></div>
+  </div>
+ </div>
+ <div class="cap">3 · Following, zero follows: the empty state answers "what now" with reasons-first suggestions</div>
+</div>
+
+<!-- 4 Following feed with posts -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t">Community</div><div class="icons"><div class="ibtn"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></div><div class="ibtn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div></div></div>
+ <div class="scroll">
+  <div class="seg"><div class="on">Following</div><div>Discover</div></div>
+  <div class="card post">
+   <div class="row"><div class="avatar a1">RM</div><div class="col" style="flex:1"><div class="label">Rowan M</div><div class="handle">@rowan_lifts · Yesterday</div></div></div>
+   <div class="body-pr"><div class="overline">New PR · Bench press</div><div class="big">85 kg × 5</div><div class="sub">Previous best 82.5 kg × 5</div></div>
+   <div class="body" style="font-size:15px">Third week on the new block. Slower eccentric finally clicked.</div>
+   <div class="actions"><span><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>3</span><span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>1</span></div>
+  </div>
+  <div class="card post">
+   <div class="row"><div class="avatar a2">PK</div><div class="col" style="flex:1"><div class="label">Priya K</div><div class="handle">@priya.kb · 3 days ago</div></div></div>
+   <div class="body-pr"><div class="overline">Block complete · Kettlebell Foundations</div><div class="big">6 weeks · 17 sessions</div><div class="sub">Goblet squat +4 kg · Single-arm row +4 kg</div></div>
+   <div class="actions"><span><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>5</span><span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>2</span></div>
+  </div>
+  <div class="card post">
+   <div class="row"><div class="avatar a3">DA</div><div class="col" style="flex:1"><div class="label">Dan A</div><div class="handle">@dan_returns · 5 days ago</div></div></div>
+   <div class="body-pr"><div class="overline">Programme · Published</div><div class="h3">Three days, no machines</div><div class="sub">Strength · 3 days · 12 exercises</div></div>
+   <div class="actions"><span>Open programme ›</span></div>
+  </div>
+ </div>
+ <div class="cap">4 · Following with stories: every post is generated from real training and human-posted</div>
+</div>
+
+<!-- 5 Profile (other, public) -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t"></div><div class="icons"><div class="ibtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></div></div></div>
+ <div class="scroll">
+  <div class="row" style="align-items:flex-start"><div class="avatar lg a2">PK</div><div class="col" style="flex:1;gap:2px"><div class="h2">Priya K</div><div class="handle">@priya.kb</div><div class="body" style="font-size:15px;margin-top:6px">Kettlebells in the garage, three mornings a week. Long-time StrongFirst fan.</div></div></div>
+  <div class="chips"><span class="chip">Kettlebell</span><span class="chip">Circuits</span><span class="chip">General fitness</span><span class="chip">Home gym</span></div>
+  <div class="sub">Trains at PureGym Leeds · Leeds</div>
+  <div class="stat"><div><b>12</b> <span>followers</span></div><div><b>9</b> <span>following</span></div></div>
+  <div class="btn prim"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Follow</div>
+  <div class="seg"><div class="on">Stories</div><div>Programmes</div></div>
+  <div class="card post">
+   <div class="body-pr"><div class="overline">Block complete · Kettlebell Foundations</div><div class="big">6 weeks · 17 sessions</div><div class="sub">Goblet squat +4 kg · Single-arm row +4 kg</div></div>
+   <div class="actions"><span>3 days ago</span><span>5 reactions</span></div>
+  </div>
+ </div>
+ <div class="cap">5 · Someone else's profile: who they are as a lifter, nothing else</div>
+</div>
+
+<!-- 6 Programme detail -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t">Programme</div><div class="icons"><div class="ibtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></div></div></div>
+ <div class="scroll">
+  <div class="h1" style="font-size:28px">Full-body circuit, dumbbells</div>
+  <div class="row"><div class="avatar a2">PK</div><div class="col"><div class="label">Priya K</div><div class="handle">@priya.kb</div></div></div>
+  <div class="chips"><span class="chip">Circuits</span><span class="chip">3 days</span><span class="chip">11 exercises</span><span class="chip">Used by 4</span></div>
+  <div class="sub">Three short sessions with one pair of dumbbells. Rounds stay at three; add load, not rounds.</div>
+  <div class="overline">Day 1 · Full body A</div>
+  <div class="circuit"><div class="t">Circuit · 3 rounds · 90 s between rounds</div>
+   <div class="ex">Goblet squat<span>8 to 12</span></div><div class="ex">Push-up<span>8 to 12</span></div><div class="ex">Dumbbell row<span>8 to 12</span></div></div>
+  <div class="ex">Romanian deadlift<span>3 × 8 to 10 · 90 s</span></div>
+  <div class="ex">Dumbbell overhead press<span>3 × 8 to 12 · 90 s</span></div>
+  <div class="overline">Day 2 · Full body B</div>
+  <div class="circuit"><div class="t">Circuit · 3 rounds · 90 s between rounds</div><div class="ex">Reverse lunge<span>8 to 12</span></div><div class="ex">Floor press<span>8 to 12</span></div></div>
+  <div style="display:flex;gap:8px;margin-top:auto"><div class="btn prim" style="flex:1"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Adapt for me</div><div class="btn sec" style="flex:1">Use as-is</div></div>
+ </div>
+ <div class="cap">6 · Shared programme: structure only, circuits intact, two clear choices</div>
+</div>
+
+<!-- 7 Adapt result -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t">Adapt for me</div><div class="icons"></div></div>
+ <div class="scroll">
+  <div class="card elev"><div class="h3">9 exercises kept, 2 swapped</div><div class="sub" style="margin-top:4px">Fitted to your kit and exclusions. Circuits, rounds and days stay exactly as Priya built them.</div></div>
+  <div class="card"><div class="sub">This programme is 3 days a week. Your setup says 4. Volyume keeps the creator's structure; you can add a day in the plan editor.</div></div>
+  <div class="overline">Changes</div>
+  <div class="change"><div class="from">Dumbbell overhead press</div><div class="to">Band overhead press</div><div class="why">Not in your equipment</div></div>
+  <div class="change"><div class="from">Romanian deadlift</div><div class="to">Single-leg hip hinge</div><div class="why">Excluded by you</div></div>
+  <div class="change" style="border:0"><div class="to" style="color:var(--sec);font-weight:500">Floor press</div><div class="why">No alternative in this style, kept</div></div>
+  <div style="margin-top:auto"><div class="btn emph">Save to my plans</div><div class="cap" style="text-align:center;margin-top:10px">The original programme is not changed.</div></div>
+ </div>
+ <div class="cap">7 · Adaptation preview: every change has a reason, nothing saved yet</div>
+</div>
+
+<!-- 8 Join -->
+<div class="phone">
+ <div class="status"></div>
+ <div class="hdr"><div class="back">‹</div><div class="t">Join Community</div><div class="icons"></div></div>
+ <div class="scroll">
+  <div class="sub">Pick a handle people can search for. You can change it later.</div>
+  <div class="col" style="gap:6px"><div class="label">Handle</div><div class="input">@priya.kb</div><div class="ok">Available</div></div>
+  <div class="col" style="gap:6px"><div class="label">Name</div><div class="input">Priya K</div></div>
+  <div class="col" style="gap:8px"><div class="label">Who can follow you</div><div class="seg"><div class="on">Anyone</div><div>People I approve</div></div></div>
+  <div class="card"><div class="label">Four rules</div><div class="sub" style="margin-top:6px;line-height:1.6">Training talk only.<br>Be decent to people.<br>No body-shaming, no diet or calorie talk.<br>Report what breaks this.</div></div>
+  <div style="margin-top:auto"><div class="btn emph">Create profile</div><div class="cap" style="text-align:center;margin-top:10px">Community rules and contact</div></div>
+ </div>
+ <div class="cap">8 · Join: handle, name, who can follow, the rules, one decisive action</div>
+</div>
+
+</div>

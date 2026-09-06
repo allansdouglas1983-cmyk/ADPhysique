@@ -94,6 +94,8 @@ export const CATEGORY_PREFS = Object.freeze({
     legacyKey: null,
     defaultEnabled: true,
   },
+  // Retired feature (Partners, SD-03 2026-09-06); the pref stays so an old
+  // server-sent partner push still respects a user's stored choice.
   [CATEGORY.PARTNER_CHEER]: {
     blobField: 'partnerCheerEnabled',
     legacyKey: null,
@@ -107,6 +109,21 @@ export const CATEGORY_PREFS = Object.freeze({
   // D142: the return nudge's one-tap switch, default on.
   [CATEGORY.RETURN_NUDGE]: {
     blobField: 'returnNudgeEnabled',
+    legacyKey: null,
+    defaultEnabled: true,
+  },
+  // SD-15: Community's two categories. Like PARTNER_CHEER above, these are
+  // server-sendable -- the community-notify Edge Function reads the
+  // projection row before delivering, so a toggle-off should push the
+  // projection immediately (pushCategoryPrefsNow) rather than waiting for
+  // the next ordinary sync.
+  [CATEGORY.COMMUNITY_FOLLOW]: {
+    blobField: 'communityFollowEnabled',
+    legacyKey: null,
+    defaultEnabled: true,
+  },
+  [CATEGORY.COMMUNITY_ACTIVITY]: {
+    blobField: 'communityActivityEnabled',
     legacyKey: null,
     defaultEnabled: true,
   },

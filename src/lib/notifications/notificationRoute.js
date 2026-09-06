@@ -118,27 +118,13 @@ export function routeForNotificationType(type, data = {}) {
     case 'partner_cheer':
     case 'partner_streak':
     case 'partner_joined':
-      // Campaign 14 job 5 (routing truth). All three live partner beats
-      // (partnerBeats.js: cheerPush / streakKeptPush / joinPush) land on the
-      // Partner surface, the ONLY screen that shows partner state: the pair
-      // card, the shared-streak run, the cheer/moment row and the newly
-      // joined pair.
-      //
-      // partner_cheer used to land on ProgressTab/Consistency on the claim
-      // that "the partner row hosts the cheer caption". That row was removed
-      // from Consistency on the founder device-walk of 2026-07-03 and its
-      // absence is now PINNED (partnerPlacementSpine.guard.test.js), so the
-      // tap opened a screen with no partner content at all. partner_streak
-      // and partner_joined had no mapping, so their taps dead-ended on
-      // whatever screen was last open.
-      //
-      // The Partner route is registered in ProgressStack as the Pro-guarded
-      // GatedPartner, exactly as the Coach-tab row and the Progress tile
-      // reach it; navigating here never bypasses that gate. `source` mirrors
-      // those two entry points so the surface-view telemetry can attribute a
-      // notification-driven open. No pairId is passed: PartnerScreen reads
-      // route.params.pairId only as a share target.
-      return { tab: 'ProgressTab', screen: 'Partner', params: { source: 'notification' } };
+      // Partners was retired on 2026-09-06 (SD-03). These three types are
+      // kept ONLY so a notification that was already scheduled or already
+      // sitting in the tray still resolves to a real screen instead of
+      // dead-ending on whatever was last open. Community is the surface
+      // that replaced the pairing model, so that is where an old cheer,
+      // shared-streak or joined beat now lands.
+      return { tab: 'HomeTab', screen: 'Community', params: { source: 'notification' } };
     case 'meal_log_reminder':
       // Campaign 14 job 5: the opt-in meal-log nudge (scheduler.js
       // scheduleMealReminders, Pro-gated and ED-flag gated at both schedule
@@ -177,6 +163,14 @@ export function routeForNotificationType(type, data = {}) {
       // F3: tap lands on the Diary, where the "Mark as eaten" banner and the
       // per-meal confirm live for the day with unconfirmed planned meals.
       return { tab: 'DiaryTab', screen: 'Diary' };
+    case 'community_follow':
+    case 'community_activity':
+      // SD-15: both Community push categories land on the Activity screen
+      // inside Community, the inbox for follows, reactions, comments and
+      // programme-use beats. `source` mirrors the other notification-driven
+      // entry points (e.g. the retired partner beats above) so surface-view
+      // telemetry can attribute the open.
+      return { tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' } };
     case 'diary_day':
       // §15 item 8 (deep-link expansion): the general-purpose target for any
       // notification that references ONE specific diary day rather than

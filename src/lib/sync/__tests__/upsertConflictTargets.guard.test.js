@@ -43,6 +43,10 @@ const LIB = path.join(__dirname, '..', '..');
 const EXPECTED = {
   users_profile: 'id',
   body_metrics: 'user_id,id',
+  // partner_week_signals left this sweep with the Partners feature (SD-03,
+  // retired 2026-09-06): the client no longer upserts it. The cloud table
+  // and its index stay, so the row is kept here as the recorded index if a
+  // successor ever writes to it again.
   partner_week_signals: 'pair_id,user_id,week_start',
   weekly_checkins_v2: 'user_id,id',
   recipe_ingredients: 'user_id,id',

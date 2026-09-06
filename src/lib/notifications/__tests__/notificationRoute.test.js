@@ -68,21 +68,32 @@ describe('routeForNotificationType', () => {
     }
   });
 
-  // Campaign 14 job 5 (routing truth) RE-ANCHOR: this test used to pin
-  // partner_cheer -> ProgressTab/Consistency. The partner row was removed from
-  // ConsistencyScreen on the founder device-walk of 2026-07-03 and its absence
-  // is pinned by partnerPlacementSpine.guard.test.js, so that destination had
-  // no partner content of any kind. All three partner beats now land on the
-  // Partner surface. Full coverage lives in campaign14.routingTruth.test.js.
-  test('NEW-002: a partner cheer lands on the Partner surface', () => {
-    expect(routeForNotificationType('partner_cheer')).toEqual({
-      tab: 'ProgressTab', screen: 'Partner', params: { source: 'notification' },
-    });
-  });
+  // RE-ANCHORED 2026-09-06 (SD-03, Partners retired). The three partner beat
+  // types keep their `case` labels so a push already scheduled, in a tray or
+  // sent by the still-deployed partner-cheer Edge Function resolves to a real
+  // screen; Community is the surface that replaced the pairing model. Full
+  // coverage lives in campaign14.routingTruth.test.js.
+  test.each(['partner_cheer', 'partner_streak', 'partner_joined'])(
+    'a retired %s beat lands on Community, never a dead route',
+    (type) => {
+      expect(routeForNotificationType(type)).toEqual({
+        tab: 'HomeTab', screen: 'Community', params: { source: 'notification' },
+      });
+    },
+  );
 
   test('F3: the planned-meal confirm nudge opens the Diary', () => {
     expect(routeForNotificationType('planned_meal_confirm')).toEqual({
       tab: 'DiaryTab', screen: 'Diary',
+    });
+  });
+
+  test('SD-15: community_follow and community_activity land on the Community Activity screen', () => {
+    expect(routeForNotificationType('community_follow')).toEqual({
+      tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' },
+    });
+    expect(routeForNotificationType('community_activity')).toEqual({
+      tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' },
     });
   });
 

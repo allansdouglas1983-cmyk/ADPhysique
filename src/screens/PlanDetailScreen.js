@@ -29,6 +29,7 @@ import { useToast } from '../components/Toast';
 import { confirmPlanSwitchMidBlock } from '../lib/planSwitch';
 import { getSplitRationale } from '../lib/whyThisTemplates';
 import { summariseCircuitGroups, formatCircuitPreviewLine } from '../lib/circuitRound';
+import { navigateCrossTab } from '../navigation/navigateCrossTab';
 import { track } from '../lib/telemetry';
 import Card from '../components/Card';
 import SectionLabel from '../components/SectionLabel';
@@ -550,6 +551,22 @@ export default function PlanDetailScreen({ navigation, route }) {
         ) : !isActive ? (
           <Button variant="emphatic" title="Set active" icon="checkmark-circle" size="lg" onPress={handleSetActive} />
         ) : null}
+
+        {/* Community entry point 5 (social-discovery blueprint section 1):
+            share this plan's STRUCTURE as a Community programme. Only for a
+            plan the user owns -- a library plan is not a row in `programmes`
+            yet, so there is nothing to snapshot until they copy it.
+            Community is registered in HomeStack, so this is a CROSS-TAB jump
+            (F4: a bare navigate() to another stack is silently dropped). */}
+        {!isLibrary && (
+          <Button
+            title="Share programme"
+            icon="share-social-outline"
+            variant="secondary"
+            onPress={() => navigateCrossTab(navigation, 'HomeTab', 'CommunityPublishProgramme', { planId })}
+            accessibilityLabel="Share this programme with Community"
+          />
+        )}
 
         {/* Workouts list */}
         <View style={styles.section}>

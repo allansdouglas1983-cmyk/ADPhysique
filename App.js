@@ -27,8 +27,6 @@ import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
 import { ensureNotifChannels } from './src/lib/notifications/channels';
 import { installGlobalHandlers, logError } from './src/lib/errorLog';
-import { parseInviteCode } from './src/lib/partners/link';
-import { rememberPendingPartnerCode } from './src/lib/partners/pendingInvite';
 import { loadMealLabelOverrides } from './src/lib/food/mealSlots';
 import { captureFirstTouch, warmFirstTouch } from './src/lib/attribution';
 
@@ -203,31 +201,18 @@ function notifyAuthLinkFailed() {
 
 // Handles volyume:// and https://volyume.app deep links from Supabase auth emails.
 // Supports both PKCE (code=xxx) and implicit (access_token in fragment) flows.
-// Partner invite links — volyume://partner/<CODE> and
-// https://volyume.app/partner/<CODE> — route to the Partner screen with the
-// code so it can be redeemed, instead of landing nowhere. Returns true when
-// the URL was an invite link (so auth handling is skipped). navigationRef is
-// lazy-required to preserve App.js's deliberate lazy load of RootNavigator
-// (eager import would freeze styles before accessibility prefs apply).
-function handlePartnerDeepLink(url) {
-  const code = parseInviteCode(url);
-  if (!code) return false;
-  rememberPendingPartnerCode(code).catch(() => {});
-  let navigationRef;
-  try { navigationRef = require('./src/navigation/RootNavigator').navigationRef; } catch (_) { return true; }
-  // On a cold start the navigator may not be mounted yet when getInitialURL
-  // resolves, so poll a few times before giving up rather than a single shot
-  // (a slow device could miss an 800ms one-off and lose the invite).
-  let attempts = 0;
-  const go = () => {
-    try {
-      if (navigationRef.isReady()) { navigationRef.navigate('Partner', { code }); return; }
-    } catch (_) { return; /* route not in current (e.g. signed-out) stack */ }
-    if (++attempts < 12) setTimeout(go, 500); // ~6s of cold-start grace
-  };
-  go();
-  return true;
-}
+//
+// The legacy partner invite links (volyume://partner/<CODE> and
+// https://volyume.app/partner/<CODE>) used to be intercepted here and pushed
+// straight at the Partner screen. Partners was retired on 2026-09-06 (SD-03,
+// docs/social-discovery-2026-09-06/30-BLUEPRINT.md section 9), so there is no
+// screen to push at and no invite to remember. Those URLs are still out in
+// people's share messages, so they are deliberately NOT dropped: with the
+// intercept gone they fall through to React Navigation's own linking config,
+// which rewrites the path to Community and shows the "Partner invites have
+// moved" card (RootNavigator.js, rewriteLegacyCommunityPath). Nothing below
+// consumes them either -- handleAuthDeepLink returns 'ignored' for a URL with
+// no auth parameters, so no failure alert is raised.
 
 // Launcher app-shortcut routing (long-press the home-screen icon → "Start
 // workout" / "Log food"). Maps a quick-action id to the tab + screen it should
@@ -265,13 +250,14 @@ function handleQuickAction(action) {
   go();
 }
 
-// Single entry point for incoming links: invite links first, then auth links.
+// Single entry point for incoming links. Attribution capture first, then auth
+// links; anything else (including the legacy partner paths) falls through to
+// React Navigation's linking config.
 function handleIncomingDeepLink(url) {
   if (!url) return;
   // C8 phase 1: passive first-touch attribution capture (?src= / ?utm_source=,
   // first-write-wins, sanitised slug only). Never consumes or reroutes the link.
   captureFirstTouch(url).catch(() => {});
-  if (handlePartnerDeepLink(url)) return;
   const supabase = getSupabaseClient();
   if (!supabase) return;
   // Keep the security-critical callback parser in a small testable module.
@@ -569,7 +555,8 @@ export default function App() {
   }, []);
 
   // Deep link handler — processes volyume:// auth callbacks from confirmation
-  // emails AND partner invite links (volyume://partner/<CODE> etc.).
+  // emails. Every other path (including the legacy volyume://partner/<CODE>
+  // links) is left to React Navigation's linking config.
   // RootNavigator's onAuthStateChange listener picks up any resulting session
   // automatically and re-routes the user without any extra navigation calls.
   useEffect(() => {

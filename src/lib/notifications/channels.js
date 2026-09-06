@@ -33,14 +33,15 @@ export async function ensureNotifChannels() {
   try {
     // C7 release audit F2: the send-push Edge Function targets
     // channelId 'default', which no client code created - those pushes
-    // (partner cheers and siblings) landed on expo's unbranded
-    // fallback channel. Creating the channel the server already names
-    // is the repo-side half that needs no server deploy: partner and
-    // other server-sent updates now appear under a named channel in
-    // the OS settings.
+    // landed on expo's unbranded fallback channel. Creating the channel
+    // the server already names is the repo-side half that needs no server
+    // deploy: server-sent updates now appear under a named channel in the
+    // OS settings. (The description named partner cheers until Partners
+    // was retired on 2026-09-06, SD-03; the channel itself still carries
+    // any old partner push that reaches a device.)
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Updates',
-      description: 'Partner cheers and other Volyume updates',
+      description: 'Community follows and activity, and other Volyume updates',
       importance: Notifications.AndroidImportance.DEFAULT,
       sound: 'default',
       enableVibrate: true,

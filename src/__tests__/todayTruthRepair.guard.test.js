@@ -23,13 +23,11 @@
  *     CoachOutputScreen insufficient-data hold receipt (buildHoldReceipt) and
  *     the You tab's coach-readiness surface. Those are the places an athlete
  *     genuinely needs to know why their FIRST review is held.
- *   - The PARTNER shared streak ("N weeks running together"). Independently
- *     derived in src/lib/partners/sharedStreak.js (a pure reducer over joint
- *     week states, with its own quiet-week/archive semantics), it is a mutual
- *     two-person social artefact rather than Volyume counting a solo run at
- *     the athlete - a genuinely different construct, and the Partners feature
- *     is outside this repair. Recorded here so the distinction is deliberate
- *     and reviewable, not an oversight.
+ *   - The PARTNER shared streak ("N weeks running together") was the one
+ *     documented exception: a mutual two-person artefact with its own
+ *     derivation rather than Volyume counting a solo run at the athlete. It
+ *     left the tree with the Partners feature (SD-03, retired 2026-09-06),
+ *     so the sweep below now carries no partner-lane exemption at all.
  *   - Ordinary English "N weeks running" in coaching prose (ReadinessCards'
  *     soreness/sleep warnings, weeklyCoach's escalation rationale,
  *     whyThisTemplates' ED lockout copy, coachResponse's on-target verdicts).
@@ -47,8 +45,7 @@ const read = (p) => fs.readFileSync(path.join(SRC, p), 'utf8');
 const HOME = read('screens/HomeScreen.js');
 const YOU = read('screens/YouScreen.js');
 
-// Every production surface a user can actually look at. Excludes __tests__,
-// and excludes the partner lane (see the header note above).
+// Every production surface a user can actually look at. Excludes __tests__.
 function productionFiles() {
   const out = [];
   (function walk(dir) {
@@ -95,17 +92,15 @@ describe('Ruling 1: the weekly run/streak construct is gone from Today', () => {
 
   test('no production file renders the run/streak construct anywhere (bounded sweep)', () => {
     // Anything that would put a run count, a broken/continuing run, or the
-    // rejected streak vocabulary on screen. The partner lane is the one
-    // documented exception (header note); it is a different construct with an
-    // independent derivation.
+    // rejected streak vocabulary on screen. The partner lane used to be the
+    // one documented exception; it retired with the feature, so the sweep is
+    // now unconditional.
     const offenders = [];
     for (const file of productionFiles()) {
-      // Normalize Windows separators before applying the documented prose and
-      // partner-lane allowlists. The old forward-slash-only comparison made
-      // intentional coaching prose fail only on Windows.
+      // Normalize Windows separators before applying the documented prose
+      // allowlist. The old forward-slash-only comparison made intentional
+      // coaching prose fail only on Windows.
       const rel = path.relative(SRC, file).split(path.sep).join('/');
-      if (rel.startsWith('lib/partners/') || rel === 'screens/PartnerScreen.js') continue;
-      if (rel.startsWith('lib/notifications/partnerBeats.js')) continue;
       const body = fs.readFileSync(file, 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/^\s*\/\/.*$/gm, '');

@@ -64,13 +64,6 @@ jest.mock('../../database', () => ({
   insertCapabilityConstraintFromCloud: jest.fn().mockResolvedValue(undefined),
   getAllSessionConstraintEffectsForUser: jest.fn().mockResolvedValue([]),
   insertSessionConstraintEffectFromCloud: jest.fn().mockResolvedValue(undefined),
-  // NEW-002 partner mirror.
-  getPartnershipsLocal: jest.fn().mockResolvedValue([]),
-  getPartnerWeekSignal: jest.fn().mockResolvedValue(null),
-  getLocalPartnershipIds: jest.fn().mockResolvedValue([]),
-  upsertPartnershipFromCloud: jest.fn().mockResolvedValue(undefined),
-  upsertPartnerWeekSignalFromCloud: jest.fn().mockResolvedValue(undefined),
-  upsertPartnerCheerFromCloud: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../food/db', () => ({
@@ -250,9 +243,6 @@ describe('syncAll integration', () => {
     const cloudTableForRegistry = {
       body_composition_log: 'body_metrics',
       profiles: 'users_profile',
-      // NEW-002 pair-scoped pseudo-table: its pull always hits partnerships
-      // first, then (for active pairs) partner_week_signals + partner_cheers.
-      partner_signals: 'partnerships',
     };
     const fromCalls = sb._calls.from;
     const FOOD = new Set([

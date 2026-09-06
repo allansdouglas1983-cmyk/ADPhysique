@@ -16,7 +16,7 @@
  *
  * ED-safety (audit constraint: "ED-flagged users get the neutral variant —
  * no rate/weight emphasis"): under an open ED-pattern flag, a positive
- * SCOFF screen (score >= 2, the same trio the streak / partner-signal /
+ * SCOFF screen (score >= 2, the same trio the streak and
  * contest-countdown surfaces suppress on), calm mode, or a FAILED read of
  * the flag or body profile, the report is the neutral variant: the
  * weight-trend section, calorie-change rows, phase line and ALL persisted

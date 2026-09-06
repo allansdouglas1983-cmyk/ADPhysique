@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title id="pageTitle">Profile · Volyume Community</title>
+<meta id="pageDescription" name="description" content="A Volyume Community profile.">
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  SD-16 (blueprint §8, 40-DECISIONS.md). Profile pages are noindex.
+
+  When the app is installed, the OS intercepts this URL via the verified
+  app link (app.json autoVerify, host volyume.app, pathPrefix "/u") and
+  this page never renders. It exists for someone who does not have the app
+  yet: it renders ONLY the allow-listed fields community-public returns for
+  kind=profile — never bodyweight, food, photos or private notes; the
+  function does not return them.
+
+  Query form only (?h=<handle>): static GitHub Pages, no path rewriting,
+  same fallback form the partner page already uses.
+-->
+<style>
+  :root{
+    --bg:#0D0D0D; --surface:#191917; --surface2:#232320; --border:#2E2E2C;
+    --amber:#F5A623; --amberFill:#E08C0B; --amberBg:rgba(245,166,35,0.12);
+    --text:#FFFFFF; --textSecondary:#9E9E9E;
+    --good:#7FB069; --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{color-scheme:dark;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font);
+    -webkit-font-smoothing:antialiased; line-height:1.5;}
+  .wrap{max-width:560px; margin:0 auto; padding:56px 24px 64px;}
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:40px;}
+  .brand img{height:36px; width:auto;}
+  .avatar{width:72px; height:72px; border-radius:50%; background:var(--amberBg); color:var(--amber);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:26px; margin:0 0 16px;}
+  h1{font-weight:900; letter-spacing:-0.5px; font-size:clamp(24px,6vw,30px); line-height:1.15; margin:0 0 2px;}
+  .handle{color:var(--textSecondary); font-size:16px; margin:0 0 16px;}
+  .bio{color:var(--text); font-size:16px; margin:0 0 18px; white-space:pre-wrap;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px;}
+  .chip{background:var(--surface2); border:1px solid var(--border); color:var(--textSecondary);
+    font-size:13px; font-weight:600; padding:6px 12px; border-radius:999px;}
+  .meta{color:var(--textSecondary); font-size:15px; margin:0 0 6px;}
+  .followers{color:var(--text); font-weight:700; font-size:15px; margin:0 0 28px;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; margin:0 0 20px;}
+  .card h2{font-size:15px; text-transform:uppercase; letter-spacing:0.06em; color:var(--textSecondary); margin:0 0 12px;}
+  .list-row{display:block; padding:10px 0; border-bottom:1px solid var(--border); text-decoration:none; color:var(--text); font-size:15px; font-weight:600;}
+  .list-row:last-child{border-bottom:none;}
+  .list-row .sub{display:block; color:var(--textSecondary); font-weight:400; font-size:13px; margin-top:2px;}
+  .empty{color:var(--textSecondary); font-size:14px;}
+  .cta{display:block; text-align:center; background:var(--amberFill); color:#0D0D0D; font-weight:800;
+    font-size:17px; padding:16px; border-radius:14px; margin:0 0 12px; text-decoration:none;}
+  .cta.secondary{background:transparent; color:var(--text); border:1px solid var(--border); font-weight:600;}
+  .muted{color:var(--textSecondary); font-size:14px; margin-top:24px;}
+  a{color:var(--amber);}
+  #loading, #notfound{padding:80px 0; text-align:center; color:var(--textSecondary); font-size:16px;}
+  #content{display:none;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><img src="/volyume-wordmark.png" alt="Volyume"></div>
+
+    <div id="loading">Loading profile…</div>
+    <div id="notfound" style="display:none;">This link has expired or is private.</div>
+
+    <div id="content">
+      <div class="avatar" id="avatar"></div>
+      <h1 id="displayName"></h1>
+      <p class="handle" id="handle"></p>
+      <p class="bio" id="bio" style="display:none;"></p>
+      <div class="chips" id="chips"></div>
+      <p class="meta" id="trainsAt" style="display:none;"></p>
+      <p class="followers" id="followers"></p>
+
+      <div class="card" id="programmesCard" style="display:none;">
+        <h2>Public programmes</h2>
+        <div id="programmesList"></div>
+      </div>
+
+      <div class="card" id="storiesCard" style="display:none;">
+        <h2>Latest stories</h2>
+        <div id="storiesList"></div>
+      </div>
+
+      <a class="cta" id="open" href="#">Open in Volyume</a>
+      <a class="cta secondary" id="store" href="https://play.google.com/store/apps/details?id=app.volyume">Get Volyume</a>
+      <p class="muted">Volyume Community. See our <a href="/privacy/">privacy policy</a>.</p>
+    </div>
+  </div>
+
+  <script>
+    var SUPABASE_FUNCTIONS_ORIGIN = 'https://sujrylzzxcqxxfygptns.supabase.co/functions/v1';
+
+    function humanize(key) {
+      if (!key) return '';
+      return String(key).split('_').map(function (w) {
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      }).join(' ');
+    }
+
+    function initials(name) {
+      var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '?';
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function shortStoryLabel(post) {
+      var payload = post.payload || {};
+      if (post.kind === 'pr') return 'PR: ' + (payload.exerciseName || '');
+      if (post.kind === 'session') return payload.sessionName || 'Training session';
+      if (post.kind === 'block') return payload.planName || 'Block complete';
+      if (post.kind === 'milestone') return payload.title || 'Milestone';
+      if (post.kind === 'programme') return payload.title || 'Shared programme';
+      return 'Story';
+    }
+
+    function render(profile) {
+      document.getElementById('pageTitle').textContent = (profile.display_name || ('@' + (profile.handle || ''))) + ' · Volyume Community';
+      var descMeta = document.getElementById('pageDescription');
+      descMeta.setAttribute('content', (profile.bio || 'A Volyume Community profile.').slice(0, 200));
+
+      document.getElementById('avatar').textContent = initials(profile.display_name || profile.handle);
+      document.getElementById('displayName').textContent = profile.display_name || (profile.handle ? ('@' + profile.handle) : 'Volyume member');
+      document.getElementById('handle').textContent = profile.handle ? ('@' + profile.handle) : '';
+
+      if (profile.bio) {
+        var bioEl = document.getElementById('bio');
+        bioEl.style.display = 'block';
+        bioEl.textContent = profile.bio;
+      }
+
+      var chips = document.getElementById('chips');
+      chips.innerHTML = '';
+      (Array.isArray(profile.styles) ? profile.styles : (profile.styles ? [profile.styles] : []))
+        .forEach(function (s) { chips.appendChild(el('span', 'chip', humanize(s))); });
+      if (profile.goal) chips.appendChild(el('span', 'chip', humanize(profile.goal)));
+      if (profile.setting) chips.appendChild(el('span', 'chip', humanize(profile.setting)));
+
+      if (profile.gym_label || profile.area_label) {
+        var trains = document.getElementById('trainsAt');
+        trains.style.display = 'block';
+        trains.textContent = 'Trains at ' + [profile.gym_label, profile.area_label].filter(Boolean).join(' · ');
+      }
+
+      var followerCount = profile.follower_count != null ? profile.follower_count : 0;
+      document.getElementById('followers').textContent = followerCount + (followerCount === 1 ? ' follower' : ' followers');
+
+      var programmes = Array.isArray(profile.programmes) ? profile.programmes : [];
+      if (programmes.length) {
+        document.getElementById('programmesCard').style.display = 'block';
+        var pList = document.getElementById('programmesList');
+        programmes.forEach(function (programme) {
+          var row = el('a', 'list-row');
+          row.href = '/p/?id=' + encodeURIComponent(programme.id);
+          row.appendChild(document.createTextNode(programme.title || 'Programme'));
+          var sub = [];
+          if (programme.days_per_week != null) sub.push(programme.days_per_week + ' days');
+          if (programme.style_key) sub.push(humanize(programme.style_key));
+          if (sub.length) row.appendChild(el('span', 'sub', sub.join(' · ')));
+          pList.appendChild(row);
+        });
+      }
+
+      var posts = Array.isArray(profile.posts) ? profile.posts : [];
+      if (posts.length) {
+        document.getElementById('storiesCard').style.display = 'block';
+        var sList = document.getElementById('storiesList');
+        posts.forEach(function (post) {
+          var row = el('a', 'list-row');
+          row.href = '/s/?id=' + encodeURIComponent(post.id);
+          row.textContent = shortStoryLabel(post);
+          sList.appendChild(row);
+        });
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    }
+
+    function showNotFound() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('notfound').style.display = 'block';
+    }
+
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var handle = (params.get('h') || '').trim();
+
+      // EXACTLY the form src/lib/community/links.js builds (appProgrammeUrl,
+      // appProfileUrl, appStoryUrl) and the navigator's linking config
+      // resolves: the trailing slash before the query is load-bearing.
+      document.getElementById('open').setAttribute('href', 'volyume://u/?h=' + encodeURIComponent(handle));
+
+      if (/iPad|iPhone|iPod/i.test(navigator.userAgent)) {
+        document.getElementById('store')
+          .setAttribute('href', 'https://apps.apple.com/app/idREPLACE_WITH_APP_STORE_ID');
+      }
+
+      if (!handle) { showNotFound(); return; }
+
+      fetch(SUPABASE_FUNCTIONS_ORIGIN + '/community-public?kind=profile&h=' + encodeURIComponent(handle))
+        .then(function (res) {
+          if (!res.ok) throw new Error('not-found');
+          return res.json();
+        })
+        .then(render)
+        .catch(showNotFound);
+    })();
+  </script>
+</body>
+</html>

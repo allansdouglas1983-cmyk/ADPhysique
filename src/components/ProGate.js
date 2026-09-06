@@ -36,7 +36,6 @@ const FEATURE_BENEFIT = {
   'Body metrics': 'Track your weight and measurements so coaching can read the trend and adjust your plan.',
   'Progress photos': 'Keep private progress photos with your stats, so you can see the changes the scales miss.',
   'Progress photos and Volyume Score': 'Keep private progress photos with your stats, with a Volyume Score when the photo read is strong enough.',
-  'Training partner': 'Train with a partner who can see you showed up, not your numbers. Private, one-to-one.',
   'Nutrition targets': 'Get calorie and macro targets set for your goal, division, and the week ahead.',
   'Weekly check-in': 'Run a weekly check-in so your plan and targets adjust to how the week actually went.',
   'Coaching decision': 'See the weekly decision, what changed, what held, and the signals behind it.',
@@ -287,21 +286,6 @@ export function ProLocked({ feature = 'This' }) {
 export function withProGuard(Component, feature) {
   return function GuardedScreen(props) {
     const tier = useAppStore(s => s.tier);
-    // A1 s9.3: an invited free/logged-out user is routed here with the invite
-    // code in route params, but ProLocked never reads it, so the code was
-    // silently dropped and there was no way to recover it after upgrading.
-    // Preserve it at the moment the gate intercepts so the Partner surface can
-    // auto-open the redemption once the user is eligible. Scoped to the partner
-    // route + a present code; this changes NOTHING about the gate decision.
-    const pendingCode = feature === 'Training partner' ? props?.route?.params?.code : null;
-    useEffect(() => {
-      if (tier !== 'pro' && pendingCode) {
-        // eslint-disable-next-line global-require
-        require('../lib/partners/pendingInvite')
-          .savePendingPartnerCode(pendingCode)
-          .catch(() => {});
-      }
-    }, [tier, pendingCode]);
     if (tier !== 'pro') return <ProLocked feature={feature} />;
     return <Component {...props} />;
   };

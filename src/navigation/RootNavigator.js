@@ -144,6 +144,25 @@ const WellbeingCheckScreen = lazyScreen(() => require('../screens/WellbeingCheck
 const PrivacyPolicyScreen = lazyScreen(() => require('../screens/PrivacyPolicyScreen').default);
 const DebugLogScreen = lazyScreen(() => require('../screens/DebugLogScreen').default);
 const NutritionEducationScreen = lazyScreen(() => require('../screens/NutritionEducationScreen').default);
+// Community (blueprint 30-BLUEPRINT.md section 1). Every Community screen
+// is registered in HomeStack, pushed (slide), headerShown false, each
+// rendering its own BackHeader. Lazy like every other screen: none of this
+// module graph is evaluated until someone opens Community.
+const CommunityHubScreen = lazyScreen(() => require('../screens/CommunityHubScreen').default);
+const CommunityJoinScreen = lazyScreen(() => require('../screens/CommunityJoinScreen').default);
+const CommunityEditProfileScreen = lazyScreen(() => require('../screens/CommunityEditProfileScreen').default);
+const CommunityProfileScreen = lazyScreen(() => require('../screens/CommunityProfileScreen').default);
+const CommunitySearchScreen = lazyScreen(() => require('../screens/CommunitySearchScreen').default);
+const CommunityActivityScreen = lazyScreen(() => require('../screens/CommunityActivityScreen').default);
+const CommunityDimensionScreen = lazyScreen(() => require('../screens/CommunityDimensionScreen').default);
+const CommunityRulesScreen = lazyScreen(() => require('../screens/CommunityRulesScreen').default);
+const CommunityPrivacyScreen = lazyScreen(() => require('../screens/CommunityPrivacyScreen').default);
+const CommunityModerationScreen = lazyScreen(() => require('../screens/CommunityModerationScreen').default);
+const CommunityProgrammeScreen = lazyScreen(() => require('../screens/CommunityProgrammeScreen').default);
+const CommunityAdaptScreen = lazyScreen(() => require('../screens/CommunityAdaptScreen').default);
+const CommunityPublishProgrammeScreen = lazyScreen(() => require('../screens/CommunityPublishProgrammeScreen').default);
+const CommunityComposeScreen = lazyScreen(() => require('../screens/CommunityComposeScreen').default);
+const CommunityPostScreen = lazyScreen(() => require('../screens/CommunityPostScreen').default);
 // Dormant billing surfaces (founder decision: Volyume is fully free, no
 // Free/Pro split, no trial, no paywall). SubscriptionScreen, CascadeGateScreen,
 // ProUpgradeScreen and SubscriptionPolicyScreen remain on disk at
@@ -232,7 +251,6 @@ const NutritionTargetsScreen = lazyScreen(() => require('../screens/NutritionTar
 const MealNamesScreen = lazyScreen(() => require('../screens/MealNamesScreen').default);
 const BodyMetricsScreen      = lazyScreen(() => require('../screens/BodyMetricsScreen').default);
 const ProgressPhotosScreen   = lazyScreen(() => require('../screens/ProgressPhotosScreen').default);
-const PartnerScreen          = lazyScreen(() => require('../screens/PartnerScreen').default);
 const CoachOutputScreen      = lazyScreen(() => require('../screens/CoachOutputScreen').default);
 const WeeklyStoryScreen      = lazyScreen(() => require('../screens/WeeklyStoryScreen').default);
 const ProGoalSetupScreen     = lazyScreen(() => require('../screens/ProGoalSetupScreen').default);
@@ -460,6 +478,25 @@ function HomeStack({ navigation }) {
           AvoidedMovements (transitive closure; its only outbound link is
           HowYouTrain, already above). */}
       <Stack.Screen name="AvoidedMovements" component={AvoidedMovementsScreen} options={{ headerShown: false }} />
+      {/* Community (blueprint section 1). One destination, reached from the
+          Today header, the Coach Support row, the Train programmes row and
+          the deep links below; every screen is pushed and draws its own
+          BackHeader. */}
+      <Stack.Screen name="Community" component={CommunityHubScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityJoin" component={CommunityJoinScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityEditProfile" component={CommunityEditProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityProfile" component={CommunityProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunitySearch" component={CommunitySearchScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityActivity" component={CommunityActivityScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityDimension" component={CommunityDimensionScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityRules" component={CommunityRulesScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityPrivacy" component={CommunityPrivacyScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityModeration" component={CommunityModerationScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityProgramme" component={CommunityProgrammeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityAdapt" component={CommunityAdaptScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityPublishProgramme" component={CommunityPublishProgrammeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityCompose" component={CommunityComposeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CommunityPost" component={CommunityPostScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
@@ -524,7 +561,6 @@ function ProgressStack({ navigation }) {
       <Stack.Screen name="ProgressPhotos" component={ProgressPhotosScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LiftProgress" component={LiftProgressScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Consistency" component={ConsistencyScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} options={heroZoomOptions({ headerShown: false })} />
       <Stack.Screen name="YearOfLifts" component={YearOfLiftsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RecapStory" component={YearOfLiftsScreen} options={{ headerShown: false }} />
@@ -823,9 +859,35 @@ function ProOnboardingStack() {
 //
 // Notification-tap routing (navigationRef.navigate in the onTap effect above)
 // is a SEPARATE mechanism and is untouched by this config.
+// The legacy partner invite path (volyume://partner/<CODE> and
+// https://volyume.app/partner/<CODE>, minted by the retired Partners feature and
+// already sitting in people's share messages) now lands on Community, which
+// shows the "Partner invites have moved" card (blueprint section 1).
+//
+// It is a rewrite rather than a second config entry because React Navigation
+// 6 allows a screen exactly one path pattern, and `Community` already owns
+// `community`. The rewrite hands the code over as a query param, so the
+// route arrives with { legacyPartnerCode }, and still goes through
+// safeGetStateFromPath -- the bounds and validation that module exists for
+// are not bypassed.
+const LEGACY_PARTNER_PATH = /^\/?partner(?:\/([^/?#]*))?\/?$/;
+
+export function rewriteLegacyCommunityPath(path) {
+  if (typeof path !== 'string') return path;
+  const [base] = path.split('?');
+  const match = LEGACY_PARTNER_PATH.exec(base);
+  if (!match) return path;
+  const code = match[1] ? decodeURIComponent(match[1]) : '';
+  return code ? `community?legacyPartnerCode=${encodeURIComponent(code)}` : 'community';
+}
+
+export function getStateFromPathWithLegacy(path, options) {
+  return safeGetStateFromPath(rewriteLegacyCommunityPath(path), options);
+}
+
 const linking = {
   prefixes: ['volyume://', 'https://volyume.app'],
-  getStateFromPath: safeGetStateFromPath,
+  getStateFromPath: getStateFromPathWithLegacy,
   config: {
     screens: {
       // Bottom-tab → stack-screen tree. Keys are the tab route names in
@@ -854,6 +916,17 @@ const linking = {
           // workout" card (HomeScreen.js:2253-2258). Per the ruling: no new
           // resume mechanism is built here.
           Home: 'active-workout',
+          // Community (blueprint section 8). The three share pages use a
+          // QUERY rather than a path segment (`/u/?h=`), because the site is
+          // static GitHub Pages with no path rewriting -- the same shape the
+          // partner page already used. React Navigation 6 puts unmatched
+          // query params straight into route.params, so `h` and `id` arrive
+          // as typed; CommunityProfileScreen reads `handle ?? h` for exactly
+          // that reason.
+          Community: 'community',
+          CommunityProfile: 'u',
+          CommunityProgramme: 'p',
+          CommunityPost: 's',
         },
       },
       DiaryTab: {
@@ -881,19 +954,10 @@ const linking = {
         screens: {
           // volyume://progress → Progress tab root (Analytics screen).
           Analytics: 'progress',
-          // volyume://partner/:code and https://volyume.app/partner/:code →
-          // Progress tab → Partner, with the invite code in hand (A2,
-          // certification 2026-09-05). src/lib/partners/link.js:18-19 mints
-          // both shapes and inviteShareMessage puts the web link in the
-          // share text, but no path matched them, so an invited partner had
-          // to type the code in by hand.
-          //
-          // The param MUST be named `code`: PartnerScreen.js:635 reads
-          // route.params.code through parseInviteCode, which also tolerates
-          // a whole link pasted in. `:code?` is OPTIONAL so a bare
-          // volyume://partner still opens the pairing screen (the redeem
-          // effect no-ops without a code) rather than failing to resolve.
-          Partner: 'partner/:code?',
+          // The partner invite path is no longer registered here: partner
+          // links now land on Community (blueprint section 1). See
+          // rewriteLegacyCommunityPath above for how the old URLs, which are
+          // already out in the world in share messages, get there.
         },
       },
       // §15 item 8: coach output + weekly check-in, the two most-requested

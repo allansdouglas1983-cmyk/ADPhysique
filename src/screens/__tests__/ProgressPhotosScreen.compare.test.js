@@ -538,24 +538,14 @@ describe('ProgressPhotosScreen ED-safety suppression gate', () => {
     expect(findPressable(tree, 'Share photos')).toBeDefined();
   });
 
-  test('share sheet can preview the progress card with Partners', async () => {
+  // The "preview the progress card with Partners" hand-off retired with the
+  // Partners feature (SD-03, 2026-09-06). The share sheet keeps its own
+  // share and save actions; there is no partner destination to preview for.
+  test('the share sheet carries no partner hand-off', async () => {
     const tree = await render([NEW, MID, OLD], { suppressed: false });
     await press(tree, 'Share photos');
     const sheet = hostNode(tree, 'BeforeAfterShareSheet');
-    expect(sheet.props.onPreviewForPartner).toEqual(expect.any(Function));
-    const progressCardSharePayload = {
-      label: 'Progress photo image',
-      dateRange: '5 Jan 2026 to 20 Jun 2026',
-      format: 'Square',
-      includesWeight: false,
-      includesScanScore: true,
-    };
-    await act(async () => { sheet.props.onPreviewForPartner(progressCardSharePayload); });
-    expect(nav.navigate).toHaveBeenCalledWith('Partner', {
-      source: 'progress_photos_share',
-      shareWinType: 'progress_card',
-      progressCardSharePayload,
-    });
+    expect(sheet.props.onPreviewForPartner).toBeUndefined();
   });
 
 });

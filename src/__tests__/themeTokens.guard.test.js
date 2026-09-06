@@ -42,9 +42,8 @@ describe('theme token guard: no component spreads a type role that does not exis
   // is built from getters, not a flat token map.
   //
   // `t.type.X` is always the theme (the useTheme() convention). A bare
-  // `type.X` is only the theme in a file that imports `type` from the theme --
-  // src/lib/partners/shareWins.js has its own local `type` callback parameter
-  // and must not be flagged.
+  // `type.X` is only the theme in a file that imports `type` from the theme,
+  // so a file with its own local `type` variable is not flagged.
   const files = listJsFiles(SRC);
   const known = new Set(Object.keys(type));
 

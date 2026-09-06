@@ -549,14 +549,6 @@ export default function ProgressPhotosScreen({ navigation }) {
     readOnly: false,
     includeScan: true,
   }), [latestPartialCapture, userId]);
-  const openPartnerProgressCardPreview = useCallback((progressCardSharePayload) => {
-    setShareOpen(false);
-    navigation?.navigate?.('Partner', {
-      source: 'progress_photos_share',
-      shareWinType: 'progress_card',
-      progressCardSharePayload,
-    });
-  }, [navigation]);
 
   const hasRange = Number.isFinite(rangeFrom) || Number.isFinite(rangeTo);
   // Plain label for the date-range pill; "to" reads calmer than a dash and
@@ -1625,7 +1617,7 @@ export default function ProgressPhotosScreen({ navigation }) {
 
   return (
     <SafeAreaView style={[styles.safe, live.safe]} edges={['top', 'bottom']}>
-      {/* Standard pushed-screen scaffold (BackHeader), matching Partners and the
+      {/* Standard pushed-screen scaffold (BackHeader), matching the
           rest of the app. The write actions live in the hero so capture and
           scoring are not duplicated in the header. */}
       <BackHeader
@@ -1919,7 +1911,6 @@ export default function ProgressPhotosScreen({ navigation }) {
           onClose={() => setShareOpen(false)}
           photos={scanShareItems.length >= 2 ? scanShareItems : photos}
           hideScanRange={false}
-          onPreviewForPartner={openPartnerProgressCardPreview}
         />
       </Modal>
 

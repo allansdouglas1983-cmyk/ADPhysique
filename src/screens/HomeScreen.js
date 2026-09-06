@@ -11,6 +11,7 @@ import { format } from 'date-fns/format';
 import { colors, fontSize, fontWeight, spacing, radius, withAlpha, alpha, type, circle, iconSize, fontFamily } from '../styles/theme';
 import useTheme from '../hooks/useTheme';
 import ScreenHeader from '../components/ScreenHeader';
+import CommunityHeaderAction from '../components/community/CommunityHeaderAction';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
@@ -2237,7 +2238,11 @@ export default function HomeScreen({ navigation, route }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={t.colors.primary} />}
       >
         {/* ── Branded header ── */}
-        <ScreenHeader title="Today" />
+        {/* Community (blueprint section 1, entry point 1; lead visual review
+            ruling in section 13): the header's right slot carries ONLY the
+            Community action. It replaces the brand mark on this screen, and
+            the brand mark is not shown beside it. */}
+        <ScreenHeader title="Today" right={<CommunityHeaderAction />} />
 
         {/* ── Campaign 22 Phase 2 Stage 1: the unified Today line (P1 slot,
             HOME-TODAY-UX-SPEC.md §17 region R2). One quiet row, one occupant,
@@ -2398,6 +2403,25 @@ export default function HomeScreen({ navigation, route }) {
                 Do another session
               </Text>
             </TouchableOpacity>
+            {/* Community entry point 8 (social-discovery blueprint section
+                1): a finished block is the one thing worth telling people
+                about that is not a single session. Tertiary, so it never
+                competes with the block decision above it. */}
+            {currentMesoWeek?.mesocycleId ? (
+              <Button
+                title="Share this block"
+                variant="tertiary"
+                size="sm"
+                icon="people-outline"
+                onPress={() => {
+                  haptics.selection();
+                  navigation.navigate('CommunityCompose', {
+                    kind: 'block', mesocycleId: currentMesoWeek.mesocycleId,
+                  });
+                }}
+                accessibilityLabel="Post this finished block to Community"
+              />
+            ) : null}
           </Card>
         ) : weekComplete ? (
           /* B-1 (F-18): every required session at this position is resolved.

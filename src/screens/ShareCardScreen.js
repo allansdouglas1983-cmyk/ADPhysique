@@ -28,6 +28,7 @@ import { drawShareCard, cardHeight, drawSticker, stickerHeight } from '../lib/sh
 import { buildWeeklyRecapParams } from '../lib/shareCard/greatWeek';
 import { loadWordmarkImage } from '../lib/shareCard/wordmarkImage';
 import usePhotoSuppression from '../hooks/usePhotoSuppression';
+import { navigateCrossTab } from '../navigation/navigateCrossTab';
 
 // Optional native modules, guarded so the screen still mounts (e.g. in tests
 // or before a rebuild) without them; the card just can't render/share until the
@@ -53,7 +54,7 @@ const FONT_FAMILY = Platform.select({ ios: 'Helvetica Neue', android: 'sans-seri
 const PREVIEW_RENDER_W = 640; // render crisp, display scaled down
 const PREVIEW_DISPLAY_W = 300;
 
-export default function ShareCardScreen({ route }) {
+export default function ShareCardScreen({ navigation, route }) {
   const toast = useToast();
   // CP-10 batch G (2026-07-11): live theme (src/hooks/useTheme.js). Chrome
   // only (segmented controls, toggles, preview placeholder) -- the card
@@ -62,6 +63,11 @@ export default function ShareCardScreen({ route }) {
   const live = useMemo(() => buildLiveStyles(t), [t]);
   const {
     sessionData = null,
+    // Community entry point 7 (social-discovery blueprint section 1): the id
+    // of the session this card was built from, passed through by
+    // WorkoutSummaryScreen so "Post to Community" can hand the story builder
+    // the same workout. Nothing on the CARD reads it.
+    workoutId = null,
     prData = null,
     // Optional list of PRs from the same session so the user can pick WHICH one
     // to feature on the card (a session can set several). Falls back to the
@@ -134,6 +140,22 @@ export default function ShareCardScreen({ route }) {
 
   const isSession = cardType === 'session';
   const isWeekly = cardType === 'weekly';
+
+  // Community entry point 7: which story kind (if any) this card can also be
+  // posted as, and the params to hand over. A session needs the workout id
+  // the payload builder reads on the other side, so a caller that did not
+  // pass one simply does not offer the action rather than offering a dead
+  // one. `weekly` and `beforeAfter` are never offered (SD-04).
+  const communityKind = (cardType === 'pr' && prs.length) ? 'pr'
+    : (cardType === 'milestone' && milestoneData) ? 'milestone'
+      : (isSession && workoutId) ? 'session' : null;
+  const communityComposeParams = communityKind === 'pr'
+    ? { kind: 'pr', pr: prs[Math.min(selectedPrIndex, Math.max(0, prs.length - 1))] ?? prData }
+    : communityKind === 'milestone'
+      ? { kind: 'milestone', milestone: milestoneData }
+      : communityKind === 'session'
+        ? { kind: 'session', workoutId }
+        : null;
   const isSticker = format === 'sticker';
   // Campaign 30: the weekly recap's old square-only restriction is lifted -
   // the rebuilt renderer composes every type against the tall canvas (story
@@ -803,6 +825,28 @@ export default function ShareCardScreen({ route }) {
           size="lg"
           style={styles.secondaryAction}
         />
+
+        {/* Community entry point 7 (social-discovery blueprint section 1):
+            the same moment, a different destination. PR, milestone and
+            session only: the weekly recap carries progress content and the
+            before/after card is photo content, neither of which enters
+            Community (SD-04). The params handed on are the ones this card
+            was built from, so the story and the image can never disagree.
+            ShareCard is registered in HomeStack, ProgressStack AND
+            ProfileStack while the Community routes live only in HomeStack,
+            so this is a CROSS-TAB jump (F4: a bare navigate() to another
+            stack is silently dropped). */}
+        {communityKind ? (
+          <Button
+            title="Post to Community"
+            icon="people-outline"
+            onPress={() => navigateCrossTab(navigation, 'HomeTab', 'CommunityCompose', communityComposeParams)}
+            accessibilityLabel="Post this to Community"
+            variant="outline"
+            size="lg"
+            style={styles.secondaryAction}
+          />
+        ) : null}
 
         {/* Save to gallery: writes the rendered card straight to the device
             gallery. Only shown when the media-library package is in the build. */}

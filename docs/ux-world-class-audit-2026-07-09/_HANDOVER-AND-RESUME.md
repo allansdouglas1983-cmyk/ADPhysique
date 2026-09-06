@@ -1,6 +1,28 @@
 # UX world-class audit — handover and resume note
 
 ===============================================================================
+## ★ 2026-09-06 — COMMUNITY REPLACES PARTNERS (social / discovery / sharing) ★
+
+Founder brief (in chat): one autonomous end-to-end task to replace
+Partners with a real social, discovery, community and sharing ecosystem.
+Campaign folder `docs/social-discovery-2026-09-06/` (README = document
+map; `40-DECISIONS.md` SD-01..SD-16 plus build-time rulings;
+`30-BLUEPRINT.md` = the spec; `60-FINAL-REPORT.md` = the report;
+`50-VERIFICATION.md` = tails + device checklist). What landed: Community
+(Following + Discover) off the Today header, Coach row, Train row and
+every share surface; profiles with chosen facts and a separate consent
+row; follow graph with requests; card-based training stories from real
+logged data; versioned programme snapshots (structure only) with Use
+as-is and a deterministic, explained Adapt for me; search, suggestions
+with reasons, dimension pages (style, programme, gym, area); report,
+block, mute, auto-hide, moderator queue with audit log; two budgeted push
+categories; deep links `community`, `u`, `p`, `s`; static link pages on
+volyume.app; safety records in `docs/community-safety/`. Partners is
+RETIRED (SD-03): code removed, cloud untouched, active pairs become
+mutual follows on join, old links land on Community. Cloud migration 160
+and the two functions are WRITTEN, NOT APPLIED (founder gate). Founder
+actions: TASKBOARD.md section 3.
+===============================================================================
 ## ★ 2026-09-06 — SENTRY FOLLOW-THROUGH: SEED RACE (VOLYUME-28) AND NEW-FAMILY REACHABILITY (on main) ★
 
 Founder brief (in chat): the iOS 1.3.5+64 build raised "exercise not

@@ -50,10 +50,18 @@ describe('the emphatic set is curated: committing actions only', () => {
   test('every emphatic usage is on the reviewed list', () => {
     const allowed = new Set([
       'screens/WelcomeScreen.js', 'components/auth/AuthSheet.js', 'screens/ProOnboardingScreen.js',
-      'screens/ProSetupCompleteScreen.js', 'screens/PlanPreviewScreen.js', 'screens/PartnerScreen.js',
+      'screens/ProSetupCompleteScreen.js', 'screens/PlanPreviewScreen.js',
       'screens/HowYouTrainAddScreen.js', 'screens/ManualBuilderScreen.js', 'screens/PlansScreen.js',
       'screens/ImportScreen.js', 'screens/GoalLockConsentScreen.js', 'screens/PlanDetailScreen.js',
       'components/PlanPreviewSheet.js', 'screens/BuildWorkoutScreen.js',
+      // Community (social-discovery blueprint sections 6 and 13, 2026-09-06).
+      // Each of these five is a committing step and the only emphatic action
+      // on its screen: create the profile, publish the programme, post the
+      // story, write the adapted plan. The programme screen deliberately has
+      // none (ruling 2: "Adapt for me" leads as the primary instead).
+      'screens/CommunityJoinScreen.js', 'screens/CommunityHubScreen.js',
+      'screens/CommunityPublishProgrammeScreen.js', 'screens/CommunityComposeScreen.js',
+      'screens/CommunityAdaptScreen.js',
     ]);
     for (const [file] of emphatic) expect(allowed.has(file)).toBe(true);
     expect(emphatic.length).toBeGreaterThan(10);

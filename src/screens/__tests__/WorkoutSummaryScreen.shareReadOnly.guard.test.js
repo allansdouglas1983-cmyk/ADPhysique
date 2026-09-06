@@ -47,8 +47,14 @@ describe('WorkoutSummaryScreen Share is reachable from a read-only (history) ses
   });
 
   test('the same session ShareCard path is used in both modes -- no new or ambiguous share destination', () => {
+    // Community entry point 7 (social-discovery blueprint section 1,
+    // 2026-09-06) added `workoutId` to this ONE call so ShareCard can offer
+    // "Post to Community" for the same session. The pin's subject is
+    // unchanged: there is still exactly one navigate('ShareCard', ...) here,
+    // it still carries sessionData/prData/prList, and readOnly and live mode
+    // still share it. ShareCard's own card build never reads workoutId.
     expect(SOURCE).toMatch(
-      /navigation\.navigate\('ShareCard', \{ sessionData, prData, prList: detectedPRs \}\);/,
+      /navigation\.navigate\('ShareCard', \{ sessionData, workoutId, prData, prList: detectedPRs \}\);/,
     );
   });
 

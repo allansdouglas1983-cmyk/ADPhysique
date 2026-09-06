@@ -183,35 +183,13 @@ export const TELEMETRY_EVENTS = Object.freeze([
   { name: 'step_tdee_modifier_evaluated',    deferred: true,  panel: 2,
     deferralReason: 'the only runWeeklyCoach call site supplies dailyStepsSeries: null (CoachOutputScreen.js:1696), so stepModifier.reason is always not_evaluated and the emit is unreachable' },
 
-  // NEW-002: training partners. Counts and booleans ONLY, NEVER partner
-  // identity. invite_sent -> invite_accepted is the pairing-rate funnel;
-  // cheer_sent carries a `reciprocal` boolean (the Strava finding: reciprocity,
-  // not volume, is the active ingredient); blocked is expected ~0 (any sustained
-  // nonzero triggers a design review). Server allow-list:
-  // supabase/migrate_081_training_partners.sql.
-  { name: 'partner_invite_sent',             deferred: false, panel: 1 },
-  { name: 'partner_invite_accepted',         deferred: false, panel: 1 },
-  { name: 'partner_cheer_sent',              deferred: false, panel: 1 },
-  { name: 'partner_blocked',                 deferred: false, panel: 1 },
-  // Emitted by src/lib/partners/service.js on leave. Was already accepted by
-  // the server allow-list (record_engine_telemetry) but never catalogued
-  // client-side, so the client's own allow-list rejected it before send
-  // (Sentry VOLYUME-1Q "unknown event, check the allow-list").
-  { name: 'partner_block_left',              deferred: false, panel: 1 },
-
-  // Partner STEP A adoption telemetry (11-DECISION-BRIEF section 0.3 / line 118).
-  // Counts/booleans only, never identity or content. Surface views + invite
-  // journey + mint/redeem/died-at-paywall funnel, cheers, unpairs, and pairs
-  // still active at week 2 / week 6. Server allow-list:
-  // supabase/migrate_102_partner_safety_consent.sql.
-  { name: 'partner_surface_view',            deferred: false, panel: 1 },
-  { name: 'partner_invite_journey_step',     deferred: false, panel: 1 },
-  { name: 'partner_invite_minted',           deferred: false, panel: 1 },
-  { name: 'partner_invite_redeemed',         deferred: false, panel: 1 },
-  { name: 'partner_invite_died_at_paywall',  deferred: false, panel: 1 },
-  { name: 'partner_cheer',                   deferred: false, panel: 1 },
-  { name: 'partner_unpair',                  deferred: false, panel: 1 },
-  { name: 'partner_pair_week_active',        deferred: false, panel: 1 },
+  // Partners was RETIRED on 2026-09-06 (SD-03), so its client event
+  // names have been dropped from this catalogue: with no emitters left they
+  // would fail the catalogue test, and a client that cannot send them needs
+  // no entry. The SERVER allow-list keeps accepting them
+  // (record_engine_telemetry, migrations 081 / 102 / 156): dropping a live
+  // allow-list entry is a migration decision, not a client one, and the
+  // historical rows stay readable.
 
   // COMP-030: one consolidated event emitted on account_created carrying the
   // pre-account quiz step timings + variant flag (pre-account events cannot

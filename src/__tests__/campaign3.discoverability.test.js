@@ -38,12 +38,11 @@ describe('SETTINGS ownership', () => {
     expect(src).not.toMatch(/tier === 'pro'/);
   });
 
-  test('partner cheers has a reachable toggle writing the flag the sender reads', () => {
-    const screen = read('screens/CoachingRemindersScreen.js');
-    expect(screen).toMatch(/partnerCheerEnabled/);
-    expect(screen).toMatch(/handlePartnerCheerToggle/);
-    expect(read('lib/notifications/scheduler.js')).toMatch(/partnerCheerEnabled === false/);
-  });
+  // The "partner cheers has a reachable toggle" pin retired with the
+  // Partners feature (SD-03, 2026-09-06): the section and its handler were
+  // removed from CoachingRemindersScreen, and nothing on device schedules a
+  // partner beat any more. The stored `partnerCheerEnabled` pref stays in
+  // categoryPrefs.js so an old server-sent push still respects it.
 
   test('onboarding writes a check-in hour the picker can display', () => {
     const src = stripComments(read('screens/ProOnboardingScreen.js'));

@@ -25,7 +25,6 @@ import useWeightTrend from '../hooks/useWeightTrend';
 import useVisualPillar from '../hooks/useVisualPillar';
 import { formatNumber } from '../lib/format';
 import { formatBodyWeight, formatBodyWeightRate } from '../lib/units';
-import { trackPartnerSurfaceView } from '../lib/partners/telemetry';
 import { VOLUME_LANDMARKS, getVolumeStatus, calculateTonnage, buildLoadSemanticsById } from '../lib/algorithms';
 import { getEffectiveLandmarks } from '../lib/effectiveLandmarks';
 import { localWeekStartMs } from '../lib/dayKey';
@@ -509,19 +508,10 @@ export default function AnalyticsScreen({ navigation, route }) {
                 />
               );
             })()}
-            {/* Campaign 23 (§27): demoted from its own promoted full-width
-                row into the utilities grid -- accountability is a valued
-                feature but is not evidence of MY progress, so it no longer
-                shares visual parity with the Answer Block's Visual pillar. */}
-            <NavTile
-              icon="people"
-              color={t.colors.primary}
-              label="Partners"
-              onPress={() => {
-                trackPartnerSurfaceView('progress_tile');
-                navigation.navigate('Partner', { source: 'progress_tile' });
-              }}
-            />
+            {/* The Partners tile is REMOVED (blueprint section 1, entry
+                point 4). Community is not a stat, so it gets no tile here;
+                it is reached from the Today header, the Coach Support row
+                and the Train programmes row. No replacement is added. */}
           </View>
         </View>
       </ScrollView>

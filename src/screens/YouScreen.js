@@ -35,9 +35,6 @@ import {
   getAllExercises,
 } from '../lib/database';
 import { navigateCrossTab } from '../navigation/navigateCrossTab';
-import usePartners from '../hooks/usePartners';
-import { partnerRowLine } from '../lib/partners/signals';
-import { trackPartnerSurfaceView } from '../lib/partners/telemetry';
 import { logError } from '../lib/errorLog';
 import { GOAL_LABELS, PHASE_LABELS } from '../lib/coachingGoals';
 import { buildCoachLedger } from '../lib/coachLedger';
@@ -211,10 +208,13 @@ function buildPendingCoachCopy(readiness) {
 }
 
 export default function YouScreen({ navigation }) {
-  const { user, userProfile, tier } = useAppStore(useShallow(s => ({
+  // `tier` left this selector with the retired Partners row (blueprint
+  // section 1, entry point 2): it was read only to pass through to the
+  // partner hook, and nothing on this screen consults tier now (fully-free
+  // product, D137).
+  const { user, userProfile } = useAppStore(useShallow(s => ({
     user: s.user,
     userProfile: s.userProfile,
-    tier: s.tier,
   })));
   const [sessions, setSessions] = useState(null);
   const [latestReview, setLatestReview] = useState(null);
@@ -361,20 +361,12 @@ export default function YouScreen({ navigation }) {
   const profileFocus = profileFocusLine(userProfile);
   const pendingCoachCopy = buildPendingCoachCopy(coachReadiness);
 
-  // FOUNDER DECISION (fully free, no tier split): every account reaches
-  // Partners now, so the free placeholder line and the ternary that
-  // withheld `user?.id` are retired. `tier` still passes through to
-  // usePartners (its own cap logic lives in lib/partners/signals.js,
-  // outside this lane).
-  const partners = usePartners(user?.id, tier);
-  const partnersSub = partnerRowLine({
-    rowState: partners.rowState,
-    partnerName: partners.partnership?.partnerFirstName,
-    partnerWeek: partners.partnerWeek,
-  });
-  const openPartners = useCallback(() => {
-    trackPartnerSurfaceView('coach_row');
-    navigateCrossTab(navigation, 'ProgressTab', 'Partner', { source: 'coach_row' });
+  // Community (blueprint section 1, entry point 2): the Support row that
+  // used to open Partners now opens Community, which is where following
+  // people, sharing programmes and training stories live. Partners itself
+  // was retired on 2026-09-06 (SD-03).
+  const openCommunity = useCallback(() => {
+    navigateCrossTab(navigation, 'HomeTab', 'Community');
   }, [navigation]);
 
   return (
@@ -606,9 +598,9 @@ export default function YouScreen({ navigation }) {
           <NavGroup>
           <NavRow
             icon="people-outline"
-            label="Partners"
-            sub={partnersSub}
-            onPress={openPartners}
+            label="Community"
+            sub="Programmes, training stories and people"
+            onPress={openCommunity}
           />
           </NavGroup>
         </View>

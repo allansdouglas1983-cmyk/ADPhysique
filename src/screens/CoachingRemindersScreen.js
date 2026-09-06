@@ -42,7 +42,7 @@ import BackHeader from '../components/BackHeader';
 import SectionLabel from '../components/SectionLabel';
 import Chip from '../components/Chip';
 import { setPreference as setPrefRow } from '../lib/notifications/preferences';
-import { setCategoryEnabled, pushCategoryPrefsNow } from '../lib/notifications/categoryPrefs';
+import { setCategoryEnabled } from '../lib/notifications/categoryPrefs';
 import { CATEGORY } from '../lib/notifications/categories';
 import { getQuietHours, shiftHourMinuteOutOfQuietHours } from '../lib/notifications/quietHours';
 import useAppStore from '../store/useAppStore';
@@ -219,12 +219,6 @@ export default function CoachingRemindersScreen({ navigation }) {
   // unlike the two coaching reminders above.
   const [missedEnabled, setMissedEnabled] = useState(true);
   const [plannedConfirmEnabled, setPlannedConfirmEnabled] = useState(true);
-  // #12: partner-cheer pushes (cheer received, shared streak kept, partner
-  // joined) read prefs.partnerCheerEnabled at send time (scheduler.js:1448)
-  // and only suppress when it is explicitly false, so default ON here
-  // preserves current behaviour for every existing user (an absent flag
-  // already reads as enabled).
-  const [partnerCheerEnabled, setPartnerCheerEnabled] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState(null);
   // C5-P28-01 (D96): quiet hours (default 22:00 -> 07:00) silently shift a 5 AM
   // or 6 AM weigh-in reminder to 07:00 at schedule time, while this screen kept
@@ -251,9 +245,6 @@ export default function CoachingRemindersScreen({ navigation }) {
           }
           if (prefs.plannedMealConfirmEnabled !== undefined) {
             setPlannedConfirmEnabled(prefs.plannedMealConfirmEnabled !== false);
-          }
-          if (prefs.partnerCheerEnabled !== undefined) {
-            setPartnerCheerEnabled(prefs.partnerCheerEnabled !== false);
           }
           if (prefs.morningEnabled !== undefined) {
             setMorningEnabled(prefs.morningEnabled !== false);
@@ -372,27 +363,6 @@ export default function CoachingRemindersScreen({ navigation }) {
         await cancelPlannedMealConfirm();
       }
       toast.show(value ? 'Meal-plan reminder on' : 'Meal-plan reminder off', { variant: 'success' });
-    } catch (_) {
-      toast.show('Could not save that change', { variant: 'error' });
-    }
-  }
-
-  // #12: partner cheers have no persistent scheduled notification to lay or
-  // cancel (schedulePartnerBeats fires them near-instantly off a live
-  // partner-sync event and reads this flag at that moment, scheduler.js:1448),
-  // so unlike the two toggles above there is no schedule/cancel call here.
-  async function handlePartnerCheerToggle(value) {
-    setPartnerCheerEnabled(value);
-    try {
-      const userId = useAppStore.getState().user?.id;
-      await setCategoryEnabled(userId, CATEGORY.PARTNER_CHEER, value);
-      // C14 job 4: partner cheers are the one live category the SERVER can
-      // send. The partner-cheer Edge Function reads the projection row
-      // before delivering, so an opt-out that waited for the next
-      // background sync would keep letting pushes through in the meantime.
-      // Push it now; best-effort, the ordinary sync still carries it.
-      await pushCategoryPrefsNow(userId);
-      toast.show(value ? 'Partner cheers on' : 'Partner cheers off', { variant: 'success' });
     } catch (_) {
       toast.show('Could not save that change', { variant: 'error' });
     }
@@ -608,30 +578,6 @@ export default function CoachingRemindersScreen({ navigation }) {
           <View style={[styles.helperBlock, live.helperBlock]}>
             <Text style={[styles.helperText, live.helperText]}>
               If you have planned meals you've not marked as eaten, we'll send one gentle nudge in the evening so you can confirm them and keep your coach accurate.
-            </Text>
-          </View>
-        </Card>
-
-        {/* #12: partner-cheer pushes. Optional, default on, Pro. */}
-        <SectionLabel style={styles.sectionLabelSpacing}>Partner cheers</SectionLabel>
-        <Card style={[styles.card, live.card]} padding="md">
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconWrap, live.iconWrap]}>
-              <Ionicons name="heart-outline" size={18} color={t.colors.primary} />
-            </View>
-            <Text style={[styles.cardTitle, styles.toggleTitle]}>Partner cheers</Text>
-            <Switch
-              value={partnerCheerEnabled}
-              onValueChange={handlePartnerCheerToggle}
-              trackColor={{ false: t.colors.surface3, true: t.colors.primaryBg }}
-              thumbColor={t.colors.primary}
-              ios_backgroundColor={t.colors.surface3}
-              accessibilityLabel="Partner cheers toggle"
-            />
-          </View>
-          <View style={[styles.helperBlock, live.helperBlock]}>
-            <Text style={[styles.helperText, live.helperText]}>
-              A nudge when your partner cheers you on, keeps a shared training streak going, or joins you as a training partner.
             </Text>
           </View>
         </Card>

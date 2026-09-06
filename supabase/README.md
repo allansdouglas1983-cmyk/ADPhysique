@@ -74,7 +74,8 @@ contract must not delegate its authority to a superseded audit.
     (job 3, `*/15 * * * *`, had been live); `cascade_advance_due_users()`
     remains defined; ledger 20260904082135.
   - **Applied to EU-Dublin production is now 001-048, 050-071, 073-154,
-    156-157.** 155 is PENDING on a client prerequisite (below). 049 HELD.
+    156-157.** 155 is PENDING (below: the client prerequisite is now met in
+    source, pending a shipped build). 049 HELD.
     150 RETIRED.
 - **155 BLOCKED on a client fix (found 2026-09-04 during the batch
   audit).** The new INSERT policy requires `sent_on` to equal the
@@ -85,6 +86,40 @@ contract must not delegate its authority to a superseded audit.
   would be rejected and `normaliseCheerInsertError` would map the RLS
   rejection to "partner not active". The client fallback must stamp the
   UTC date and that build must be in users' hands before 155 runs.
+  **155 update (2026-09-06, Community campaign):** the blocking client
+  fallback (`insertCheerDirectly`) has now BEEN DELETED. The whole Partners
+  surface was retired under SD-03
+  (`docs/social-discovery-2026-09-06/40-DECISIONS.md`,
+  `docs/social-discovery-2026-09-06/30-BLUEPRINT.md` section 9) on this
+  branch: `src/lib/partners/` is gone, including `service.js` and its
+  `insertCheerDirectly` fallback, so nothing in the client can write a
+  `partner_cheers` row at all, let alone stamp a local date. The only
+  writer left is the deployed `partner-cheer` Edge Function, which already
+  stamps the UTC date (pinned by
+  `src/lib/__tests__/partnerCheerRateBoundary.guard.test.js`).
+  So 155 is unblocked ONCE a build WITHOUT Partners is in users' hands.
+  Until that build ships, an older binary still on a user's phone carries
+  the local-date fallback, and applying 155 before then would give those
+  users the "partner not active" mapping around UTC midnight. 155 is still
+  NOT APPLIED, and stays that way until the founder authorises it.
+- **160 WRITTEN, NOT APPLIED (Community; founder gate).**
+  `migrate_160_community.sql` is the complete Community schema (SD-01 to
+  SD-16, blueprint section 3): fourteen `community_*` tables, all with RLS
+  enabled and NO policy for anon or authenticated and all privileges revoked
+  from both, plus 41 SECURITY DEFINER RPCs (`search_path = public, pg_temp`,
+  EXECUTE revoked from PUBLIC and anon, granted to authenticated) which are
+  the only ingress and egress (SD-14). It also widens the `consent_log`
+  CHECK with `community_visibility`, widens the
+  `notification_preferences` category CHECK with `community_follow` and
+  `community_activity`, seeds `community_moderators` with the marketing
+  admin address, and re-issues `delete_user_data()` IN FULL (migrate_154's
+  body plus the Community deletes). Nothing has been applied: it waits for
+  the founder's exact phrase "run against production" for the batch that
+  carries it. Verification after any future apply: the acceptance check at
+  the end of the file (14 tables, `rls_enabled = t`, `policy_count = 0` on
+  every one; 72 functions, all `security_definer = t` with the search_path
+  in `settings`; `authenticated_can_execute = t` for exactly the 41
+  `community_*` RPCs and `f` for every `_community_*` helper).
 - **132-136 APPLIED 2026-08-12** (founder order, Claude-run, project
   `sujrylzzxcqxxfygptns`, eu-west-1). Every object verified read-only
   after the apply:
@@ -429,6 +464,7 @@ themselves; add a row here whenever a migration is added.
 | 157 | `migrate_157_pause_cascade_cron.sql` | Unschedules the `cascade-advance-due-users` pg_cron job (migration 031) on the fully-free product; the function stays defined, nothing else touched. Rollback: one `cron.schedule` statement (see file header). | **YES - APPLIED 2026-09-04** (exact phrase; MCP; verified: zero matching cron rows, function still defined). |
 | 158 | `migrate_158_routine_exercise_groups.sql` | Exercise library expansion EL-9: two nullable columns on `routine_exercises` (`group_kind` 'circuit'\|null=superset, `round_rest_seconds`) for the circuit model. Client push omits both while `CIRCUIT_SYNC_COLUMNS_ENABLED` (src/lib/sync/featureFlags.js) is false; pull reads both via `?? null`. | **APPLIED AND VERIFIED 2026-09-05** (Claude-run batch below). |
 | 159 | `migrate_159_workout_set_evidence_class.sql` | Exercise library expansion EL-7: nullable `workout_sets.evidence_class` (null=conventional \| 'circuit' \| 'ballistic' \| 'circuit_ballistic'), stamped by the live screen, never user-chosen. Client push omits it while `CIRCUIT_SYNC_COLUMNS_ENABLED` is false; pull reads it via `?? null`. | **APPLIED AND VERIFIED 2026-09-05** (Claude-run batch below); flag flipped ON in the same landing. |
+| 160 | `migrate_160_community.sql` | Community (Social / Community / Discovery campaign, `docs/social-discovery-2026-09-06/30-BLUEPRINT.md` section 3). Fourteen `community_*` tables (profiles, follows, blocks, mutes, programmes + uses, posts, reactions, comments, reports, moderators, moderation log, activity, rate events), all RLS-enabled with NO anon/authenticated policy and ALL privileges revoked from both; 41 SECURITY DEFINER RPCs pinned to `search_path = public, pg_temp` as the only ingress and egress (SD-14). Widens the `consent_log` CHECK (`community_visibility`) and the `notification_preferences` category CHECK (`community_follow`, `community_activity`); seeds `community_moderators`; re-issues `delete_user_data()` in full with two-sided Community deletes. Rollback: drop the fourteen tables and the `community_*` / `_community_*` functions, re-apply migrate_154, re-narrow both CHECKs (see the file header). | **WRITTEN, NOT APPLIED - awaiting the founder's exact phrase.** |
 
 > Ledger gap noted 2026-08-20: `migrate_144_apple_review_password_reset.sql`
 > exists in this folder but has no row in this table (it predates CC26 and

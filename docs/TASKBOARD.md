@@ -33,6 +33,25 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## COMMUNITY REPLACES PARTNERS (2026-09-06) — LANDED on `claude/volyume-social-discovery-h7dknu`, merged to main; CLOUD 160 WRITTEN NOT APPLIED
+
+Founder brief in chat 2026-09-06 (one autonomous end-to-end task). Campaign
+folder `docs/social-discovery-2026-09-06/` (README = document map;
+`40-DECISIONS.md` SD-01..SD-16 + build-time rulings; `30-BLUEPRINT.md`;
+`50-VERIFICATION.md`; `60-FINAL-REPORT.md`; reviews `51`, `52`). Safety
+records `docs/community-safety/`. What landed: Community (Following +
+Discover) off Today, Coach, Train, Settings and every share surface;
+profiles with chosen facts and their own consent row; follows with
+requests; card-based training stories; versioned structure-only programme
+snapshots with Use as-is and an explained deterministic Adapt for me;
+search, suggestions with reasons, dimension pages; report, block, mute,
+auto-hide, moderator queue with audit log; two budgeted push categories;
+deep links `community`/`u`/`p`/`s`; static link pages; Partners RETIRED
+(SD-03) with active pairs becoming mutual follows on join and old links
+landing on Community. Founder actions: section 3 (Community block).
+
+---
+
 ## NEW-FAMILY REACHABILITY AFTER VOLYUME-28 (2026-09-06) — LANDED ON MAIN. Record: `docs/final-certification-2026-09-05/07-FINDINGS.md` F-21..F-23 + table; ruling D154.
 
 Founder brief in chat: kettlebells missing from library plans, "probably
@@ -2295,6 +2314,20 @@ conditional on the decision; recorded here so they are visible, not lost._
 
 ## 3. FOUNDER-SIDE OPS (not agent work - only the founder can do these)
 
+- **COMMUNITY (2026-09-06) - four actions, in order.** (1) Say "run
+  against production" for migration 160 (`supabase/migrate_160_community.sql`)
+  and the deploy of `community-notify` and `community-public`; Claude
+  runs them and re-verifies read-only. Until then every Community read
+  fails as "unavailable" and the screens show their calm error state with
+  Try again (the Volyume library tiles still render). (2) Give the go for
+  an Android build from main, then walk the sixteen-step device checklist
+  in `30-BLUEPRINT.md` section 12 with two test accounts. (3) Decide on
+  image upload (posts and photo avatars): it needs an image-moderation
+  processor with an EU residency check and a data-processing agreement,
+  which is a new dependency and a new data category; not built (SD-12).
+  (4) Migration 155 becomes applicable once a build WITHOUT Partners is
+  in users' hands (README note). Also: the three link pages carry the App
+  Store id placeholder until the iOS app is on the store.
 - **NOTE, NOT A DEFECT (2026-08-18) - Android App Links are not verified,
   and that is fine.** Recorded so nobody "fixes" it again. The served
   assetlinks.json carries one fingerprint (the upload key) where the

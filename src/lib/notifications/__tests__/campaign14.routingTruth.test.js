@@ -22,9 +22,8 @@
  *   2. MISLEADING DESTINATION — a registered screen that does not carry the
  *      notification's subject. This is what `partner_cheer` was doing: it
  *      landed on ProgressTab/Consistency on the claim that "the partner row
- *      hosts the cheer caption", but that row was removed from
- *      ConsistencyScreen on the founder device-walk of 2026-07-03 and its
- *      absence is pinned by partnerPlacementSpine.guard.test.js. Every
+ *      hosts the cheer caption", but that row had been removed from
+ *      ConsistencyScreen on the founder device-walk of 2026-07-03. Every
  *      destination below is therefore checked against a marker in the
  *      destination screen's own source that proves the subject is represented.
  *
@@ -177,17 +176,16 @@ const DECISIONS = {
     tab: 'ProgressTab', screen: 'Analytics',
     file: 'src/screens/AnalyticsScreen.js', marker: /recap/,
   },
+  // Partners was retired on 2026-09-06 (SD-03). partner_cheer is still a
+  // LIVE type because the partner-cheer Edge Function stays deployed, so an
+  // in-flight or already-delivered push must still resolve. It now lands on
+  // Community, the surface that replaced the pairing model, which explains
+  // the retirement in its own copy. partner_streak and partner_joined left
+  // the live inventory with the local scheduler that emitted them; their
+  // `case` labels stay in notificationRoute.js for anything still in a tray.
   partner_cheer: {
-    tab: 'ProgressTab', screen: 'Partner',
-    file: 'src/screens/PartnerScreen.js', marker: /cheer/,
-  },
-  partner_streak: {
-    tab: 'ProgressTab', screen: 'Partner',
-    file: 'src/screens/PartnerScreen.js', marker: /sharedStreak/,
-  },
-  partner_joined: {
-    tab: 'ProgressTab', screen: 'Partner',
-    file: 'src/screens/PartnerScreen.js', marker: /partnership/i,
+    tab: 'HomeTab', screen: 'Community',
+    file: 'src/screens/CommunityHubScreen.js', marker: /[Pp]artner/,
   },
   planned_meal_confirm: {
     tab: 'DiaryTab', screen: 'Diary',
@@ -260,8 +258,6 @@ describe('live notification type inventory is derived, not assumed', () => {
       'monthly_recap',
       'morning_weight',
       'partner_cheer',
-      'partner_joined',
-      'partner_streak',
       'planned_meal_confirm',
       'rest_end',
       'rest_timer',
@@ -339,48 +335,35 @@ describe('(19) every routed live type reaches a route a navigator registers', ()
 });
 
 // (20) ────────────────────────────────────────────────────────────────────────
-describe('(20) no partner notification routes to an unrelated surface', () => {
+describe('(20) the retired partner beats still resolve, on Community', () => {
+  // Partners was retired on 2026-09-06 (SD-03). The three data types are kept
+  // as explicit cases so a push already scheduled, in a tray, or sent by the
+  // still-deployed partner-cheer Edge Function opens a real screen instead of
+  // dead-ending on whatever was last on top.
   const PARTNER_TYPES = ['partner_cheer', 'partner_streak', 'partner_joined'];
 
-  test.each(PARTNER_TYPES)('%s lands on the Partner surface', (type) => {
+  test.each(PARTNER_TYPES)('%s lands on Community', (type) => {
     expect(routeForNotificationType(type, SAMPLE_DATA[type] ?? {})).toEqual({
-      tab: 'ProgressTab', screen: 'Partner', params: { source: 'notification' },
+      tab: 'HomeTab', screen: 'Community', params: { source: 'notification' },
     });
   });
 
-  test.each(PARTNER_TYPES)('%s never lands on Consistency, which carries no partner content', (type) => {
-    const target = routeForNotificationType(type, SAMPLE_DATA[type] ?? {});
-    expect(target.screen).not.toBe('Consistency');
+  test('Community is registered in HomeStack, so the tap is never a dead route', () => {
+    expect([...screensIn(TAB_TO_STACK.HomeTab)]).toContain('Community');
   });
 
-  test('ConsistencyScreen still has no partner content (the reason the old route was false)', () => {
-    // Kept in step with partnerPlacementSpine.guard.test.js: the Partners row
-    // was removed from this screen on the founder device-walk of 2026-07-03.
-    expect(read('src/screens/ConsistencyScreen.js')).not.toMatch(/[Pp]artner/);
+  test('the Partner route and screen are gone with the feature', () => {
+    expect(NAV).not.toMatch(/<Stack\.Screen name="Partner"/);
+    expect(fs.existsSync(path.resolve(__dirname, '../../../screens/PartnerScreen.js'))).toBe(false);
   });
 
-  test('PartnerScreen shows the state each of the three beats describes', () => {
-    const src = read('src/screens/PartnerScreen.js');
-    // cheerPush: "<name> cheered you on".
-    expect(src).toMatch(/cheer/i);
-    // streakKeptPush: "<n> weeks running, together".
-    expect(src).toMatch(/sharedStreak/);
-    // joinPush: "<name> joined you [...] you'll see their training week here".
-    expect(src).toMatch(/partnership/i);
+  test('Community explains where partner invites went', () => {
+    // The destination has to represent the subject: the hub carries the
+    // "Partner invites have moved" card for the legacy link path.
+    expect(read('src/screens/CommunityHubScreen.js')).toMatch(/[Pp]artner/);
   });
 
-  test('the Partner route is registered, so the tap is never a dead route', () => {
-    // INVERTED 2026-09-03 (fully-free product, founder decision). This used to
-    // pin `GatedPartner = withProGuard(...)` and its registration, on the rule
-    // that "routing never widens a tier gate". There is no tier gate any more:
-    // Volyume has no Free/Pro split, so the Pro guard came off Partner along
-    // with every other Pro wrapper. The property this test actually protects -
-    // that the destination this suite routes to is really registered - is
-    // pinned directly instead, and it is what a notification tap depends on.
-    expect(NAV).toMatch(/<Stack\.Screen name="Partner" component=\{PartnerScreen\}/);
-  });
-
-  test('no pairId is forwarded (PartnerScreen reads route.params.pairId as a share target)', () => {
+  test('no pairId is forwarded (the pair no longer exists to open)', () => {
     const target = routeForNotificationType('partner_joined', { pairId: 'pair-1' });
     expect(target.params).toEqual({ source: 'notification' });
     expect(target.params.pairId).toBeUndefined();
