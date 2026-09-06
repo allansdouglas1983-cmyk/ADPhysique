@@ -266,3 +266,45 @@ export async function rederiveExerciseMetadataIfNeeded() {
     logSeedChainFailure('seedExercises.rederiveExerciseMetadataIfNeeded', err);
   }
 }
+
+// ── Readiness for the routine seed (Sentry VOLYUME-28, 2026-09-06) ────────
+// seedRoutinesIfNeeded reads getAllExercises() to resolve every template
+// name. On an existing install updating to a build whose corpus has grown
+// (the kettlebell and band families, 918 rows), that read used to race the
+// fire-and-forget top-up below: Home mounted, the routine seed ran, and 90
+// template names were "not found" for two seconds while the new rows were
+// still being inserted. The kettlebell and band library plans were then
+// created with stations missing, and the name dedupe froze them that way.
+// The chain is now one promise the routine seed awaits, with a ceiling so
+// a stuck chain can never hold the routine seed for ever.
+let _chainPromise = null;
+
+export async function runExerciseSeedChain() {
+  if (_chainPromise) return _chainPromise;
+  _chainPromise = (async () => {
+    await seedExercisesIfNeeded();
+    await topUpNewExercisesIfNeeded();
+    await backfillExerciseMetadataIfNeeded();
+    await rederiveExerciseMetadataIfNeeded();
+  })().catch((err) => {
+    // Every step logs its own failure; the chain itself never rejects, so
+    // a waiter proceeds with whatever the table holds.
+    logError('seedExercises.runExerciseSeedChain', err, {});
+  });
+  return _chainPromise;
+}
+
+/**
+ * Resolves once the exercise seed chain has finished (or after `timeoutMs`,
+ * whichever is first). Resolves immediately when no chain was ever started
+ * in this process (tests, tools), so a caller can always await it.
+ */
+export function exercisesReady({ timeoutMs = 20000 } = {}) {
+  if (!_chainPromise) return Promise.resolve();
+  let timer;
+  const ceiling = new Promise((resolve) => { timer = setTimeout(resolve, timeoutMs); });
+  return Promise.race([_chainPromise, ceiling]).then(() => clearTimeout(timer));
+}
+
+/** Test seam: forget the chain so a suite can start a fresh one. */
+export function _resetExerciseSeedChainForTests() { _chainPromise = null; }
