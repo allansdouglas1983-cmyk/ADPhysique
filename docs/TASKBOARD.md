@@ -48,6 +48,19 @@ Recovery path: re-dispatch any missing file from the briefs recorded in the
 README document map. Phases B-E follow in the same session; each landing
 updates this entry, the handover and the decisions register.
 
+Phase B landed on the branch (197d70e): `20-SYNTHESIS.md`, `40-DECISIONS.md`
+SD-01..SD-16, `30-BLUEPRINT.md` (edit-gate spec).
+Phase C in flight (Opus agents, disjoint lanes; recovery = re-dispatch the
+lane from blueprint sections named here, lead-review the diff before
+commit; agents never commit):
+- Lane A: `supabase/migrate_160_community.sql`, `community-notify` and
+  `community-public` edge functions, security targets, README (§3, §4).
+- Lane B: `src/lib/community/**` + tests, `useCommunityMe`, scrub (§5, §10).
+- Lane C (after the lead's visual review): screens, components, navigation,
+  entry points (§1, §6).
+- Lane D: notifications, deep links, AASA, app.json, web pages (§7, §8).
+- Lane E (after C): Partners retirement (§9).
+
 ---
 
 ## SENTRY TRIAGE AND THE CODEC-LESS ANDROID BUILDS (2026-09-06) — CODE ON MAIN `39df0f8`; FOUNDER: PUBLISH A CODEC BUILD TO PLAY.
