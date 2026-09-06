@@ -10,7 +10,10 @@
  * the sentence on screen is a description of the code, not a promise.
  *
  * The preview above the fields is the same `ProgrammeStructure` the reader
- * will see, so nobody publishes something they have not looked at.
+ * will see, so nobody publishes something they have not looked at. That
+ * includes the exercise notes: they are rendered in the preview and one
+ * caption says they travel, because a private note on an exercise used to
+ * be published unseen (product review 2026-09-06, item 17).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -36,9 +39,44 @@ import {
   buildSnapshotForPlan, validateSnapshot, snapshotStats,
   publishProgramme, unpublishProgramme, myProgrammes, hasProfile, loadMe,
   PROGRAMME_TITLE_MAX, PROGRAMME_DESCRIPTION_MAX, programmeUrl,
+  SNAPSHOT_MAX_DAYS, SNAPSHOT_MAX_EXERCISES_PER_DAY,
 } from '../lib/community';
 
 export const DISCLOSURE_LINE = 'Structure only: days, exercises, sets, reps, rest and your exercise notes. Never your weights.';
+
+export const NOTES_TRAVEL_LINE = 'Your exercise notes travel with the programme. Check them above before you publish.';
+
+export const LINK_ONLY_LINE = 'Anyone with the link can open it. It is not listed anywhere.';
+
+/** True when any exercise in the snapshot carries a note. Named field by
+ * field, like everything else that reads a snapshot. */
+export function snapshotHasNotes(snapshot) {
+  const days = Array.isArray(snapshot?.days) ? snapshot.days : [];
+  return days.some((day) => (Array.isArray(day?.exercises) ? day.exercises : [])
+    .some((ex) => ex?.notes != null && String(ex.notes).trim().length > 0));
+}
+
+/**
+ * Why a plan cannot be shared, in the words of the thing that is wrong.
+ * `validateSnapshot` fails on the caps as well as on an empty plan, and
+ * one line for all of them told a creator with nine days to add a workout
+ * (product review 2026-09-06, item 33).
+ *
+ * @param {string[]} errors from `validateSnapshot`
+ */
+export function publishBlockedLine(errors) {
+  const list = Array.isArray(errors) ? errors : [];
+  if (list.some((e) => e === 'too_many_days')) {
+    return `A shared programme can have up to ${SNAPSHOT_MAX_DAYS} days. Take one out, then share it.`;
+  }
+  if (list.some((e) => /^day_\d+_too_many_exercises$/.test(e))) {
+    return `A day can have up to ${SNAPSHOT_MAX_EXERCISES_PER_DAY} exercises. Shorten the longest day, then share it.`;
+  }
+  if (list.some((e) => e === 'too_large')) {
+    return 'This plan is too big to share. Shorten the descriptions and your exercise notes, then share it.';
+  }
+  return 'This plan has no days and exercises to publish. Add a workout to it first, then share it.';
+}
 
 const VISIBILITY_OPTIONS = [
   { label: 'Public', value: 'public' },
@@ -108,7 +146,10 @@ export default function CommunityPublishProgrammeScreen({ navigation, route }) {
     (async () => {
       const { me } = await loadMe({});
       if (cancelled || hasProfile(me)) return;
-      navigation.navigate('CommunityJoin', {
+      // REPLACE, not push: Join comes back with its own `replace`, so a
+      // push here would leave this screen underneath the one the creator
+      // ends up on (product review 2026-09-06, item 12).
+      navigation.replace('CommunityJoin', {
         next: { screen: 'CommunityPublishProgramme', params: { planId } },
       });
     })();
@@ -190,7 +231,7 @@ export default function CommunityPublishProgrammeScreen({ navigation, route }) {
           <EmptyState
             icon="document-outline"
             title="Nothing to share yet"
-            text="This plan has no days and exercises to publish. Add a workout to it first, then share it."
+            text={publishBlockedLine(check.errors)}
             actionLabel="Go back"
             onAction={() => navigation.goBack()}
           />
@@ -239,11 +280,17 @@ export default function CommunityPublishProgrammeScreen({ navigation, route }) {
               value={visibility}
               onChange={setVisibility}
             />
+            {visibility === 'link' ? (
+              <Text style={[styles.hint, { color: t.colors.textMuted }]}>{LINK_ONLY_LINE}</Text>
+            ) : null}
           </View>
 
           <View style={styles.field}>
             <SectionLabel>{`Preview · ${stats?.days ?? 0} days · ${stats?.exercises ?? 0} exercises`}</SectionLabel>
             <ProgrammeStructure snapshot={snapshot} />
+            {snapshotHasNotes(snapshot) ? (
+              <Text style={[styles.hint, { color: t.colors.textMuted }]}>{NOTES_TRAVEL_LINE}</Text>
+            ) : null}
           </View>
 
           <Button
@@ -271,6 +318,7 @@ const styles = StyleSheet.create({
   centre: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
   disclosure: { ...type.bodySm },
+  hint: { ...type.caption },
   field: { gap: spacing.sm },
   input: {
     minHeight: touchTarget.minimum, borderWidth: 1, borderRadius: radius.md,

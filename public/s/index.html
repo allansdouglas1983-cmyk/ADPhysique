@@ -197,7 +197,10 @@
       var params = new URLSearchParams(location.search);
       var id = (params.get('id') || '').trim();
 
-      document.getElementById('open').setAttribute('href', 'volyume://s?id=' + encodeURIComponent(id));
+      // EXACTLY the form src/lib/community/links.js builds (appProgrammeUrl,
+      // appProfileUrl, appStoryUrl) and the navigator's linking config
+      // resolves: the trailing slash before the query is load-bearing.
+      document.getElementById('open').setAttribute('href', 'volyume://s/?id=' + encodeURIComponent(id));
 
       if (/iPad|iPhone|iPod/i.test(navigator.userAgent)) {
         document.getElementById('store')

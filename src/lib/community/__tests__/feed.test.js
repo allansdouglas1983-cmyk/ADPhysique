@@ -180,4 +180,23 @@ describe('paging Discover', () => {
     expect(page.posts).toHaveLength(1);
     expect(page.cursor).toBe('next');
   });
+
+  // Product review 2026-09-06, item 14: `cursor` used to be the only one,
+  // so the programmes were paged with the stories' cursor (and their own
+  // was dropped). The two are separate fields now, and the hub pages the
+  // stories with `cursor` while "See all" pages the programmes.
+  test('the programmes carry a cursor of their own, never the stories\' one', async () => {
+    server({
+      community_discover_programmes: PROGRAMME_PAGE,
+      community_discover_posts: POST_PAGE,
+      community_suggested_people: { people: [] },
+      community_dimensions_me: { dimensions: [] },
+    });
+
+    const hub = await loadHub('discover', { joined: true });
+
+    expect(hub.cursor).toBe(POST_PAGE.cursor);
+    expect(hub.programmesCursor).toBe(PROGRAMME_PAGE.cursor);
+    expect(hub.programmesCursor).not.toBe(hub.cursor);
+  });
 });

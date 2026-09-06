@@ -9,10 +9,10 @@
  * quietly passing against a copy.
  *
  * Why it exists: route-graph certification 2026-09-05.
- *   A2 — `src/lib/partners/link.js:18-19` mints volyume://partner/<CODE> and
+ *   A2 — the retired Partners feature minted volyume://partner/<CODE> and
  *        https://volyume.app/partner/<CODE>, app.json carries the autoVerify
- *        intent filter for /partner, PartnerScreen.js:635 reads
- *        route.params.code — and no path in the config matched, so the whole
+ *        intent filter for /partner, and the old PartnerScreen read
+ *        route.params.code — but no path in the config matched, so the whole
  *        invite path was unwired and the code had to be typed by hand.
  *   A3 — the Android foreground-service notification hands
  *        volyume://active-workout to the OS
@@ -40,7 +40,6 @@ const fs = require('fs');
 const path = require('path');
 
 const { safeGetStateFromPath } = require('../safeGetStateFromPath');
-const { parseInviteCode } = require('../../lib/partners/link');
 
 const extractPathFromURL = require(
   '@react-navigation/native/lib/commonjs/extractPathFromURL',
@@ -160,13 +159,15 @@ describe('linking config — legacy partner invite links now open Community', ()
   });
 
   test('a real server-issued code still arrives intact', () => {
-    // Codes are uppercase hex, 8 characters or more (link.js
-    // isValidInviteCode). Community does not redeem it; it carries it so the
-    // "Partner invites have moved" card knows the link was an invite.
+    // Codes were uppercase hex, 8 characters or more. Community does not
+    // redeem one; it carries it so the "Partner invites have moved" card
+    // knows the link was an invite. Partners itself retired on 2026-09-06
+    // (SD-03), so nothing parses the code any more, but links already out
+    // in share messages must still resolve.
     const route = routeFor('volyume://partner/9F3A1C7B');
 
     expect(route).toMatchObject({ name: 'Community', params: { legacyPartnerCode: '9F3A1C7B' } });
-    expect(parseInviteCode(route.params.legacyPartnerCode)).toBe('9F3A1C7B');
+    expect(route.params.legacyPartnerCode).toBe('9F3A1C7B');
   });
 
   test('a bare partner link still resolves, to Community with no code', () => {
@@ -177,7 +178,10 @@ describe('linking config — legacy partner invite links now open Community', ()
   });
 
   test('the Partner route is no longer a deep-link destination', () => {
+    // Retired outright on 2026-09-06 (SD-03): the screen and its
+    // registration are gone, so there is nothing left to link to.
     expect(config.screens.ProgressTab.screens.Partner).toBeUndefined();
+    expect(source).not.toMatch(/<Stack\.Screen name="Partner"/);
   });
 });
 
@@ -257,5 +261,28 @@ describe('linking config — existing paths still resolve', () => {
     expect(rewriteLegacyCommunityPath('partner/ABCD12'))
       .toBe('community?legacyPartnerCode=ABCD12');
     expect(rewriteLegacyCommunityPath('diary/2026-09-02')).toBe('diary/2026-09-02');
+  });
+});
+
+// ─── APPENDED 2026-09-06 (product review, item 23) ──────────────────────
+//
+// The "Open in Volyume" button on the three static share pages hands the OS
+// exactly the string `src/lib/community/links.js` builds. That exact form
+// (`volyume://p/?id=`, with the slash before the query) was never resolved
+// through the real config, and the pages were emitting `volyume://p?id=`.
+// The URLs here are BUILT BY links.js rather than typed out, so the app
+// form and the route it must reach can never drift apart again.
+describe('linking config — the exact app-scheme forms links.js builds', () => {
+  const {
+    appProfileUrl, appProgrammeUrl, appStoryUrl,
+  } = require('../../lib/community/links');
+
+  test.each([
+    [appProgrammeUrl('prog-1'), 'CommunityProgramme', { id: 'prog-1' }],
+    [appProfileUrl('rowan_lifts'), 'CommunityProfile', { h: 'rowan_lifts' }],
+    [appStoryUrl('post-1'), 'CommunityPost', { id: 'post-1' }],
+  ])('%s resolves to %s with its param', (url, name, params) => {
+    expect(url).toContain('/?');
+    expect(routeFor(url)).toMatchObject({ tab: 'HomeTab', name, params });
   });
 });

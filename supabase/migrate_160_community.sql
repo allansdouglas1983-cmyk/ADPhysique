@@ -3551,6 +3551,23 @@ BEGIN
         'status',      page.status,
         'priority',    page.priority,
         'created_at',  page.created_at,
+        -- Product review 2026-09-06 (findings 19/22): the Actioned tab is
+        -- the audit view, so an actioned or dismissed report carries its
+        -- resolution, the moderator's note and who acted (handle when the
+        -- moderator has a Community profile, else null).
+        'resolution',  page.resolution,
+        'resolved_at', page.resolved_at,
+        'report_count', (SELECT count(*) FROM public.community_reports rc
+                         WHERE rc.target_kind = page.target_kind
+                           AND rc.target_id = page.target_id),
+        'note',        (SELECT l.note FROM public.community_moderation_log l
+                        WHERE l.report_id = page.id
+                        ORDER BY l.created_at DESC LIMIT 1),
+        'moderator_handle', (SELECT mp.handle
+                             FROM public.community_moderation_log l
+                             LEFT JOIN public.community_profiles mp ON mp.user_id = l.moderator_id
+                             WHERE l.report_id = page.id
+                             ORDER BY l.created_at DESC LIMIT 1),
         'content',     CASE
           WHEN page.target_kind = 'post' THEN
             (SELECT jsonb_build_object('kind', p.kind, 'caption', p.caption,

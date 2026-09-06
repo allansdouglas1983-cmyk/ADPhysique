@@ -7,7 +7,10 @@
  * receipt are both on this screen, above the one committing action.
  *
  * The handle check is live: valid shape first (nothing is asked of the
- * server until the shape is right), then availability. Under 18, the
+ * server until the shape is right), then availability. A check that could
+ * not RUN says so and leaves Create available, so joining offline ends in
+ * a refusal that names the reason rather than a button that never lights
+ * up. Under 18, the
  * server forces followers-only and keeps the profile out of search and
  * suggestions; the note says so before anyone commits.
  */
@@ -45,6 +48,8 @@ const RULES = [
 ];
 
 const HANDLE_HINT = 'Use 3 to 20 letters, numbers or underscores.';
+export const HANDLE_OFFLINE_HINT = 'Could not check that handle. You are offline.';
+export const HANDLE_UNAVAILABLE_HINT = 'Could not check that handle just now. Try again.';
 
 const REFUSALS = {
   offline: 'You are offline. Try again when you have a connection.',
@@ -65,8 +70,13 @@ export default function CommunityJoinScreen({ navigation, route }) {
   const [displayName, setDisplayName] = useState('');
   const [preset, setPreset] = useState(AVATAR_PRESETS[0].key);
   const [visibility, setVisibility] = useState('public');
-  // 'idle' | 'invalid' | 'checking' | 'available' | 'taken'
+  // 'idle' | 'invalid' | 'checking' | 'available' | 'taken' | 'unknown'
+  // 'unknown' is the check that could not RUN (offline, or a read that did
+  // not answer). It is not a refusal: Create stays available so `create()`
+  // can surface the real reason, rather than a screen that can never be
+  // tapped and never says why (product review 2026-09-06, item 20).
   const [handleState, setHandleState] = useState('idle');
+  const [checkFailure, setCheckFailure] = useState(null);
   const [busy, setBusy] = useState(false);
   const checkRef = useRef(0);
 
@@ -74,8 +84,9 @@ export default function CommunityJoinScreen({ navigation, route }) {
 
   useEffect(() => {
     const trimmed = handle.trim().toLowerCase();
-    if (!trimmed) { setHandleState('idle'); return undefined; }
-    if (!isValidHandle(trimmed)) { setHandleState('invalid'); return undefined; }
+    if (!trimmed) { setCheckFailure(null); setHandleState('idle'); return undefined; }
+    if (!isValidHandle(trimmed)) { setCheckFailure(null); setHandleState('invalid'); return undefined; }
+    setCheckFailure(null);
     setHandleState('checking');
     const seq = checkRef.current + 1;
     checkRef.current = seq;
@@ -85,10 +96,12 @@ export default function CommunityJoinScreen({ navigation, route }) {
         // Request-id guard: a slower earlier check must not overwrite a
         // newer answer (the food search's own pattern).
         if (checkRef.current !== seq) return;
+        setCheckFailure(null);
         setHandleState(free ? 'available' : 'taken');
-      } catch (_e) {
+      } catch (e) {
         if (checkRef.current !== seq) return;
-        setHandleState('idle');
+        setCheckFailure(e?.code === 'offline' ? 'offline' : 'unavailable');
+        setHandleState('unknown');
       }
     }, HANDLE_DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -100,13 +113,18 @@ export default function CommunityJoinScreen({ navigation, route }) {
     checking: 'Checking',
     available: 'Available',
     taken: 'Taken',
+    unknown: checkFailure === 'offline' ? HANDLE_OFFLINE_HINT : HANDLE_UNAVAILABLE_HINT,
   }[handleState];
 
   const handleTone = handleState === 'available'
     ? t.colors.success
     : (handleState === 'taken' || handleState === 'invalid' ? t.colors.error : t.colors.textMuted);
 
-  const canCreate = handleState === 'available' && displayName.trim().length > 0 && !busy;
+  // A check that could not run does not block the one committing action:
+  // `create()` is what knows the truth, and its refusals (REFUSALS.offline,
+  // handle_taken) say what actually happened.
+  const canCreate = (handleState === 'available' || handleState === 'unknown')
+    && displayName.trim().length > 0 && !busy;
 
   const create = useCallback(async () => {
     if (!canCreate) return;

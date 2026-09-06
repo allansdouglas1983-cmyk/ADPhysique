@@ -19,7 +19,7 @@
  * with one quiet line.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, RefreshControl, ActivityIndicator, Pressable,
 } from 'react-native';
@@ -107,6 +107,12 @@ export default function CommunityHubScreen({ navigation, route }) {
   const [volyume, setVolyume] = useState([]);
   const [legacyCardShown, setLegacyCardShown] = useState(!!legacyPartnerCode);
   const [browsing, setBrowsing] = useState(false);
+  const [focusProgrammes, setFocusProgrammes] = useState(route?.params?.focus === 'programmes');
+  const listRef = useRef(null);
+  // Where the Programmes section sits inside the list header, measured on
+  // layout. 0 until it has been measured, which is the top of the list and
+  // still shows the section, so there is no race to lose.
+  const programmesY = useRef(0);
 
   // Someone without a profile only ever sees Discover (SD-04), so the
   // segment follows the profile rather than the other way round.
@@ -123,6 +129,29 @@ export default function CommunityHubScreen({ navigation, route }) {
   }, [shown, joined]);
 
   useEffect(() => { load(); }, [load]);
+
+  // The hub is a tab root, so an entry point that names a segment usually
+  // arrives at a screen that is ALREADY mounted: initial state alone would
+  // land Train's "Programmes from the community" on Following, whichever
+  // half the reader last looked at (product review 2026-09-06, item 13).
+  // The whole params object is the dependency because React Navigation
+  // mints a new one per navigate, so repeating the same entry point still
+  // re-applies it.
+  const routeParams = route?.params;
+  const paramSegment = routeParams?.segment ?? null;
+  const paramFocus = routeParams?.focus ?? null;
+  useEffect(() => {
+    if (paramSegment === 'discover' || paramSegment === 'following') setSegment(paramSegment);
+    if (paramFocus === 'programmes') setFocusProgrammes(true);
+  }, [routeParams, paramSegment, paramFocus]);
+
+  // `focus: 'programmes'` brings the Programmes section into view once the
+  // payload it lists is on screen.
+  useEffect(() => {
+    if (!focusProgrammes || loading) return;
+    listRef.current?.scrollToOffset?.({ offset: Math.max(0, programmesY.current), animated: true });
+    setFocusProgrammes(false);
+  }, [focusProgrammes, loading]);
 
   useEffect(() => {
     let alive = true;
@@ -333,8 +362,24 @@ export default function CommunityHubScreen({ navigation, route }) {
       {shown === 'discover' ? (
         <>
           {programmes.length || volyume.length ? (
-            <View style={styles.section}>
-              <SectionLabel>Programmes</SectionLabel>
+            <View
+              style={styles.section}
+              onLayout={(e) => { programmesY.current = e?.nativeEvent?.layout?.y ?? 0; }}
+            >
+              <View style={styles.sectionHead}>
+                <SectionLabel>Programmes</SectionLabel>
+                {programmes.length ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    fullWidth={false}
+                    icon="list-outline"
+                    title="See all"
+                    onPress={() => navigation.navigate('CommunitySearch', { tab: 'programmes' })}
+                    accessibilityLabel="See all community programmes"
+                  />
+                ) : null}
+              </View>
               {programmes.map((row) => (
                 <ProgrammeTile
                   key={row.id ?? row.programme?.id}
@@ -442,6 +487,7 @@ export default function CommunityHubScreen({ navigation, route }) {
     <SafeAreaView style={[styles.safe, { backgroundColor: t.colors.background }]} edges={['top']}>
       <BackHeader title="Community" right={headerRight} />
       <FlashList
+        ref={listRef}
         data={posts}
         keyExtractor={(item) => item.post.id}
         renderItem={({ item }) => (
@@ -508,6 +554,7 @@ const styles = StyleSheet.create({
   heroTitle: { ...type.h2, color: colors.textPrimary },
   heroBody: { ...type.body, color: colors.textSecondary },
   section: { gap: spacing.md },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   offline: { ...type.caption, color: colors.textMuted },
   loading: { paddingVertical: spacing.xxl, alignItems: 'center' },
   footer: { paddingVertical: spacing.lg },

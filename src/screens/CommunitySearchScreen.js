@@ -8,10 +8,15 @@
  *
  * The query is debounced and request-id guarded, the same shape the food
  * search uses, so a slow earlier answer can never overwrite a newer one.
+ *
+ * The Programmes tab with an EMPTY query is the full Discover list, paged
+ * on the server cursor: that is what "See all" beside the hub's Programmes
+ * section opens, so browsing past the first twenty is possible at all
+ * (product review 2026-09-06, item 14).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, RefreshControl } from 'react-native';
+import { View, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // E8 (founder decision 2026-07-02): every list in the app renders
 // through FlashList, never an unrecycled FlatList. The props are the
@@ -26,7 +31,7 @@ import ProfileCard from '../components/community/ProfileCard';
 import ProgrammeTile from '../components/community/ProgrammeTile';
 import useTheme from '../hooks/useTheme';
 import { colors, spacing } from '../styles/theme';
-import { searchPeople, searchProgrammes } from '../lib/community';
+import { searchPeople, searchProgrammes, discoverProgrammes } from '../lib/community';
 
 const DEBOUNCE_MS = 250;
 const PAGE = 20;
@@ -38,42 +43,79 @@ export default function CommunitySearchScreen({ navigation, route }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [paging, setPaging] = useState(false);
+  const [cursor, setCursor] = useState(null);
   const [error, setError] = useState(null);
   const seqRef = useRef(0);
+
+  /** One page of programmes: the discover list when there is no query,
+   * the title search when there is. Both answer the same shape and the
+   * same server cursor. */
+  function programmePage(q, opts) {
+    return q ? searchProgrammes(q, opts) : discoverProgrammes(opts);
+  }
 
   const run = useCallback(async (q, which) => {
     const seq = seqRef.current + 1;
     seqRef.current = seq;
-    if (!q.trim()) { setResults([]); setLoading(false); setError(null); return; }
+    const trimmed = q.trim();
+    // People need a name to look for. Programmes with an empty query are
+    // the Discover list, which is what "See all" on the hub opens
+    // (product review 2026-09-06, item 14).
+    if (!trimmed && which !== 'programmes') {
+      setResults([]); setCursor(null); setLoading(false); setError(null); return;
+    }
     setLoading(true);
     try {
       const page = which === 'programmes'
-        ? await searchProgrammes(q, { limit: PAGE })
-        : await searchPeople(q, { limit: PAGE });
+        ? await programmePage(trimmed, { limit: PAGE })
+        : await searchPeople(trimmed, { limit: PAGE });
       if (seqRef.current !== seq) return;
-      setResults(which === 'programmes' ? page.programmes : page.people);
+      const rows = which === 'programmes' ? page.programmes : page.people;
+      setResults(rows);
+      // A cursor with nothing behind it pages forever, so it is dropped
+      // as soon as a page comes back short.
+      setCursor(which === 'programmes' && rows.length ? (page.cursor ?? null) : null);
       setError(null);
     } catch (e) {
       if (seqRef.current !== seq) return;
       setResults([]);
+      setCursor(null);
       setError(e?.code ?? 'unavailable');
     } finally {
       if (seqRef.current === seq) setLoading(false);
     }
   }, []);
 
+  const loadMore = useCallback(async () => {
+    if (tab !== 'programmes' || !cursor || paging || loading) return;
+    const seq = seqRef.current;
+    setPaging(true);
+    try {
+      const page = await programmePage(query.trim(), { cursor, limit: PAGE });
+      if (seqRef.current !== seq) return;
+      const rows = page.programmes ?? [];
+      setResults((prev) => [...prev, ...rows]);
+      setCursor(rows.length ? (page.cursor ?? null) : null);
+    } catch (_e) {
+      // Best effort: the page the reader already has stays on screen.
+    } finally {
+      setPaging(false);
+    }
+  }, [tab, cursor, paging, loading, query]);
+
   useEffect(() => {
     const timer = setTimeout(() => { run(query, tab); }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [query, tab, run]);
 
-  const empty = !query.trim() ? (
+  const empty = loading ? null : !query.trim() && tab === 'people' ? (
     <EmptyState
       icon="search-outline"
       title="Search by @handle or name"
       text="Find someone you train with, or a programme by its title."
     />
-  ) : loading ? null : error ? (
+  ) : error ? (
     <EmptyState
       icon="cloud-offline-outline"
       title={error === 'offline' ? 'You are offline' : 'Could not search just now'}
@@ -89,6 +131,12 @@ export default function CommunitySearchScreen({ navigation, route }) {
       icon="people-outline"
       title="No one by that name yet"
       text="Try the start of their handle, or their display name."
+    />
+  ) : !query.trim() ? (
+    <EmptyState
+      icon="list-outline"
+      title="No programmes yet"
+      text="Nobody has shared one yet. Publish one of your own plans and it appears here."
     />
   ) : (
     <EmptyState
@@ -135,11 +183,16 @@ export default function CommunitySearchScreen({ navigation, route }) {
           />
         ))}
         ListEmptyComponent={empty}
+        ListFooterComponent={paging ? (
+          <ActivityIndicator color={t.colors.primary} style={styles.footer} />
+        ) : null}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
         onEndReachedThreshold={0.4}
-        onEndReached={() => { /* search returns one page; refine the query rather than paging */ }}
+        // People search answers one page; programmes page on the server
+        // cursor, which is what makes "See all" on the hub a real list.
+        onEndReached={loadMore}
         refreshControl={(
           <RefreshControl
             refreshing={refreshing}
@@ -160,4 +213,5 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   controls: { padding: spacing.lg, gap: spacing.md },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
+  footer: { paddingVertical: spacing.lg },
 });

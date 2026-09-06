@@ -297,3 +297,74 @@ describe('state 5: a legacy partner link', () => {
     expect(text).not.toContain('Partner invites have moved');
   });
 });
+
+// ─── Product review 2026-09-06 (items 13 and 14) ────────────────────────
+describe('the entry points that name a half of the hub', () => {
+  beforeEach(() => {
+    useCommunityMe.mockReturnValue({
+      me: ME_WITH_PROFILE, loading: false, error: null, refresh: jest.fn(),
+    });
+  });
+
+  test('params that arrive at an ALREADY MOUNTED hub still land on Discover', async () => {
+    // The hub is a tab root, so Train's "Programmes from the community"
+    // usually navigates to a screen that is already mounted: initial state
+    // alone left the reader on whichever half they last looked at.
+    loadHub.mockResolvedValue(emptyHub());
+    const navigation = { navigate: jest.fn(), push: jest.fn(), getParent: () => ({ navigate: jest.fn() }) };
+    let tree;
+    await act(async () => {
+      tree = create(
+        <CommunityHubScreen navigation={navigation} route={{ params: { segment: 'following' } }} />,
+      );
+    });
+    await flush();
+    expect(loadHub).toHaveBeenLastCalledWith('following', expect.any(Object));
+
+    await act(async () => {
+      tree.update(
+        <CommunityHubScreen
+          navigation={navigation}
+          route={{ params: { segment: 'discover', focus: 'programmes' } }}
+        />,
+      );
+    });
+    await flush();
+
+    expect(loadHub).toHaveBeenLastCalledWith('discover', expect.any(Object));
+  });
+
+  test('"See all" opens the programmes half of search, which lists them all', async () => {
+    loadHub.mockResolvedValue(emptyHub({
+      segment: 'discover',
+      programmes: [{
+        id: 'p1', title: 'Minimal Push Pull Legs', style_key: 'strength',
+        days_per_week: 3, exercise_count: 14, has_circuits: false, use_count: 4,
+      }],
+    }));
+
+    const { partTrees, navigation, text } = await render({ segment: 'discover' });
+    expect(text).toContain('See all');
+
+    const header = partTrees[0];
+    const seeAll = header.root.findAll(
+      (n) => n.props?.accessibilityLabel === 'See all community programmes',
+    )[0];
+    await act(async () => { seeAll.props.onPress(); });
+
+    expect(navigation.navigate).toHaveBeenCalledWith('CommunitySearch', { tab: 'programmes' });
+  });
+
+  test('with no community programmes there is nothing to see all of', async () => {
+    getLibraryPlans.mockResolvedValue([
+      { id: 'lib-1', name: 'Kettlebell Foundations', tags: 'style:kettlebell_foundations featured' },
+    ]);
+    getPlanWorkoutCounts.mockResolvedValue({ 'lib-1': 3 });
+    loadHub.mockResolvedValue(emptyHub({ segment: 'discover' }));
+
+    const { text } = await render({ segment: 'discover' });
+
+    expect(text).toContain('Kettlebell Foundations');
+    expect(text).not.toContain('See all');
+  });
+});

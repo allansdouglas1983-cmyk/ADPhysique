@@ -90,3 +90,37 @@ describe('parsing', () => {
     expect(parseCommunityLink('not a url')).toBeNull();
   });
 });
+
+// ─── The static pages, against the builders above ───────────────────────
+//
+// Added by the product-review fix pass 2026-09-06 (items 15 and 23). The
+// "Open in Volyume" button on `public/p`, `public/u` and `public/s` used to
+// emit `volyume://p?id=` while the app builds `volyume://p/?id=`, and the
+// exact string was untested on both sides. The pages are read as text
+// here, so a hand edit that drifts from the builder fails this suite.
+describe('the static share pages emit exactly what links.js builds', () => {
+  const fs = require('fs');
+  const path = require('path');
+
+  const PUBLIC = path.resolve(__dirname, '../../../../public');
+  const page = (dir) => fs.readFileSync(path.join(PUBLIC, dir, 'index.html'), 'utf8');
+
+  test.each([
+    ['p', appProgrammeUrl(''), 'id'],
+    ['u', appProfileUrl(''), 'h'],
+    ['s', appStoryUrl(''), 'id'],
+  ])('public/%s opens the app on the builder form', (dir, built, param) => {
+    // e.g. "volyume://p/?id=" — the trailing slash before the query is the
+    // half that used to be missing.
+    expect(built.endsWith(`?${param}=`)).toBe(true);
+    expect(page(dir)).toContain(`'${built}' + encodeURIComponent(`);
+  });
+
+  test('no em dash is ever rendered by the programme page (CLAUDE.md section 3)', () => {
+    const html = page('p');
+    // Comments may name one; a string the page RENDERS may not. The two
+    // placeholders that failed this were `ex.sets` and the circuit rounds.
+    const code = html.replace(/\/\/[^\n]*/g, '').replace(/<!--[\s\S]*?-->/g, '');
+    expect(code).not.toContain('—');
+  });
+});

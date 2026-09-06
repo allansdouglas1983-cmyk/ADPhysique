@@ -80,7 +80,11 @@ export default function CommunityComposeScreen({ navigation, route }) {
     const { me } = await loadMe({});
     if (!hasProfile(me)) {
       setLoading(false);
-      navigation.navigate('CommunityJoin', {
+      // REPLACE, not push: Join comes back with its own `replace`, so a
+      // push here would leave this half-loaded Compose underneath the one
+      // the reader ends up on, and backing out of the posting flow would
+      // land on "Nothing to post yet" (product review 2026-09-06, item 12).
+      navigation.replace('CommunityJoin', {
         next: { screen: 'CommunityCompose', params },
       });
       return;

@@ -9,10 +9,17 @@
  * The screen is only reachable for a moderator. Anyone else who arrives
  * here (an old link, a shared device) sees a plain, calm note rather
  * than an error.
+ *
+ * The Actioned tab IS the audit view: reports that have been acted on,
+ * with what was done and the note the moderator left. The note is
+ * captured in the actions sheet and written to
+ * `community_moderation_log.note` server-side.
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import {
+  View, Text, StyleSheet, RefreshControl, ActivityIndicator, TextInput,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // E8 (founder decision 2026-07-02): every list in the app renders
 // through FlashList, never an unrecycled FlatList. The props are the
@@ -29,13 +36,19 @@ import SegmentedControl from '../components/SegmentedControl';
 import { useToast } from '../components/Toast';
 import useTheme from '../hooks/useTheme';
 import useCommunityMe from '../hooks/useCommunityMe';
-import { colors, spacing, type } from '../styles/theme';
+import { colors, spacing, radius, type } from '../styles/theme';
 import { calendarRelativeLabel } from '../lib/workoutDate';
 import {
   moderationQueue, moderate, MODERATION_ACTIONS, REPORT_REASONS,
 } from '../lib/community';
 
 const PAGE = 30;
+
+// The audit note a moderator may leave with an action. Optional, short,
+// and written to `community_moderation_log.note` by `community_moderate`
+// (migrate_160_community.sql), which is what makes the rules screen's
+// "who did it and why" true (product review 2026-09-06, items 19 and 22).
+export const MODERATION_NOTE_MAX = 300;
 
 // The action list, in the order a moderator works through it: dismiss
 // first (most reports are nothing), then content, then the account.
@@ -81,6 +94,7 @@ export default function CommunityModerationScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [active, setActive] = useState(null);
+  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -102,10 +116,13 @@ export default function CommunityModerationScreen() {
     if (!active || busy) return;
     setBusy(true);
     try {
-      await moderate(active.id, action, null);
+      // The note is the "why" in the audit row. Optional: an empty one is
+      // sent as null rather than as a blank string.
+      await moderate(active.id, action, note.trim() || null);
       setRows((prev) => prev.filter((r) => r.id !== active.id));
       toast.show('Recorded');
       setActive(null);
+      setNote('');
     } catch (_e) {
       toast.show('Could not do that just now.', { variant: 'error' });
     } finally {
@@ -133,7 +150,12 @@ export default function CommunityModerationScreen() {
       <BackHeader title="Moderation" />
       <View style={styles.controls}>
         <SegmentedControl
-          options={[{ label: 'Open', value: 'open' }, { label: 'Actioned', value: 'actioned' }]}
+          options={[
+            { label: 'Open', value: 'open' },
+            // This tab IS the audit view the blueprint asks for: it is
+            // what was done, by whom, with the note that was left.
+            { label: 'Actioned (audit log)', value: 'actioned' },
+          ]}
           value={status}
           onChange={setStatus}
           accessibilityLabel="Queue"
@@ -170,9 +192,21 @@ export default function CommunityModerationScreen() {
                 {[
                   item.report_count ? reportCountLabel(item.report_count) : null,
                   whenLabel(item.created_at),
-                  item.resolution ? `Resolution: ${item.resolution}` : null,
+                  item.resolution ? `Resolution: ${ACTION_LABELS[item.resolution] ?? item.resolution}` : null,
+                  // The moderator and the note are rendered when the row
+                  // carries them, under the column names the audit log
+                  // itself uses (`community_moderation_log.moderator_id` /
+                  // `.note`). `community_moderation_queue` does not return
+                  // either today, so nothing is invented here: the tab
+                  // shows them the moment the queue does.
+                  item.moderator_handle ? `by @${item.moderator_handle}` : null,
                 ].filter(Boolean).join(' · ')}
               </Text>
+              {item.note ? (
+                <Text style={[styles.detail, { ...t.type.caption, color: t.colors.textSecondary }]}>
+                  {`Note: ${item.note}`}
+                </Text>
+              ) : null}
           </Card>
         )}
         ListEmptyComponent={loading ? (
@@ -205,7 +239,7 @@ export default function CommunityModerationScreen() {
 
       <BottomSheet
         visible={!!active}
-        onClose={() => setActive(null)}
+        onClose={() => { setActive(null); setNote(''); }}
         accessibilityLabel="Moderation actions"
       >
         <View style={styles.sheet}>
@@ -213,8 +247,23 @@ export default function CommunityModerationScreen() {
             {active ? (REPORT_REASONS[active.reason] ?? active.reason) : 'Actions'}
           </Text>
           <Text style={[styles.detail, { ...t.type.caption, color: t.colors.textSecondary }]}>
-            Every action is recorded with who did it and when.
+            Every action is recorded with who did it, when, and the note you leave here.
           </Text>
+          <TextInput
+            style={[styles.note, {
+              backgroundColor: t.colors.inputBg,
+              borderColor: t.colors.border,
+              color: t.colors.textPrimary,
+              ...t.type.bodySm,
+            }]}
+            value={note}
+            onChangeText={setNote}
+            maxLength={MODERATION_NOTE_MAX}
+            multiline
+            placeholder="Note for the record (optional)"
+            placeholderTextColor={t.colors.textDisabled}
+            accessibilityLabel="Note for the record"
+          />
           {MODERATION_ACTIONS.map((action) => (
             <Button
               key={action}
@@ -242,6 +291,10 @@ const styles = StyleSheet.create({
   detail: { ...type.caption, color: colors.textSecondary },
   meta: { ...type.caption, color: colors.textMuted },
   loading: { paddingVertical: spacing.xxl, alignItems: 'center' },
+  note: {
+    minHeight: 72, textAlignVertical: 'top', borderWidth: 1, borderRadius: radius.md,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, ...type.bodySm,
+  },
   sheet: { gap: spacing.sm, paddingBottom: spacing.md },
   sheetTitle: { ...type.h3, color: colors.textPrimary },
 });

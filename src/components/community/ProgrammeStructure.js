@@ -90,6 +90,37 @@ export function blocksForDay(day) {
   return blocks;
 }
 
+/**
+ * One exercise line: name, its sets or reps, and the creator's own note
+ * underneath when there is one.
+ *
+ * The note is part of the published structure (`snapshot.js` carries
+ * `notes`, and `importProgramme` writes it into the reader's plan), so it
+ * belongs on BOTH sides of the same component: the creator sees before
+ * publishing exactly what a reader sees afterwards (product review
+ * 2026-09-06, item 17). The fields are still named one by one; nothing is
+ * spread out of the row.
+ */
+function ExerciseLine({ row, meta }) {
+  const t = useTheme();
+  const note = row?.notes != null ? String(row.notes).trim() : '';
+  return (
+    <View style={styles.exercise}>
+      <View style={styles.exerciseRow}>
+        <Text style={[styles.exerciseName, { color: t.colors.textPrimary }]}>
+          {row?.exercise_name ?? 'Exercise'}
+        </Text>
+        <Text style={[styles.exerciseMeta, { color: t.colors.textSecondary }]}>
+          {meta}
+        </Text>
+      </View>
+      {note ? (
+        <Text style={[styles.exerciseNote, { color: t.colors.textMuted }]}>{note}</Text>
+      ) : null}
+    </View>
+  );
+}
+
 export default function ProgrammeStructure({ snapshot }) {
   const t = useTheme();
   const days = Array.isArray(snapshot?.days) ? [...snapshot.days] : [];
@@ -132,28 +163,22 @@ export default function ProgrammeStructure({ snapshot }) {
                       </Text>
                     </View>
                     {block.stations.map((row, i) => (
-                      <View key={`${row?.exercise_id ?? row?.exercise_name}-${i}`} style={styles.exerciseRow}>
-                        <Text style={[styles.exerciseName, { color: t.colors.textPrimary }]}>
-                          {row?.exercise_name ?? 'Exercise'}
-                        </Text>
-                        <Text style={[styles.exerciseMeta, { color: t.colors.textSecondary }]}>
-                          {stationRepsLine(row)}
-                        </Text>
-                      </View>
+                      <ExerciseLine
+                        key={`${row?.exercise_id ?? row?.exercise_name}-${i}`}
+                        row={row}
+                        meta={stationRepsLine(row)}
+                      />
                     ))}
                   </View>
                 );
               }
               const row = block.row;
               return (
-                <View key={`s-${row?.exercise_id ?? row?.exercise_name}-${blockIndex}`} style={styles.exerciseRow}>
-                  <Text style={[styles.exerciseName, { color: t.colors.textPrimary }]}>
-                    {row?.exercise_name ?? 'Exercise'}
-                  </Text>
-                  <Text style={[styles.exerciseMeta, { color: t.colors.textSecondary }]}>
-                    {straightSetLine(row)}
-                  </Text>
-                </View>
+                <ExerciseLine
+                  key={`s-${row?.exercise_id ?? row?.exercise_name}-${blockIndex}`}
+                  row={row}
+                  meta={straightSetLine(row)}
+                />
               );
             })}
           </View>
@@ -172,10 +197,12 @@ const styles = StyleSheet.create({
   },
   circuitLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs2, marginBottom: spacing.xxs },
   circuitLabel: { ...type.captionStrong, flex: 1 },
+  exercise: { paddingVertical: spacing.xs2, gap: spacing.xxs },
   exerciseRow: {
     flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between',
-    gap: spacing.md, paddingVertical: spacing.xs2,
+    gap: spacing.md,
   },
   exerciseName: { ...type.bodySm, flex: 1 },
   exerciseMeta: { ...type.caption },
+  exerciseNote: { ...type.captionTight },
 });

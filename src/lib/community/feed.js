@@ -85,7 +85,8 @@ function listPage(data, key) {
  *   joined?: boolean}} [opts]
  * @returns {Promise<{segment: string, posts: Array, programmes: Array,
  *   people: Array, dimensions: Array, cursor: (string|null),
- *   fromCache: boolean, error: (string|null)}>} never throws.
+ *   programmesCursor: (string|null), fromCache: boolean,
+ *   error: (string|null)}>} never throws.
  */
 export async function loadHub(segment = 'following', {
   cursor = null, limit = DEFAULT_PAGE_SIZE, userId = null, joined = true,
@@ -93,7 +94,7 @@ export async function loadHub(segment = 'following', {
   const uid = userId ?? currentUserId();
   const empty = {
     segment, posts: [], programmes: [], people: [], dimensions: [], cursor: null,
-    fromCache: false, error: null,
+    programmesCursor: null, fromCache: false, error: null,
   };
   try {
     if (segment === 'discover') {
@@ -121,7 +122,13 @@ export async function loadHub(segment = 'following', {
         posts: posts.value?.posts ?? [],
         people: people.value?.people ?? [],
         dimensions: dimensions.value?.dimensions ?? [],
+        // `cursor` pages the training stories: they are the list. The
+        // programmes have a cursor of their own and it is kept apart from
+        // it, because paging the list with the programme cursor (or the
+        // other way round) silently reads the wrong page (product review
+        // 2026-09-06, item 14).
         cursor: posts.value?.cursor ?? null,
+        programmesCursor: programmes.value?.cursor ?? null,
       };
       await writeCachedHub(uid, payload);
       return payload;

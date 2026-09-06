@@ -6,20 +6,20 @@
  * a push was allowed to leave the server, so this row never assumes a
  * notification was seen.
  *
- * Follow requests carry Accept and Decline inline, because deciding is
- * the whole point of the row.
+ * Deciding on a follow request happens in ONE place: the "Follow requests"
+ * section at the top of CommunityActivityScreen. This row used to carry
+ * its own Accept and Decline, which nothing ever wired up, so a request
+ * row is a plain line here like every other kind (product review
+ * 2026-09-06, item 27).
  *
  * Props:
  *   item        {id, kind, actor, target_kind, target_id, preview,
  *                created_at, seen}
  *   onPress     opens whatever the activity is about
- *   onRespond   (accept: boolean) => void, for a follow request
- *   busy        true while a response is in flight
  */
 
 import { View, Text, StyleSheet } from 'react-native';
 import Card from '../Card';
-import Button from '../Button';
 import ProfileAvatarMark from '../ProfileAvatarMark';
 import { spacing, type, colors, circle } from '../../styles/theme';
 import useTheme from '../../hooks/useTheme';
@@ -47,16 +47,15 @@ function whenLabel(createdAt) {
   return Number.isFinite(ms) ? calendarRelativeLabel(ms) : '';
 }
 
-export default function ActivityRow({ item, onPress, onRespond, busy = false }) {
+export default function ActivityRow({ item, onPress }) {
   const t = useTheme();
   if (!item) return null;
   const line = activityLine(item);
   const when = whenLabel(item.created_at);
-  const isRequest = item.kind === 'follow_request';
 
   return (
     <Card
-      onPress={isRequest ? undefined : onPress}
+      onPress={onPress}
       style={styles.card}
       accessibilityLabel={when ? `${line}. ${when}` : line}
     >
@@ -88,28 +87,6 @@ export default function ActivityRow({ item, onPress, onRespond, busy = false }) 
           <View style={[styles.dot, { backgroundColor: t.colors.primary }]} />
         ) : null}
       </View>
-      {isRequest && onRespond ? (
-        <View style={styles.actions}>
-          <Button
-            variant="primary"
-            size="sm"
-            fullWidth={false}
-            title="Accept"
-            loading={busy}
-            onPress={() => onRespond(true)}
-            accessibilityLabel={`Accept the follow request from ${item.actor?.handle ?? 'this person'}`}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            fullWidth={false}
-            title="Decline"
-            disabled={busy}
-            onPress={() => onRespond(false)}
-            accessibilityLabel={`Decline the follow request from ${item.actor?.handle ?? 'this person'}`}
-          />
-        </View>
-      ) : null}
     </Card>
   );
 }
@@ -122,5 +99,4 @@ const styles = StyleSheet.create({
   preview: { ...type.caption, color: colors.textSecondary },
   when: { ...type.caption, color: colors.textMuted },
   dot: { width: 8, height: 8, borderRadius: circle(8) },
-  actions: { flexDirection: 'row', gap: spacing.sm },
 });

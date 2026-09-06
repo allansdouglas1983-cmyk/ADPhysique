@@ -58,8 +58,19 @@ jest.mock('expo-haptics', () => ({
 jest.mock('../../components/community/ProfileCard', () => () => null);
 jest.mock('../../components/community/ReportSheet', () => () => null);
 
+jest.mock('../../hooks/useCommunityMe', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    me: { profile: { user_id: 'u1', handle: 'rowan_lifts' } },
+    loading: false,
+    error: null,
+    refresh: jest.fn(),
+  })),
+}));
+
 jest.mock('../../lib/community', () => ({
   getCommunityProgramme: jest.fn(),
+  hasProfile: (me) => !!me?.profile?.handle,
   REPORT_REASONS: {},
   recordProgrammeUse: jest.fn(() => Promise.resolve({})),
   listComments: jest.fn(() => Promise.resolve({ comments: [], cursor: null })),
@@ -76,6 +87,7 @@ jest.mock('../../lib/community', () => ({
 import {
   getCommunityProgramme, recordProgrammeUse, importSnapshotAsPlan, notifyCommunityEvent,
 } from '../../lib/community';
+import useCommunityMe from '../../hooks/useCommunityMe';
 import CommunityProgrammeScreen from '../CommunityProgrammeScreen';
 
 // A real-shaped snapshot: day 1 is a three-station circuit at 3 rounds with
@@ -192,6 +204,12 @@ async function mount() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useCommunityMe.mockReturnValue({
+    me: { profile: { user_id: 'u1', handle: 'rowan_lifts' } },
+    loading: false,
+    error: null,
+    refresh: jest.fn(),
+  });
   getCommunityProgramme.mockResolvedValue(PAYLOAD);
   importSnapshotAsPlan.mockResolvedValue({ plan: { id: 'plan-new' }, unresolved: [], rowsByDay: {} });
 });
@@ -388,5 +406,116 @@ describe('reporting', () => {
       visible: true, targetKind: 'programme', targetId: 'prog1',
     }));
     act(() => { tree.unmount(); });
+  });
+});
+
+// ─── Product review 2026-09-06 (items 16, 17 and 34) ────────────────────
+describe('the creator\'s exercise notes travel and are shown', () => {
+  test('a note on an exercise renders under it, on the reader\'s side', async () => {
+    const withNote = JSON.parse(JSON.stringify(SNAPSHOT));
+    withNote.days[1].exercises[0].notes = 'Shoulder, keep it light';
+    getCommunityProgramme.mockResolvedValue({
+      ...PAYLOAD, programme: { ...PROGRAMME, snapshot: withNote },
+    });
+
+    const tree = await mount();
+    const header = renderHeader(tree);
+
+    expect(texts(header)).toContain('Shoulder, keep it light');
+    act(() => { header.unmount(); tree.unmount(); });
+  });
+
+  test('an empty note adds no line', async () => {
+    const blank = JSON.parse(JSON.stringify(SNAPSHOT));
+    blank.days[1].exercises[0].notes = '   ';
+    getCommunityProgramme.mockResolvedValue({
+      ...PAYLOAD, programme: { ...PROGRAMME, snapshot: blank },
+    });
+
+    const tree = await mount();
+    const header = renderHeader(tree);
+
+    expect(texts(header)).toContain('Floor press');
+    expect(texts(header)).not.toContain('   |');
+    act(() => { header.unmount(); tree.unmount(); });
+  });
+});
+
+describe('a reader who has already copied this programme (item 34)', () => {
+  test('is told so, and the confirmation says this makes another copy', async () => {
+    getCommunityProgramme.mockResolvedValue({ ...PAYLOAD, my_use: 'use' });
+
+    const tree = await mount();
+    expect(texts(tree)).toContain('You already use this programme');
+
+    const useAsIs = buttons(tree).find((p) => p.title === 'Use as-is');
+    await act(async () => { useAsIs.onPress(); });
+
+    expect(mockAppAlert).toHaveBeenCalledWith(
+      'Copy it again?',
+      'You already have a copy in your plans. This makes another one.',
+      expect.any(Array),
+    );
+    act(() => { tree.unmount(); });
+  });
+
+  test('with no copy, neither the line nor the wording appears', async () => {
+    const tree = await mount();
+    expect(texts(tree)).not.toContain('You already use this programme');
+
+    const useAsIs = buttons(tree).find((p) => p.title === 'Use as-is');
+    await act(async () => { useAsIs.onPress(); });
+
+    expect(mockAppAlert).toHaveBeenCalledWith(
+      'Copy this programme?',
+      expect.stringContaining('Nothing is activated'),
+      expect.any(Array),
+    );
+    act(() => { tree.unmount(); });
+  });
+});
+
+describe('a reader with no Community profile (item 16)', () => {
+  test('gets one quiet row to Join instead of the comment composer', async () => {
+    useCommunityMe.mockReturnValue({
+      me: { profile: null }, loading: false, error: null, refresh: jest.fn(),
+    });
+    const navigation = { navigate: jest.fn(), goBack: jest.fn(), replace: jest.fn() };
+    let tree;
+    await act(async () => {
+      tree = create(
+        <CommunityProgrammeScreen
+          navigation={navigation}
+          route={{ params: { id: 'prog1' }, name: 'CommunityProgramme' }}
+        />,
+      );
+    });
+    await flush();
+
+    const list = tree.root.findAll((n) => n.type === 'FlatList')[0];
+    let footer = null;
+    act(() => { footer = create(list.props.ListFooterComponent); });
+
+    expect(texts(footer)).toContain('Create your Community profile to react and comment');
+    const row = footer.root.findAll(
+      (n) => n.props?.accessibilityLabel === 'Create your Community profile to react and comment'
+        && 'onPress' in n.props,
+    )[0];
+    await act(async () => { row.props.onPress(); });
+
+    expect(navigation.navigate).toHaveBeenCalledWith('CommunityJoin', {
+      next: { screen: 'CommunityProgramme', params: { id: 'prog1' } },
+    });
+    act(() => { footer.unmount(); tree.unmount(); });
+  });
+
+  test('with a profile the composer is what the thread ends with', async () => {
+    const tree = await mount();
+    const list = tree.root.findAll((n) => n.type === 'FlatList')[0];
+    let footer = null;
+    act(() => { footer = create(list.props.ListFooterComponent); });
+
+    expect(texts(footer)).not.toContain('Create your Community profile to react and comment');
+    act(() => { footer.unmount(); tree.unmount(); });
   });
 });

@@ -207,3 +207,66 @@ describe('the rules and the under-18 rule', () => {
       .toContain('Under 18: your profile is followers-only and does not appear in search.');
   });
 });
+
+// ─── Product review 2026-09-06, item 20 ─────────────────────────────────
+//
+// A handle check that could not RUN used to fall back to 'idle', which
+// reads as the shape hint and leaves Create disabled forever: joining
+// offline was a silent dead end with `REFUSALS.offline` unreachable.
+describe('when the handle check cannot run', () => {
+  function offline() {
+    const e = new Error('offline');
+    e.code = 'offline';
+    return e;
+  }
+
+  test('offline says so, and Create stays available', async () => {
+    checkHandle.mockRejectedValue(offline());
+    const { tree } = await mount();
+    await type(tree, 'Handle', 'rowan_lifts');
+    await type(tree, 'Display name', 'Rowan M');
+
+    expect(flattenText(tree.toJSON())).toContain('Could not check that handle. You are offline.');
+    expect(button(tree, 'Create my Community profile').props.disabled).toBe(false);
+  });
+
+  test('any other failure says try again, and Create stays available', async () => {
+    checkHandle.mockRejectedValue(new Error('boom'));
+    const { tree } = await mount();
+    await type(tree, 'Handle', 'rowan_lifts');
+    await type(tree, 'Display name', 'Rowan M');
+
+    expect(flattenText(tree.toJSON())).toContain('Could not check that handle just now. Try again.');
+    expect(button(tree, 'Create my Community profile').props.disabled).toBe(false);
+  });
+
+  test('tapping Create then surfaces the real refusal', async () => {
+    checkHandle.mockRejectedValue(offline());
+    upsertProfile.mockRejectedValueOnce(offline());
+
+    const { tree } = await mount();
+    await type(tree, 'Handle', 'rowan_lifts');
+    await type(tree, 'Display name', 'Rowan M');
+    await act(async () => { button(tree, 'Create my Community profile').props.onPress(); });
+    await flush();
+
+    expect(upsertProfile).toHaveBeenCalledTimes(1);
+    expect(mockToastShow).toHaveBeenCalledWith(
+      'You are offline. Try again when you have a connection.',
+      expect.objectContaining({ variant: 'error' }),
+    );
+  });
+
+  test('a check that answers again clears the line', async () => {
+    checkHandle.mockRejectedValueOnce(offline());
+    const { tree } = await mount();
+    await type(tree, 'Handle', 'rowan_lifts');
+    expect(flattenText(tree.toJSON())).toContain('Could not check that handle. You are offline.');
+
+    checkHandle.mockResolvedValue(true);
+    await type(tree, 'Handle', 'rowan_lift');
+
+    expect(flattenText(tree.toJSON())).toContain('Available');
+    expect(flattenText(tree.toJSON())).not.toContain('Could not check that handle');
+  });
+});

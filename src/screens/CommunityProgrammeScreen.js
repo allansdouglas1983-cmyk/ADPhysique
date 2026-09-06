@@ -14,7 +14,10 @@
  *
  * "Use as-is" copies the programme into the reader's plans and activates
  * nothing. The confirmation says so in those words, because a reader who
- * expects a copy and gets their live plan replaced has lost real work.
+ * expects a copy and gets their live plan replaced has lost real work. A
+ * reader who has already taken a copy is told so above the actions, and
+ * the confirmation says plainly that this makes another one (product
+ * review 2026-09-06, item 34).
  */
 
 import { useCallback, useRef, useState } from 'react';
@@ -35,8 +38,10 @@ import { useToast } from '../components/Toast';
 import ProfileCard from '../components/community/ProfileCard';
 import ProgrammeStructure from '../components/community/ProgrammeStructure';
 import CommentRow, { CommentComposer } from '../components/community/CommentRow';
+import JoinToInteractRow from '../components/community/JoinToInteractRow';
 import ReportSheet from '../components/community/ReportSheet';
 import useTheme from '../hooks/useTheme';
+import useCommunityMe from '../hooks/useCommunityMe';
 import useAppStore from '../store/useAppStore';
 import { spacing, type, hitSlop, iconSize } from '../styles/theme';
 import { touchTarget } from '../styles/layout';
@@ -45,9 +50,11 @@ import { logError } from '../lib/errorLog';
 import { navigateCrossTab } from '../navigation/navigateCrossTab';
 import {
   getCommunityProgramme, recordProgrammeUse, listComments, addComment, deleteComment,
-  importSnapshotAsPlan, snapshotStats, notifyCommunityEvent,
+  importSnapshotAsPlan, snapshotStats, notifyCommunityEvent, hasProfile,
   COMMUNITY_STYLE_KEYS, programmeUrl,
 } from '../lib/community';
+
+export const ALREADY_USING_LINE = 'You already use this programme';
 
 export const OFFLINE_LINE = 'Volyume could not reach Community just now. Check your connection and try again.';
 
@@ -75,6 +82,8 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
   const toast = useToast();
   const id = route?.params?.id ?? null;
   const user = useAppStore((s) => s.user);
+  const { me } = useCommunityMe();
+  const joined = hasProfile(me);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -128,13 +137,18 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
   const creator = data?.creator ?? null;
   const snapshot = programme?.snapshot ?? null;
   const stats = snapshot ? snapshotStats(snapshot) : null;
+  // 'use' or 'adapt' when this reader has already taken a copy
+  // (`community_get_programme` returns the mode, or null).
+  const myUse = data?.my_use ?? null;
 
   function handleUseAsIs() {
     if (!programme || !user?.id || busyRef.current) return;
     haptics.selection();
     appAlert(
-      'Copy this programme?',
-      'It goes to your plans as a new programme. Nothing is activated and your current plan is untouched.',
+      myUse ? 'Copy it again?' : 'Copy this programme?',
+      myUse
+        ? 'You already have a copy in your plans. This makes another one.'
+        : 'It goes to your plans as a new programme. Nothing is activated and your current plan is untouched.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -305,12 +319,23 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
                 onReport={item.mine ? undefined : () => setReportTarget({ targetKind: 'comment', targetId: item.id })}
               />
             )}
-            ListFooterComponent={<CommentComposer onSubmit={handleAddComment} />}
+            ListFooterComponent={joined ? (
+              <CommentComposer onSubmit={handleAddComment} />
+            ) : (
+              <JoinToInteractRow
+                onPress={() => navigation.navigate('CommunityJoin', {
+                  next: { screen: 'CommunityProgramme', params: { id } },
+                })}
+              />
+            )}
           />
           <View style={[styles.actionBar, {
             backgroundColor: t.colors.surface, borderTopColor: t.colors.borderSubtle,
           }]}
           >
+            {myUse ? (
+              <Text style={[styles.myUse, { color: t.colors.textMuted }]}>{ALREADY_USING_LINE}</Text>
+            ) : null}
             <View style={styles.actionRow}>
               <Button
                 title="Adapt for me"
@@ -361,6 +386,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs2 },
   description: { ...type.bodySm },
   useCount: { ...type.caption },
+  myUse: { ...type.caption },
   commentsLabel: { marginTop: spacing.lg },
   noComments: { ...type.caption },
   headerAction: {

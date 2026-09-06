@@ -123,15 +123,17 @@
     }
 
     function setDetailText(ex) {
-      var sets = ex.sets != null ? ex.sets : '—';
+      var sets = ex.sets != null ? ex.sets : null;
       var repsMin = ex.reps_min != null ? ex.reps_min : null;
       var repsMax = ex.reps_max != null ? ex.reps_max : null;
       var reps = repsMin != null && repsMax != null
         ? (repsMin === repsMax ? repsMin : (repsMin + ' to ' + repsMax))
         : (repsMin != null ? repsMin : (repsMax != null ? repsMax : null));
       var rest = ex.rest_seconds != null ? (ex.rest_seconds + 's rest') : null;
-      var out = sets + (reps != null ? (' x ' + reps) : '');
-      if (rest) out += ' · ' + rest;
+      var out = sets != null
+        ? (sets + (reps != null ? (' x ' + reps) : ''))
+        : (reps != null ? String(reps) : '');
+      if (rest) out = out ? (out + ' · ' + rest) : rest;
       return out;
     }
 
@@ -156,10 +158,11 @@
             stations.push(exercises[i]);
             i += 1;
           }
-          var rounds = stations[0].sets != null ? stations[0].sets : '—';
+          var rounds = stations[0].sets != null ? stations[0].sets : null;
           var roundRest = stations[0].round_rest_seconds;
           var block = el('div', 'circuit');
-          block.appendChild(el('h3', null, 'Circuit · ' + rounds + (rounds === 1 ? ' round' : ' rounds')
+          block.appendChild(el('h3', null, 'Circuit'
+            + (rounds != null ? (' · ' + rounds + (rounds === 1 ? ' round' : ' rounds')) : '')
             + (roundRest != null ? (' · ' + roundRest + 's between rounds') : '')));
           stations.forEach(function (st) {
             var row = el('div', 'station');
@@ -229,7 +232,10 @@
       var params = new URLSearchParams(location.search);
       var id = (params.get('id') || '').trim();
 
-      document.getElementById('open').setAttribute('href', 'volyume://p?id=' + encodeURIComponent(id));
+      // EXACTLY the form src/lib/community/links.js builds (appProgrammeUrl,
+      // appProfileUrl, appStoryUrl) and the navigator's linking config
+      // resolves: the trailing slash before the query is load-bearing.
+      document.getElementById('open').setAttribute('href', 'volyume://p/?id=' + encodeURIComponent(id));
 
       if (/iPad|iPhone|iPod/i.test(navigator.userAgent)) {
         // iOS LAUNCH: replace REPLACE_WITH_APP_STORE_ID once Volyume is

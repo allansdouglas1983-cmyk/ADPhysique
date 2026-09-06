@@ -10,6 +10,10 @@
  * The story renders through `PostCard`, which reads only the allow-listed
  * payload keys for the kind, so nothing about a person's body, food or
  * coaching can appear here.
+ *
+ * Reading it needs no Community profile (SD-04). Reacting and commenting
+ * do, so without one the composer and the Respect tap are replaced by one
+ * quiet row that goes to Join and comes back.
  */
 
 import { useCallback, useState } from 'react';
@@ -27,8 +31,10 @@ import { appAlert } from '../components/AppAlert';
 import { useToast } from '../components/Toast';
 import PostCard from '../components/community/PostCard';
 import CommentRow, { CommentComposer } from '../components/community/CommentRow';
+import JoinToInteractRow from '../components/community/JoinToInteractRow';
 import ReportSheet from '../components/community/ReportSheet';
 import useTheme from '../hooks/useTheme';
+import useCommunityMe from '../hooks/useCommunityMe';
 import useAppStore from '../store/useAppStore';
 import { spacing, type, hitSlop, iconSize } from '../styles/theme';
 import { touchTarget } from '../styles/layout';
@@ -36,7 +42,7 @@ import * as haptics from '../lib/haptics';
 import { logError } from '../lib/errorLog';
 import {
   getPost, reactToPost, deletePost, listComments, addComment, deleteComment,
-  notifyCommunityEvent,
+  notifyCommunityEvent, hasProfile,
 } from '../lib/community';
 
 export const POST_OFFLINE_LINE = 'Volyume could not reach Community just now. Check your connection and try again.';
@@ -64,6 +70,8 @@ export default function CommunityPostScreen({ navigation, route }) {
   const toast = useToast();
   const id = route?.params?.id ?? null;
   const user = useAppStore((s) => s.user);
+  const { me } = useCommunityMe();
+  const joined = hasProfile(me);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -211,11 +219,14 @@ export default function CommunityPostScreen({ navigation, route }) {
 
   const header = (
     <View style={styles.header}>
+      {/* No profile, no Respect: `community_react` raises `no_profile`, so
+          the tap is not offered and the row below says what to do about
+          it (product review 2026-09-06, item 16). */}
       <PostCard
         post={post}
         author={author}
         myReaction={myReaction}
-        onReact={handleReact}
+        onReact={joined ? handleReact : undefined}
         onOpenAuthor={openAuthor}
       />
       <SectionLabel style={styles.commentsLabel}>Comments</SectionLabel>
@@ -282,7 +293,15 @@ export default function CommunityPostScreen({ navigation, route }) {
               onReport={item.mine ? undefined : () => setReportTarget({ targetKind: 'comment', targetId: item.id })}
             />
           )}
-          ListFooterComponent={<CommentComposer onSubmit={handleAddComment} />}
+          ListFooterComponent={joined ? (
+            <CommentComposer onSubmit={handleAddComment} />
+          ) : (
+            <JoinToInteractRow
+              onPress={() => navigation.navigate('CommunityJoin', {
+                next: { screen: 'CommunityPost', params: { id } },
+              })}
+            />
+          )}
         />
       )}
       <ReportSheet
