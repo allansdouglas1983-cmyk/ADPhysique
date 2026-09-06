@@ -157,7 +157,7 @@ describe('state 1: no Community profile', () => {
   test('shows the hero, the privacy receipt and the one committing action', async () => {
     const { text } = await render();
 
-    expect(text).toContain('Programmes, training stories and people');
+    expect(text).toContain('Programmes you can make your own');
     expect(text).toContain('Nothing about your body, food or coaching is ever shared.');
     // The receipt's two columns, verbatim from the blueprint.
     expect(text).toContain('Others can see');

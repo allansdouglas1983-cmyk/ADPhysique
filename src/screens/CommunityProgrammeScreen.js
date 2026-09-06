@@ -54,7 +54,9 @@ import {
   COMMUNITY_STYLE_KEYS, programmeUrl,
 } from '../lib/community';
 
-export const ALREADY_USING_LINE = 'You already use this programme';
+export // Blueprint section 14: what Adapt does, said at the moment of choice.
+const ADAPT_EXPLAINS_LINE = 'Adapt keeps the creator\'s structure and swaps only what your kit, exclusions or limitations rule out. Every change is shown before anything is saved.';
+const ALREADY_USING_LINE = 'You already use this programme';
 
 export const OFFLINE_LINE = 'Volyume could not reach Community just now. Check your connection and try again.';
 
@@ -357,6 +359,9 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
                 style={styles.actionButton}
               />
             </View>
+            <Text style={[styles.adaptLine, { ...t.type.captionTight, color: t.colors.textMuted }]}>
+              {ADAPT_EXPLAINS_LINE}
+            </Text>
             <Button
               title="Share link"
               variant="tertiary"
@@ -378,6 +383,7 @@ export default function CommunityProgrammeScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
+  adaptLine: { marginTop: spacing.sm, textAlign: 'center' },
   safe: { flex: 1 },
   centre: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   content: { padding: spacing.lg, paddingBottom: spacing.xl },

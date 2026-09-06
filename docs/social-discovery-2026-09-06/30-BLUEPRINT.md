@@ -711,3 +711,35 @@ states answer "what now". Three corrections bind the screens lane:
    `chatbubble-outline`. No hearts.
 The Today root header keeps only the Community action in its `right`
 slot (the brand mark is not shown beside it).
+
+## 14. Final product pass: discoverability and differentiation (lead, 2026-09-06)
+
+Ruling on IA: Community stays off the tab bar (SD-02 holds). Two weaknesses
+found on the evidence: a new user has no labelled path to Community on
+Today before their first workout summary, and the programme screen never
+says what Adapt for me does at the moment of choice. Four changes, nothing
+else:
+1. **Today introduction card** (`src/components/HomeCommunityIntroCard.js`,
+   rendered by HomeScreen after the last-session card, same gating shape as
+   the Injuries & limitations offer): shown once a person has completed at
+   least one session, has no Community profile in the cache, has not
+   dismissed it, and no ranked banner holds the slot. Copy: title "Other
+   lifters, their programmes, your stories"; body "Use a programme another
+   lifter built, as-is or refitted to your kit, and share the training you
+   actually did. Nothing about your body, food or coaching is ever
+   shared."; actions "Have a look" (primary, opens Community) and "Not
+   now" (secondary). Either action dismisses it for good
+   (`@volyume_community_intro_<uid>`).
+2. **Plan library row**: under the search and collection chips, one
+   pressable row "Programmes from other lifters" with the sub "Use as-is or
+   refit them to your kit" opening Community Discover focused on
+   programmes. The library is where people choose programmes; community
+   programmes belong beside Volyume's.
+3. **Programme screen**: one caption under the action row, "Adapt keeps
+   the creator's structure and swaps only what your kit, exclusions or
+   limitations rule out. Every change is shown before anything is saved."
+4. **Hub hero copy** leads with the differentiator: title "Programmes you
+   can make your own"; body "Use another lifter's programme as they built
+   it, or let Volyume refit it to your kit and limits and show you every
+   change. Share the training you actually did. Nothing about your body,
+   food or coaching is ever shared."

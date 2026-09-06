@@ -323,10 +323,10 @@ export default function CommunityHubScreen({ navigation, route }) {
       {!joined && !browsing ? (
         <Card elevated style={styles.block}>
           <Text style={[styles.heroTitle, { ...t.type.h2, color: t.colors.textPrimary }]}>
-            Programmes, training stories and people
+            Programmes you can make your own
           </Text>
           <Text style={[styles.heroBody, { ...t.type.body, color: t.colors.textSecondary }]}>
-            Follow lifters you rate, share what you build, and use or adapt other people&apos;s programmes. Nothing about your body, food or coaching is ever shared.
+            Use another lifter&apos;s programme as they built it, or let Volyume refit it to your kit and limits and show you every change. Share the training you actually did. Nothing about your body, food or coaching is ever shared.
           </Text>
           <PrivacyReceipt />
           <Button
