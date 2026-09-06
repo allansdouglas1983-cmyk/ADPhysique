@@ -1,6 +1,28 @@
 # UX world-class audit — handover and resume note
 
 ===============================================================================
+## ★ 2026-09-06 — SENTRY FOLLOW-THROUGH: SEED RACE (VOLYUME-28) AND NEW-FAMILY REACHABILITY (on main) ★
+
+Founder brief (in chat): the iOS 1.3.5+64 build raised "exercise not
+found" x90 and the kettlebell library plans were missing stations;
+"check for kettlebell ... probably on the engine and plan builder too.
+Check all the new ones". Cause of the library gap: the routine seed
+raced the corpus top-up on an existing install. Landed: one awaited seed
+chain (`runExerciseSeedChain`, `exercisesReady`), library plans repair
+their own gaps (`repairLibraryPlans`, seed key v17, incomplete flag).
+Then an Opus audit of every new family on every surface, lead-reviewed:
+F-21 (79 rows had no picker chip; Landmine, Suspension, Other added and
+pinned against the corpus), F-22 (six banded barbell lifts classed as
+band; fixed, rederive key v7), F-23 ruled D154 (ordinary generation
+never picks kettlebells by the C16 tiers; the kit-named path fills 9/9;
+no tier change; founder fork = an equipment inventory). Record:
+`docs/final-certification-2026-09-05/07-FINDINGS.md` F-21..F-23 and the
+reachability table; board block "NEW-FAMILY REACHABILITY". Founder
+actions: TASKBOARD section 3 plus the board's Sentry block (Play
+internal-testing upload of the codec build, iOS rebuild before
+submitting 1.3.5).
+
+===============================================================================
 ## ★ 2026-09-05 — FINAL WHOLE-PRODUCT CERTIFICATION (COMPLETE, on main) ★
 
 Founder brief (in chat): one autonomous adversarial certification of the

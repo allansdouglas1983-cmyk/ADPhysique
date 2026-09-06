@@ -33,6 +33,31 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## NEW-FAMILY REACHABILITY AFTER VOLYUME-28 (2026-09-06) — LANDED ON MAIN. Record: `docs/final-certification-2026-09-05/07-FINDINGS.md` F-21..F-23 + table; ruling D154.
+
+Founder brief in chat: kettlebells missing from library plans, "probably
+on the engine and plan builder too. Check all the new ones". Opus audit
+against the real corpus and real `generatePlan`, lead-reviewed.
+- [x] Library: the seed race (VOLYUME-28) was the whole library cause;
+      all 57 plans' names resolve against the corpus (lead probe).
+- [x] F-21: 79 landmine/suspension/sandbag/medicine-ball/sled rows had no
+      picker chip. Chip row now `PICKER_EQUIPMENT_CHIPS` with Landmine,
+      Suspension, Other; pinned against the corpus (0 unreachable).
+- [x] F-22: six "Band-Resisted"/"Reverse Band" barbell lifts derived as
+      band (excluded from Full Gym). Fixed; rederive key v7 so existing
+      installs take it.
+- [x] F-23 / D154: ordinary generation reaches 0 kettlebell slots by the
+      C16 tiers; kettlebell STYLE plans fill 9/9. Ruled: no tier change
+      (profiles cannot tell who owns a bell). Founder fork open: an
+      equipment inventory if ordinary home plans should use kettlebells.
+Device checklist (EAS build): 1. Any plan > Add exercise: chips scroll
+to Landmine, Suspension, Other; expect 27 / 36 / 24 rows. 2. Bands chip:
+band rows only, no "Reverse Band Squat". 3. Barbell chip, search "Reverse
+Band": three rows. 4. Manual Builder > Add: same chips. 5. Kettlebell
+library plan > swap: kettlebell candidates plus "Show all exercises".
+6. Existing install updated: Library > kettlebell plan shows every
+station (repair ran).
+
 ## SENTRY TRIAGE AND THE CODEC-LESS ANDROID BUILDS (2026-09-06) — CODE ON MAIN `39df0f8`; FOUNDER: PUBLISH A CODEC BUILD TO PLAY.
 
 Founder brief in chat 2026-09-06 (a live Pixel 9 user on build 3560).
