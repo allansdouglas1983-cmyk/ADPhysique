@@ -98,7 +98,10 @@
     { "table": "community_moderators", "disposition": "rpc_only" },
     { "table": "community_moderation_log", "disposition": "rpc_only" },
     { "table": "community_activity", "disposition": "rpc_only" },
-    { "table": "community_rate_events", "disposition": "rpc_only" }
+    { "table": "community_rate_events", "disposition": "rpc_only" },
+    { "table": "community_connections", "disposition": "rpc_only" },
+    { "table": "community_conversations", "disposition": "rpc_only" },
+    { "table": "community_messages", "disposition": "rpc_only" }
   ],
   "clientRpcNames": [
     "delete_user_data",
@@ -158,6 +161,24 @@
     "community_mark_activity_seen",
     "community_report",
     "community_moderation_queue",
-    "community_moderate"
+    "community_moderate",
+    "community_connect",
+    "community_respond_connect",
+    "community_withdraw_connect",
+    "community_remove_connection",
+    "community_list_connections",
+    "community_update_training_profile",
+    "community_set_partner",
+    "community_set_connect_from",
+    "community_set_show_programmes",
+    "community_find_people",
+    "community_programme_people",
+    "community_gym_summary",
+    "community_gym_suggest",
+    "community_conversations",
+    "community_messages",
+    "community_send_message",
+    "community_mark_conversation_read",
+    "community_delete_message"
   ]
 }

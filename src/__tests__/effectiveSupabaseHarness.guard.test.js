@@ -53,6 +53,11 @@ describe('effective Supabase hostile-matrix harness', () => {
       'community_posts', 'community_reactions', 'community_comments',
       'community_reports', 'community_moderators', 'community_moderation_log',
       'community_activity', 'community_rate_events',
+      // migrate_161: the connection graph and messaging. A message body is
+      // the most private thing Community stores, so the only correct
+      // hostile-matrix expectation for these three is a denial on every
+      // attack, exactly as for the fourteen above.
+      'community_connections', 'community_conversations', 'community_messages',
     ];
     const byName = new Map(
       inventory.directPostgrestTables.map((item) => [`${item.schema || 'public'}.${item.table}`, item]),
@@ -68,11 +73,15 @@ describe('effective Supabase hostile-matrix harness', () => {
 
   test('every Community RPC is inventoried, because each is the sole ingress to its table', () => {
     const communityRpcs = inventory.clientRpcNames.filter((n) => n.startsWith('community_'));
-    expect(communityRpcs.length).toBeGreaterThanOrEqual(41);
+    expect(communityRpcs.length).toBeGreaterThanOrEqual(59);
     for (const name of [
       'community_get_me', 'community_upsert_profile', 'community_leave',
       'community_follow', 'community_block', 'community_publish_programme',
       'community_create_post', 'community_report', 'community_moderate',
+      // migrate_161.
+      'community_connect', 'community_respond_connect', 'community_send_message',
+      'community_find_people', 'community_update_training_profile',
+      'community_conversations', 'community_messages',
     ]) expect(inventory.clientRpcNames).toContain(name);
     // The internal helpers are NOT client RPCs and must never be listed as
     // ones: they are revoked from authenticated entirely.

@@ -131,3 +131,139 @@ describe('the file is registered in the tracker', () => {
     expect(README).toContain('| 160 | `migrate_160_community.sql` |');
   });
 });
+
+/**
+ * ── migrate_161_community_connections.sql keeps the same shape ───────────
+ *
+ * Same rules, same reasons. The one difference worth stating: 161 widens
+ * three CHECKs that 160 already created, so it uses the drop-then-add form
+ * for those three and the duplicate_object form for the constraints on its
+ * own new tables. Both are pinned below, because "additive and idempotent" is
+ * a promise about the whole file rather than about the parts that were easy.
+ */
+const MIGRATION_161 = path.join(ROOT, 'supabase', 'migrate_161_community_connections.sql');
+const SQL161 = fs.readFileSync(MIGRATION_161, 'utf8');
+const HEADER_161 = SQL161.slice(0, SQL161.indexOf('-- ─── Part 1'));
+const CODE_161 = SQL161.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n');
+
+describe('161: the mandatory header is present and honest', () => {
+  test.each([
+    ['Purpose', /^-- Purpose:/m],
+    ['Push', /Push:/],
+    ['Pull', /Pull:/],
+    ['Applied locally', /^-- Applied locally:/m],
+    ['Applied remotely', /^-- Applied remotely:/m],
+    ['Safe to re-run', /^-- Safe to re-run:/m],
+    ['Rollback', /^-- Rollback:/m],
+    ['GDPR note', /^-- GDPR note:/m],
+  ])('the header states %s', (_label, re) => {
+    expect(HEADER_161).toMatch(re);
+  });
+
+  test('it names its authority document', () => {
+    expect(HEADER_161).toContain('docs/social-discovery-2026-09-06/');
+    expect(HEADER_161).toContain('70-DISCOVERY-BLUEPRINT.md');
+  });
+
+  test('Applied remotely still says NO, awaiting the founder phrase', () => {
+    expect(HEADER_161).toMatch(/Applied remotely:\s+NO/);
+    expect(HEADER_161).toContain('run against production');
+  });
+
+  test('it records that it depends on 160 and must never run before it', () => {
+    expect(HEADER_161).toContain('migrate_160');
+  });
+
+  test('Applied locally says N/A: this adds no local SQLite table either', () => {
+    expect(HEADER_161).toMatch(/Applied locally:\s+N\/A/);
+  });
+
+  test('the GDPR note explains the bands and the age derivation', () => {
+    expect(HEADER_161).toContain('tp_age_band');
+    expect(HEADER_161).toContain('date_of_birth');
+    expect(HEADER_161).toMatch(/coarse bands/i);
+  });
+
+  test('the rules version bump is recorded with its re-consent path', () => {
+    expect(HEADER_161).toContain('rules_outdated');
+    expect(HEADER_161).toContain('accept_rules_version');
+    expect(HEADER_161).toContain('COMMUNITY-RULES.md');
+  });
+});
+
+describe('161: every statement is re-runnable', () => {
+  test('tables and indexes use IF NOT EXISTS', () => {
+    const creates = CODE_161.split('\n')
+      .filter((l) => /^CREATE (TABLE|INDEX|UNIQUE INDEX)/i.test(l.trim()));
+    expect(creates.length).toBeGreaterThan(0);
+    for (const line of creates) expect(line).toMatch(/IF NOT EXISTS/i);
+  });
+
+  test('added columns use ADD COLUMN IF NOT EXISTS', () => {
+    const adds = CODE_161.split('\n').filter((l) => /ADD COLUMN/i.test(l));
+    expect(adds.length).toBeGreaterThan(0);
+    for (const line of adds) expect(line).toMatch(/ADD COLUMN IF NOT EXISTS/i);
+  });
+
+  test('new constraints are duplicate_object tolerant; the three widenings drop first', () => {
+    const blocks = SQL161.match(
+      /DO \$\$ BEGIN\s+ALTER TABLE[\s\S]*?EXCEPTION WHEN duplicate_object THEN NULL; END \$\$;/g,
+    ) || [];
+    expect(blocks.length).toBeGreaterThanOrEqual(5);
+    const guarded = (blocks.join('\n').match(/ADD CONSTRAINT/g) || []).length;
+    const all = (CODE_161.match(/ADD CONSTRAINT/g) || []).length;
+    // Exactly three unguarded ADD CONSTRAINTs, and each is preceded by its own
+    // DROP CONSTRAINT IF EXISTS inside a DO block.
+    expect(all - guarded).toBe(3);
+    for (const name of ['community_activity_kind_check',
+      'community_reports_target_kind_check',
+      'notification_preferences_category_check']) {
+      expect(CODE_161).toContain(`DROP CONSTRAINT IF EXISTS ${name}`);
+      expect(CODE_161).toContain(`ADD CONSTRAINT ${name}`);
+    }
+  });
+
+  test('every function is CREATE OR REPLACE, never a bare CREATE FUNCTION', () => {
+    expect(CODE_161).not.toMatch(/^CREATE FUNCTION/m);
+    expect((CODE_161.match(/CREATE OR REPLACE FUNCTION/g) || []).length)
+      .toBeGreaterThanOrEqual(44);
+  });
+
+  test('every trigger is dropped before it is created', () => {
+    const created = [...CODE_161.matchAll(/CREATE TRIGGER\s+([a-z_0-9]+)/g)].map((m) => m[1]);
+    expect(created.length).toBeGreaterThanOrEqual(2);
+    for (const name of created) {
+      expect(CODE_161).toMatch(new RegExp(`DROP TRIGGER IF EXISTS ${name} ON`));
+    }
+  });
+
+  test('nothing destructive touches an existing table', () => {
+    expect(CODE_161).not.toMatch(/DROP TABLE/i);
+    expect(CODE_161).not.toMatch(/DROP COLUMN/i);
+    expect(CODE_161).not.toMatch(/TRUNCATE/i);
+    const drops = CODE_161.split('\n')
+      .filter((l) => /^\s*(ALTER TABLE|DROP)/i.test(l) && /DROP/i.test(l));
+    for (const line of drops) {
+      expect(line).toMatch(/DROP (TRIGGER IF EXISTS|CONSTRAINT IF EXISTS)/i);
+    }
+  });
+
+  test('it ends with an acceptance check over the catalogues', () => {
+    expect(SQL161).toContain('information_schema.tables');
+    expect(SQL161).toContain('relrowsecurity');
+    expect(SQL161).toContain('pg_policy');
+    expect(SQL161).toContain('prosecdef');
+    expect(SQL161).toContain('pg_get_constraintdef');
+  });
+});
+
+describe('161 is registered in the tracker', () => {
+  const README = fs.readFileSync(path.join(ROOT, 'supabase', 'README.md'), 'utf8');
+
+  test('supabase/README.md carries the status entry and a ledger row', () => {
+    expect(README).toContain(
+      '161 WRITTEN, NOT APPLIED (Community connections and messaging; founder gate)',
+    );
+    expect(README).toContain('| 161 | `migrate_161_community_connections.sql` |');
+  });
+});

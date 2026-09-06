@@ -120,6 +120,42 @@ contract must not delegate its authority to a superseded audit.
   every one; 72 functions, all `security_definer = t` with the search_path
   in `settings`; `authenticated_can_execute = t` for exactly the 41
   `community_*` RPCs and `f` for every `_community_*` helper).
+- **161 WRITTEN, NOT APPLIED (Community connections and messaging; founder gate).**
+  `migrate_161_community_connections.sql` extends 160 with the
+  discovery campaign's server half (`docs/social-discovery-2026-09-06/
+  70-DISCOVERY-BLUEPRINT.md` section 11; SD-20 to SD-32): thirteen additive
+  columns on `community_profiles` (`connect_from`, `open_to_partner`,
+  `partner_prefs`, `show_programmes`, `connection_count` and the eight
+  `tp_*` training-profile bands), three new tables
+  (`community_connections`, `community_conversations`,
+  `community_messages`) with RLS enabled, NO policy and all privileges
+  revoked from anon and authenticated, and 23 SECURITY DEFINER RPCs
+  (`search_path = public, pg_temp`, revoked from PUBLIC and anon, granted
+  to authenticated) as the only ingress and egress. It widens three
+  CHECKs, keeping every existing value: `community_activity.kind`
+  (`connect_request`, `connect_accepted`), `community_reports.target_kind`
+  (`message`) and `notification_preferences.category`
+  (`community_message`, so the recipient's message toggle can be stored at
+  all). It re-issues `_community_profile_card`, `community_get_me`,
+  `community_upsert_profile`, `community_block`, `community_unfollow`,
+  `community_leave` and `delete_user_data()` IN FULL. The Community rules
+  move to version 2 (`docs/community-safety/COMMUNITY-RULES.md`):
+  `_community_rules_version()` is the single definition, a new profile must
+  accept 2, an existing profile re-accepts by sending
+  `accept_rules_version` alone, and `community_connect`,
+  `community_send_message` and `community_update_training_profile` raise
+  `rules_outdated` until it does. It DEPENDS ON 160 and must never run
+  before it; nothing has been applied, and it waits for the founder's exact
+  phrase "run against production" for the batch that carries it.
+  Verified twice (fresh and re-run) against a throwaway PostgreSQL 16 with
+  160 applied and stubs for `auth`, `consent_log`,
+  `notification_preferences`, `user_body_profile` and `partnerships`:
+  idempotent, 3 tables with RLS on and zero policies, every function
+  SECURITY DEFINER with the search_path pinned, `authenticated` executing
+  exactly the `community_*` RPCs and no helper. Verification after any
+  future apply: the acceptance check at the end of the file (3 tables,
+  `rls_enabled = t`, `policy_count = 0`; the 13 columns; the 3 widened
+  CHECKs carrying their new values; the function privilege table).
 - **132-136 APPLIED 2026-08-12** (founder order, Claude-run, project
   `sujrylzzxcqxxfygptns`, eu-west-1). Every object verified read-only
   after the apply:
@@ -465,6 +501,7 @@ themselves; add a row here whenever a migration is added.
 | 158 | `migrate_158_routine_exercise_groups.sql` | Exercise library expansion EL-9: two nullable columns on `routine_exercises` (`group_kind` 'circuit'\|null=superset, `round_rest_seconds`) for the circuit model. Client push omits both while `CIRCUIT_SYNC_COLUMNS_ENABLED` (src/lib/sync/featureFlags.js) is false; pull reads both via `?? null`. | **APPLIED AND VERIFIED 2026-09-05** (Claude-run batch below). |
 | 159 | `migrate_159_workout_set_evidence_class.sql` | Exercise library expansion EL-7: nullable `workout_sets.evidence_class` (null=conventional \| 'circuit' \| 'ballistic' \| 'circuit_ballistic'), stamped by the live screen, never user-chosen. Client push omits it while `CIRCUIT_SYNC_COLUMNS_ENABLED` is false; pull reads it via `?? null`. | **APPLIED AND VERIFIED 2026-09-05** (Claude-run batch below); flag flipped ON in the same landing. |
 | 160 | `migrate_160_community.sql` | Community (Social / Community / Discovery campaign, `docs/social-discovery-2026-09-06/30-BLUEPRINT.md` section 3). Fourteen `community_*` tables (profiles, follows, blocks, mutes, programmes + uses, posts, reactions, comments, reports, moderators, moderation log, activity, rate events), all RLS-enabled with NO anon/authenticated policy and ALL privileges revoked from both; 41 SECURITY DEFINER RPCs pinned to `search_path = public, pg_temp` as the only ingress and egress (SD-14). Widens the `consent_log` CHECK (`community_visibility`) and the `notification_preferences` category CHECK (`community_follow`, `community_activity`); seeds `community_moderators`; re-issues `delete_user_data()` in full with two-sided Community deletes. Rollback: drop the fourteen tables and the `community_*` / `_community_*` functions, re-apply migrate_154, re-narrow both CHECKs (see the file header). | **WRITTEN, NOT APPLIED - awaiting the founder's exact phrase.** |
+| 161 | `migrate_161_community_connections.sql` | Community connections, messaging, the shared training profile and the discovery surfaces (Discovery campaign, `docs/social-discovery-2026-09-06/70-DISCOVERY-BLUEPRINT.md` section 11; SD-20 to SD-32). Thirteen additive `community_profiles` columns (`connect_from`, `open_to_partner`, `partner_prefs`, `show_programmes`, `connection_count`, eight `tp_*` bands); three new tables (`community_connections`, `community_conversations`, `community_messages`), all RLS-enabled with NO anon/authenticated policy and ALL privileges revoked from both; 23 SECURITY DEFINER RPCs pinned to `search_path = public, pg_temp` as the only ingress and egress (SD-14). Widens the `community_activity.kind` CHECK (`connect_request`, `connect_accepted`), the `community_reports.target_kind` CHECK (`message`) and the `notification_preferences.category` CHECK (`community_message`). Moves the Community rules to version 2 with a re-consent path and the new `rules_outdated` refusal. Re-issues `_community_profile_card`, `community_get_me`, `community_upsert_profile`, `community_block`, `community_unfollow`, `community_leave` and `delete_user_data()` in full, the last with two-sided deletes for the three new tables. DEPENDS ON 160. Rollback: drop the three tables and the thirteen columns, drop the `community_*` / `_community_*` functions this file creates, re-apply migrate_160, re-narrow the three CHECKs (see the file header). | **WRITTEN, NOT APPLIED - awaiting the founder's exact phrase.** |
 
 > Ledger gap noted 2026-08-20: `migrate_144_apple_review_password_reset.sql`
 > exists in this folder but has no row in this table (it predates CC26 and

@@ -121,6 +121,28 @@ const CLIENT_RPCS = [
   'community_unmute',
   'community_unpublish_programme',
   'community_upsert_profile',
+  // Discovery campaign (migrate_161, SD-20 to SD-32). Same contract as the
+  // Community RPCs above: SECURITY DEFINER, `search_path = public, pg_temp`,
+  // user from auth.uid(), granted to `authenticated` only, with the
+  // `_community_*` helpers beneath them granted to nobody.
+  'community_connect',
+  'community_conversations',
+  'community_delete_message',
+  'community_find_people',
+  'community_gym_suggest',
+  'community_gym_summary',
+  'community_list_connections',
+  'community_mark_conversation_read',
+  'community_messages',
+  'community_programme_people',
+  'community_remove_connection',
+  'community_respond_connect',
+  'community_send_message',
+  'community_set_connect_from',
+  'community_set_partner',
+  'community_set_show_programmes',
+  'community_update_training_profile',
+  'community_withdraw_connect',
 ];
 
 /** Every RPC name the app actually calls, read from the real source. */

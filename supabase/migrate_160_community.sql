@@ -3033,7 +3033,7 @@ BEGIN
          OR (g.owner_id = v_row.user_id AND u.user_id = v_uid)
     ) THEN
       v_score := v_score + 3;
-      v_reasons := v_reasons || 'Uses a programme you use';
+      v_reasons := v_reasons || ('Uses a programme you use')::text;
     END IF;
 
     IF v_me.gym_key IS NOT NULL AND v_row.gym_key = v_me.gym_key THEN
@@ -3057,7 +3057,7 @@ BEGIN
 
     IF v_me.goal IS NOT NULL AND v_row.goal = v_me.goal THEN
       v_score := v_score + 1;
-      v_reasons := v_reasons || 'Same goal';
+      v_reasons := v_reasons || ('Same goal')::text;
     END IF;
 
     SELECT count(*) INTO v_mutual
