@@ -687,3 +687,26 @@ additions. TASKBOARD, handover, decisions, verification, final report.
     Expected: Community opens with the "Partner invites have moved" card.
 16. Airplane mode: open Community. Expected: last seen content with the
     offline line; core training unaffected.
+
+## 13. Lead visual review rulings (2026-09-06, render `render-community-screens.html`, artifact https://claude.ai/code/artifact/1f910a8b-4ade-41ee-82bf-879cbba6de86)
+
+Eight states were rendered at 390 x 844 in the dark tokens and reviewed
+against the brief's visual questions (does it feel like Volyume, is the
+hierarchy clear, is there too much orange, are empty states elegant).
+Verdict: it reads as the same product; the hierarchy is clear; the empty
+states answer "what now". Three corrections bind the screens lane:
+1. Amber is never body text. Suggestion reasons render in `textPrimary`
+   at `captionStrong`; the circuit group label renders in `textPrimary`
+   with a small amber `repeat-outline` glyph; the only amber on any
+   Community screen is glyphs on primary buttons, the selected segment,
+   the emphatic button fill, the Volyume chip on library tiles, and the
+   unseen dot.
+2. On the programme screen the action row leads with "Adapt for me"
+   (`primary`, `options-outline` glyph) and "Use as-is" is `secondary`.
+   Neither is emphatic; the emphatic fill belongs to "Save to my plans"
+   on the adapt screen and to "Create profile" on Join.
+3. Reaction is a single "Respect" tap (Ionicons `thumbs-up-outline`,
+   filled `thumbs-up` when on) with a count; comments use
+   `chatbubble-outline`. No hearts.
+The Today root header keeps only the Community action in its `right`
+slot (the brand mark is not shown beside it).
