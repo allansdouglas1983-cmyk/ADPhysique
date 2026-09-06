@@ -70,6 +70,13 @@ describe('scheduleTrainingReminders (D4)', () => {
       [tr.REMINDER_PREF_KEY]: 'true',
       [tr.SCHEDULE_KEY]: JSON.stringify({ days: [0, 3] }), // Sunday, Wednesday
     });
+    // Pinned "now": a Friday at midday. The count below depends on the
+    // start day (a run that starts on a habit day before 08:00 includes
+    // today), so an unpinned clock made this test fail on Sundays and
+    // Wednesdays. The horizon function itself is exercised with a fixed
+    // clock in the next test.
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date(2026, 8, 4, 12, 0, 0, 0).getTime());
+    try {
     await tr.scheduleTrainingReminders();
     // Eight weeks x two days = 16, inside the 28 cap.
     expect(mockSchedule).toHaveBeenCalledTimes(16);
@@ -88,6 +95,9 @@ describe('scheduleTrainingReminders (D4)', () => {
     }
     const last = new Date(mockSchedule.mock.calls.at(-1)[0].trigger.date);
     expect(last.getTime() - Date.now()).toBeLessThanOrEqual(tr.TRAINING_HORIZON_DAYS * 86400000 + 86400000);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   test('D142: trainingHorizonDates is pure, capped, and never in the past', () => {

@@ -33,6 +33,20 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## TODAY: SETUP WEIGHT POPULATES, LOG LABEL VISIBLE (2026-09-06) — COMPLETE, MERGED TO MAIN. Record D150.
+
+**Device checklist (Android, fresh account).**
+1. Complete setup with body weight 89 kg. Land on Today. Expected: no
+   weigh-in strip; the check-in card shows "Morning weight 89 kg" with
+   a green tick and "1 of 3 morning weigh-ins this week".
+2. Next morning, Today. Expected: the weigh-in strip with the input
+   pre-filled with 89; the Log button reads "Log" in white on charcoal,
+   clearly a button. Tap Log. Expected: "Morning weight 89 kg" logged.
+3. Weekly check-in on day 0. Expected: it still asks for a real weigh-in
+   before treating today as weighed (unchanged).
+ED-safety: the enrolment row already counted toward the gate; nothing
+weight-adjacent changed in the engine or the notifications.
+
 ## EXERCISE LIBRARY & ALTERNATIVE TRAINING EXPANSION (2026-09-05) — COMPLETE, MERGED TO MAIN. Record EL-1 to EL-25; closure `11-CLOSURE.md`; device checklist `10-VERIFICATION.md`.
 
 Founder brief in chat 2026-09-05 (one autonomous end-to-end task).

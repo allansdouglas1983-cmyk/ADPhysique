@@ -57,7 +57,7 @@ export default function TodayStrip({
     logPrompt: { ...t.type.label, color: t.colors.textPrimary },
     logWhy: { ...t.type.captionTight, color: t.colors.textMuted },
     unit: { ...t.type.caption, color: t.colors.textMuted },
-    logBtnText: { ...t.type.label, color: t.colors.onPrimary },
+    logBtnText: { ...t.type.label, color: t.colors.textPrimary },
   };
   const [weightInput, setWeightInput] = useState('');
   const [weightInputSt, setWeightInputSt] = useState('');
@@ -393,5 +393,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   logBtnDisabled: { opacity: 0.5 },
-  logBtnText: { ...type.label, color: colors.onPrimary },
+  // D150 (founder device report 2026-09-06): this label carried the dark
+  // on-amber colour from before the D148 hierarchy; on the raised charcoal
+  // primary it was dark on dark, so the Log button read as an empty shell.
+  logBtnText: { ...type.label, color: colors.textPrimary },
 });

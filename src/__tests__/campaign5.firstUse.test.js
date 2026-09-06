@@ -1738,11 +1738,20 @@ describe('WEIGH-IN: day 0 never claims a weigh-in the user did not take (C5-P22-
     expect(read('screens/ProOnboardingScreen.js')).toMatch(/notes: ENROLMENT_WEIGHT_NOTE/);
   });
 
-  test('a typed enrolment figure does not read as "logged today"', () => {
+  // D150 (founder device verdict 2026-09-06): Today SHOWS the typed
+  // enrolment weight as the day's morning weight; the check-in's own
+  // "weighed today" claim still does not, and the first-use sentence still
+  // waits for a real weigh-in. The display half of C5-P22-01 is reversed,
+  // the claim half stands.
+  test('a typed enrolment figure does not read as "weighed today" to the check-in, but Today shows it', () => {
     const now = Date.now();
     expect(hasLoggedToday([{ loggedAt: now, notes: 'enrolment' }])).toBe(false);
     expect(hasLoggedToday([{ loggedAt: now }])).toBe(true);
-    expect(read('screens/HomeScreen.js')).toMatch(/isEnrolmentSeedWeight\(entry\) \? null :/);
+    const home = read('screens/HomeScreen.js');
+    expect(home).toMatch(/setTodayWeight\(entry\?\.weightKg \?\? null\);/);
+    expect(home).not.toMatch(/isEnrolmentSeedWeight\(entry\) \? null :/);
+    // The first-use sentence still retires only on a REAL weigh-in.
+    expect(home).toMatch(/setHasEverLoggedWeight\(recent14\.some\(\(w\) => !isEnrolmentSeedWeight\(w\)\)\)/);
   });
 
   test('what counts toward the check-in gate is deliberately unchanged', () => {

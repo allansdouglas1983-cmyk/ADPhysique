@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   submitText: {
     fontSize: fontSize.md,
     fontFamily: fontFamily.bold, fontWeight: fontWeight.bold,
-    color: colors.onPrimary,
+    color: colors.textPrimary,
   },
 
   privacy: {
@@ -428,7 +428,7 @@ function buildLiveStyles(t) {
     sentimentChipText: { color: t.colors.textSecondary },
     sentimentChipTextSelected: { color: t.colors.textPrimary },
     cancelText: { color: t.colors.textSecondary },
-    submitText: { color: t.colors.onPrimary },
+    submitText: { color: t.colors.textPrimary },
     privacy: { ...t.type.captionTight, color: t.colors.textMuted },
     doneTitle: { color: t.colors.textPrimary },
     doneSub: { color: t.colors.textMuted },

@@ -835,16 +835,16 @@ export default function HomeScreen({ navigation, route }) {
   async function loadTodayWeight() {
     try {
       const entry = await getMorningWeightToday(user.id);
-      // C5-P22-01 (D96): Pro enrolment seeds today's row from the body weight
-      // the user TYPED during setup, so day 0 read "Morning weight 84.0 kg -
-      // Logged" beside a green tick for a weigh-in that never happened. The
-      // seeded row is marked at the write, and the strip treats it as
-      // un-logged: the empty state, its Log button and the why-line show
-      // instead. The value is still the prefill (recentWeights below reads
-      // the same series), and what counts toward the check-in gate is
-      // deliberately unchanged. A real weigh-in overwrites the row and
-      // clears the marker.
-      setTodayWeight(isEnrolmentSeedWeight(entry) ? null : (entry?.weightKg ?? null));
+      // D150 (founder device verdict 2026-09-06, reversing the display half
+      // of C5-P22-01): the body weight typed during setup IS today's morning
+      // weight on Today. Hiding it left day 0 with an empty weigh-in strip
+      // under a dead-looking Log button, and the founder read that as the
+      // weight "not populating". The enrolment marker stays on the row, so
+      // the weekly check-in's own "weighed today" claim and the strip's
+      // first-use sentence still treat it as a typed figure, and the
+      // check-in gate is unchanged. A real weigh-in or a Health import
+      // overwrites the row as before.
+      setTodayWeight(entry?.weightKg ?? null);
       // Recent weights feed the "last known weight" prefill when today's
       // weight is not logged yet.
       try {

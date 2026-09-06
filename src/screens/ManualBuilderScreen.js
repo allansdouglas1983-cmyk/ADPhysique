@@ -1877,7 +1877,7 @@ const styles = StyleSheet.create({
   },
   activateBtnText: {
     ...type.bodyStrong,
-    color: colors.onPrimary,
+    color: colors.textPrimary,
   },
   successSheet: {
     alignItems: 'center',
@@ -1921,7 +1921,7 @@ const styles = StyleSheet.create({
   },
   successPrimaryText: {
     ...type.bodyStrong,
-    color: colors.onPrimary,
+    color: colors.textPrimary,
   },
 });
 
@@ -1960,12 +1960,12 @@ function buildLiveStyles(t) {
     addDayBtn: { backgroundColor: t.colors.surface, borderColor: t.colors.borderLight },
     addDayText: { fontSize: t.fontSize.md, color: t.colors.textSecondary },
     draftBtnText: { ...t.type.bodyStrong, color: t.colors.textSecondary },
-    activateBtnText: { ...t.type.bodyStrong, color: t.colors.onPrimary },
+    activateBtnText: { ...t.type.bodyStrong, color: t.colors.textPrimary },
     successTitle: { fontSize: t.fontSize.xxl, color: t.colors.textPrimary },
     successName: { ...t.type.title, color: t.colors.primary },
     successSub: { ...t.type.bodySm, color: t.colors.textSecondary },
     successSecondaryText: { ...t.type.bodyStrong, color: t.colors.textSecondary },
-    successPrimaryText: { ...t.type.bodyStrong, color: t.colors.onPrimary },
+    successPrimaryText: { ...t.type.bodyStrong, color: t.colors.textPrimary },
   };
 }
 

@@ -6129,3 +6129,28 @@ frame for as long as the session restore takes, then Today. Nothing
 reads as a splash screen.
 
 **Engine, ED-safety, consent, billing: untouched.**
+
+## D150 — The setup weight is today's morning weight; the Log label was invisible (founder device report, 2026-09-06)
+
+**Report.** "The first ever morning weight from onboarding doesn't
+always populate; when it doesn't, the log button is an empty shell."
+
+**What was observed.** Setup writes today's `morning_weights` row with
+an `enrolment` marker. Under C5-P22-01 (a lead ruling, D96) the Today
+weigh-in strip deliberately treated a marked row as not logged, so day 0
+always showed the empty strip with the typed figure as a prefill. The
+"sometimes populated" cases were the Health Connect import
+(`src/lib/health.js`) or a manual weigh-in replacing the marked row with
+a real reading. And the strip's edit-mode Log label still carried the
+dark-on-amber colour from before the D148 hierarchy, so on the raised
+charcoal primary it was dark on dark: the "empty shell".
+
+**Ruling.** The founder's verdict reverses the display half of
+C5-P22-01: the weight typed during setup IS today's morning weight on
+Today, so day 0 shows "Morning weight 89 kg" in the evidence panel and
+no empty strip. The claim half stands: the marker stays on the row, the
+weekly check-in's own "weighed today" logic still does not count a typed
+figure, the strip's first-use sentence still waits for a real weigh-in,
+and the check-in gate is unchanged. A real weigh-in or a Health import
+overwrites the row as before. The Log label uses the primary tier's
+foreground. Pins re-anchored in `campaign5.firstUse.test.js`.
