@@ -167,3 +167,22 @@ Activity screen inside Community is the inbox.
 pages are `noindex`. The query form is chosen because the site is static
 GitHub Pages with no path rewriting (the partner page already uses it as
 its fallback form).
+
+## Build-time rulings (2026-09-06)
+
+- **SD-09a Suggestion weights.** Same programme 3, same gym 3, shared style
+  2, same area 2, mutual follows 2 (capped), same goal 1; minimum score 1;
+  ties on last activity. Chosen by the migration lane, accepted by the
+  lead: the two strongest signals are the ones that imply a person
+  actually trains like you or beside you.
+- **SD-11a Suspension is invisible everywhere.** Lead review added the
+  suspended-author exclusion to the Following feed and the comment list
+  (discover, search and profiles already had it).
+- **SD-14a Extra widening.** `notification_preferences.category` CHECK
+  widened for the two Community categories, otherwise the server-side
+  opt-out could not be stored. Additive.
+- **SD-03a Migration 155 stays blocked until the Partners removal ships
+  in a build.** The README note records that truthfully; the blueprint's
+  §9 wording applies only once Lane E has landed and shipped.
+- **SD-13a Leaving keeps blocks, mutes and programme-use counters.** A
+  block is a safety record and must outlive the blocker's membership.
