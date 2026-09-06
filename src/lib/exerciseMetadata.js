@@ -26,6 +26,20 @@ const LANDMINE_RE = /\blandmine\b/i;
 // filter never matches them. Reclassify to `band`.
 const BAND_RE = /\bband(ed)?\b/i;
 
+// ...but ONLY for a row whose coarse equipment is that legacy `bodyweight`
+// (or the corrected `band` the corpus now carries, or nothing at all). A
+// row that names a band while carrying its OWN implement is that
+// implement's lift with accommodating resistance, not a band movement:
+// EL-4 (05-DECISIONS.md) files "chains, bands on bars" under specialty
+// barbell work, never under the band family. Without this gate the six
+// corpus rows "Band-Resisted Squat/Bench Press/Deadlift" and "Reverse Band
+// Squat/Bench Press/Deadlift" (equipment 'barbell') derived to `band`,
+// which put them under the picker's Bands chip instead of Barbell and,
+// through PROFILES_BY_CATEGORY.band below, made them reachable ONLY in the
+// no-equipment `bodyweight` profile and never in Full Gym or Barbell &
+// Plates -- the two contexts that actually have a loaded bar.
+const BAND_RECLASSIFIABLE_EQUIPMENT = new Set(['', 'bodyweight', 'band']);
+
 // Plate-loaded / iso-lateral machines (Hammer Strength and the like) load a
 // movement differently from a selectorised stack. Only relevant when the
 // seed already calls it a `machine`; "Hammer Curl" is a dumbbell move, not a
@@ -40,7 +54,7 @@ const CONDITIONING_RE = /sled|prowler|battle rope|assault bike|cycling|tyre flip
 export function deriveEquipmentCategory(name, equipment) {
   const n = String(name || '');
   if (LANDMINE_RE.test(n)) return 'landmine';
-  if (BAND_RE.test(n)) return 'band';
+  if (BAND_RE.test(n) && BAND_RECLASSIFIABLE_EQUIPMENT.has(String(equipment ?? ''))) return 'band';
 
   switch (equipment) {
     case 'barbell':       return 'barbell';
@@ -56,6 +70,14 @@ export function deriveEquipmentCategory(name, equipment) {
     // and fell through to 'other', which the pool generator drops entirely
     // (generatePoolFromLibrary skips equipmentCategory === 'other').
     case 'suspension':    return 'suspension';
+    // The corpus sets `equipment` to the CORRECTED coarse family (EL-21,
+    // vocab.js), so a band or landmine row states its own family rather
+    // than relying on the legacy name regexes above. Explicit cases here
+    // keep a future row whose name omits the word ("Pull-Apart",
+    // "Meadows Row") out of the `other` bucket, which the pool generator
+    // drops entirely.
+    case 'band':          return 'band';
+    case 'landmine':      return 'landmine';
     // exercise-library-expansion-2026-09-05 (integration stage 2, job 3):
     // sled/medicine_ball/sandbag get their own categories rather than
     // falling to 'other', so PROFILES_BY_CATEGORY below can give each its

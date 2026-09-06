@@ -4,7 +4,9 @@ import {
   equipmentDisplayLabel,
   difficultyDisplayLabel,
   subregionDisplayLabel,
+  PICKER_EQUIPMENT_CHIPS,
 } from '../exerciseDisplay';
+import { CORPUS, corpusEntryToSeedRow } from '../exerciseCorpus/index.js';
 
 describe('matchesEquipmentFilter', () => {
   test('no filter matches everything', () => {
@@ -160,5 +162,78 @@ describe('subregionDisplayLabel', () => {
   test('returns null for empty', () => {
     expect(subregionDisplayLabel(null)).toBeNull();
     expect(subregionDisplayLabel('')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Certification 2026-09-06: the picker's chip row is a CONTRACT with the
+// corpus, not a hand-kept list. The 2026-09-05 expansion added five
+// equipment families (landmine, suspension, sandbag, medicine ball, sled)
+// and the chip row was never extended, so 79 live rows could be reached
+// only by typing a name: no chip matched them. These pin the chips against
+// the REAL corpus so a new family can never ship chipless again.
+// ---------------------------------------------------------------------------
+describe('PICKER_EQUIPMENT_CHIPS against the real corpus', () => {
+  const ROWS = CORPUS.map(corpusEntryToSeedRow);
+
+  test('the chip row is the specified list, in order', () => {
+    expect(PICKER_EQUIPMENT_CHIPS).toEqual([
+      'Barbell', 'Dumbbell', 'Kettlebell', 'Cable', 'Machine',
+      'Smith machine', 'Bodyweight', 'Bands', 'Landmine', 'Suspension',
+      'Other',
+    ]);
+  });
+
+  test('every live corpus row is reachable through at least one chip', () => {
+    const unreachable = ROWS
+      .filter(r => !PICKER_EQUIPMENT_CHIPS.some(c => matchesEquipmentFilter(r, c)))
+      .map(r => `${r.name} (${r.equipmentCategory})`);
+    expect(unreachable).toEqual([]);
+  });
+
+  test('each of the expansion families has a chip that finds it', () => {
+    const countFor = (chip, category) => ROWS.filter(
+      r => r.equipmentCategory === category && matchesEquipmentFilter(r, chip),
+    ).length;
+    expect(countFor('Landmine', 'landmine')).toBeGreaterThan(20);
+    expect(countFor('Suspension', 'suspension')).toBeGreaterThan(30);
+    expect(countFor('Kettlebell', 'kettlebell')).toBeGreaterThan(50);
+    expect(countFor('Other', 'sandbag')).toBeGreaterThan(0);
+    expect(countFor('Other', 'medicine_ball')).toBeGreaterThan(0);
+    expect(countFor('Other', 'sled')).toBeGreaterThan(0);
+  });
+
+  // 'Machine' is deliberately absent from the named list below: its filter
+  // has always matched the RAW string 'machine' too, so the eight
+  // conditioning rows the seed lumps under equipment 'machine' (Assault
+  // Bike, Sled Push, Tyre Flip...) but which derive to category 'other'
+  // answer to both chips. That overlap is pre-existing and harmless, and
+  // narrowing the Machine chip would hide those rows from legacy installs.
+  test('the Other chip never claims a row a named chip already owns', () => {
+    const owned = ROWS.filter(r => matchesEquipmentFilter(r, 'Other')
+      && ['Barbell', 'Dumbbell', 'Kettlebell', 'Cable', 'Bodyweight', 'Bands', 'Landmine', 'Suspension', 'Smith machine']
+        .some(c => matchesEquipmentFilter(r, c)))
+      .map(r => r.name);
+    expect(owned).toEqual([]);
+  });
+
+  test('a custom row with no derived metadata still lands under exactly one chip', () => {
+    const custom = { name: 'My Move', equipment: 'dumbbell' };
+    expect(matchesEquipmentFilter(custom, 'Dumbbell')).toBe(true);
+    expect(matchesEquipmentFilter(custom, 'Other')).toBe(false);
+    const unknown = { name: 'My Odd Move', equipment: '' };
+    expect(matchesEquipmentFilter(unknown, 'Other')).toBe(true);
+  });
+
+  test('a barbell lift with bands on the bar is a Barbell chip row, not a Bands row', () => {
+    const banded = ROWS.filter(r => /^(Band-Resisted|Reverse Band) /.test(r.name));
+    expect(banded.length).toBe(6);
+    for (const row of banded) {
+      expect(row.equipmentCategory).toBe('barbell');
+      expect(matchesEquipmentFilter(row, 'Barbell')).toBe(true);
+      expect(matchesEquipmentFilter(row, 'Bands')).toBe(false);
+      // ...and it reaches the two profiles that actually have a loaded bar.
+      expect(row.equipmentProfiles).toEqual(['full_gym', 'barbell_plates']);
+    }
   });
 });

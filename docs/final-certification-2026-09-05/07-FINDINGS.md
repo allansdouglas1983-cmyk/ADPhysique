@@ -251,3 +251,52 @@ route is the library, not the generator:
 3. "Adjust training" on a library style plan (kettlebell, circuit, band)
    does not regenerate into a different kind of plan. It says so and
    routes to the Plan Library's matching style filter. This absorbs F-15.
+
+## F-21 (P1, FIXED, agent + lead) — 79 expansion rows had no equipment chip in the picker
+Evidence: probe against the real corpus (scratchpad `probe/`, 2026-09-06).
+`ExercisePickerModal.js` offered eight chips; the 2026-09-05 expansion's
+landmine (27), suspension (36), sandbag (8), medicine ball (5) and sled (3)
+families matched none, so those rows were reachable only by typing a
+name. Fix: the chip row lives beside its filter as `PICKER_EQUIPMENT_CHIPS`
+in `exerciseDisplay.js` (Barbell, Dumbbell, Kettlebell, Cable, Machine,
+Smith machine, Bodyweight, Bands, Landmine, Suspension, Other);
+`matchesEquipmentFilter` gained an `other` case that claims only what no
+named chip owns. Pinned against the real corpus: zero unreachable rows.
+
+## F-22 (P2, FIXED, agent + lead) — six barbell lifts were classed as band
+`deriveEquipmentCategory` fired the band regex on the NAME alone, so
+"Band-Resisted Squat/Bench Press/Deadlift" and "Reverse Band
+Squat/Bench Press/Deadlift" (equipment `barbell`) derived `band`, sat
+under the Bands chip, were excluded from Full Gym and Barbell & Plates,
+and were offered to the no-equipment profile. EL-4 files bands on bars
+under specialty barbell work. Fix: the reclassification applies only when
+the coarse equipment is empty, `bodyweight` or `band`; explicit `band` and
+`landmine` cases added so a row whose name omits the word cannot fall to
+`other`. Rederive key bumped to v7 so existing installs take the new
+category (the lead's addition; the agent's fix reached fresh installs only).
+
+## F-23 (ruled D154, not changed) — kettlebells never appear in ORDINARY generated plans
+Founder report 2026-09-06: kettlebells "missing from the plans in the
+library and probably on the engine and plan builder too". Observed: the
+library gap was the seed race (Sentry VOLYUME-28, fixed on main); the
+builder's picker has the Kettlebell chip and all 59 rows; the engine
+fills kettlebell STYLE plans 9/9 slots with kettlebell rows. Ordinary
+generation reaches zero kettlebell slots in 36 runs across every profile
+because only two kettlebell rows are COMMON or better in the C16 tier
+registry, and the recognisable gate prefers STAPLE/COMMON. Ruling and the
+founder fork are in D154.
+
+## New-family reachability table (2026-09-06 audit, real functions)
+| family | rows | top-up | chip | ordinary generation | style pool | swap | detail/volume |
+|---|---|---|---|---|---|---|---|
+| kettlebell | 59 | ok | Kettlebell | 0 slots (D154) | 9/9 | yes | ok |
+| band | 62 | ok | Bands | bodyweight profile (D10/D19) | yes | yes | ok |
+| landmine | 27 | ok | Landmine (F-21) | 10 slots, barbell_plates | n/a | yes | ok |
+| suspension | 36 | ok | Suspension (F-21) | 12 slots, home_gym | yes | yes | ok |
+| smith | 13 | ok | Smith machine | 18 slots, machines_cables | n/a | yes | ok |
+| sandbag | 8 | ok | Other (F-21) | 0 (no COMMON rows, D154) | n/a | yes | ok |
+| medicine ball | 5 | ok | Other (F-21) | 0 (EL-4 power patterns) | n/a | yes | ok |
+| sled | 3 | ok | Other (F-21) | 0 (EL-22 duration rows) | n/a | yes | ok |
+Top-up: zero canonical id or name collisions; every row inserts on an
+existing install. Detail: zero rows with a missing cue, muscle, pattern
+or category; zero empty volume allocations.

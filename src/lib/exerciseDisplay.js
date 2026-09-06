@@ -35,6 +35,44 @@ const EQUIPMENT_LABELS = {
 const DIFFICULTY_LABELS = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' };
 
 /**
+ * The equipment chips the exercise picker offers, in display order
+ * (ExercisePickerModal.js reads this list). Kept here beside
+ * matchesEquipmentFilter, which is what each label is resolved through, so
+ * a chip can never be offered that the filter cannot answer and no
+ * equipment family can be left without a chip. Every live corpus row is
+ * reachable through at least one of these (pinned in
+ * __tests__/exerciseDisplay.test.js against the real corpus).
+ *
+ * Certification 2026-09-06: Landmine, Suspension and Other were added.
+ * Before this the 2026-09-05 expansion's landmine (27 rows), suspension
+ * (36), sandbag (8), medicine ball (5) and sled (3) families had no chip
+ * at all, so 79 rows could be reached only by typing a name.
+ */
+export const PICKER_EQUIPMENT_CHIPS = Object.freeze([
+  'Barbell', 'Dumbbell', 'Kettlebell', 'Cable', 'Machine', 'Smith machine',
+  'Bodyweight', 'Bands', 'Landmine', 'Suspension', 'Other',
+]);
+
+// The derived categories the NAMED chips above already claim. Anything
+// else is what the "Other" chip is for: sleds, medicine balls, sandbags,
+// the conditioning rows that derive to 'other', and a custom exercise
+// whose kit is unknown.
+const NAMED_CHIP_CATEGORIES = new Set([
+  'barbell', 'dumbbell', 'kettlebell', 'cable', 'machine_selectorised',
+  'machine_plate_loaded', 'smith', 'bodyweight', 'band', 'landmine',
+  'suspension',
+]);
+
+// The same families as raw `equipment` substrings, for a row that has no
+// derived category yet (a custom exercise created before the metadata
+// derive runs), so such a row shows under its own chip rather than under
+// Other as well.
+const NAMED_CHIP_RAW_HINTS = [
+  'barbell', 'dumbbell', 'kettlebell', 'cable', 'machine', 'smith',
+  'bodyweight', 'body weight', 'band', 'landmine', 'suspension',
+];
+
+/**
  * Does an exercise match a Library equipment filter chip? Reads the derived
  * equipment_category first, then falls back to the raw equipment string so
  * legacy rows still match. Returns true when no filter is set.
@@ -63,10 +101,18 @@ export function matchesEquipmentFilter(exercise, filterLabel) {
       return cat.startsWith('machine') || cat === 'smith' || raw.includes('machine');
     case 'bodyweight':
       return cat === 'bodyweight' || raw.includes('bodyweight') || raw.includes('body weight');
+    case 'other':
+      // Everything no named chip claims. Reads the derived category when
+      // there is one, and falls back to the raw string so a custom row
+      // with no metadata yet still lands under exactly one chip.
+      return cat
+        ? !NAMED_CHIP_CATEGORIES.has(cat)
+        : !NAMED_CHIP_RAW_HINTS.some((hint) => raw.includes(hint));
     default:
-      // barbell, dumbbell, cable, kettlebell and any future label: match
-      // either the derived category exactly or the raw string loosely. The
-      // category catches reclassified rows (an EZ bar reads as 'barbell').
+      // barbell, dumbbell, cable, kettlebell, suspension and any future
+      // label: match either the derived category exactly or the raw string
+      // loosely. The category catches reclassified rows (an EZ bar reads
+      // as 'barbell').
       return cat === f || raw.includes(f);
   }
 }

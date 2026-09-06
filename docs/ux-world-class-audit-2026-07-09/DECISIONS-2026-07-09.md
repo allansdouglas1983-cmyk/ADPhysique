@@ -6359,10 +6359,22 @@ always populate; when it doesn't, the log button is an empty shell."
 **What was observed.** Setup writes today's `morning_weights` row with
 an `enrolment` marker. Under C5-P22-01 (a lead ruling, D96) the Today
 weigh-in strip deliberately treated a marked row as not logged, so day 0
-always showed the empty strip with the typed figure as a prefill. The
-"sometimes populated" cases were the Health Connect import
-(`src/lib/health.js`) or a manual weigh-in replacing the marked row with
-a real reading. And the strip's edit-mode Log label still carried the
+always showed the empty strip with the typed figure as a prefill.
+CORRECTION (founder, same day: both cases were fresh users straight
+through setup): the "sometimes populated" case was a race inside setup
+itself. Setup wrote today's row twice, first through the body-metric
+write-through WITHOUT the marker, then with it; each write fired its own
+fire-and-forget cloud push, the cloud stamps `updated_at` at push time,
+and the two pushes could land in either order. When the unmarked push
+landed last, the next pull's last-write-wins replaced the local row with
+the unmarked copy and Today read the weight as logged. Fix: the marked
+write goes first and the write-through preserves an existing row's
+notes, so both pushes carry the marker and their order cannot change
+the row's meaning. Known wider limitation, mentioned not fixed: any two
+rapid edits of the same synced row can reorder the same way because the
+push stamps its own time; per-row push serialisation or a true
+local-edit timestamp in the payload is the general fix. And the strip's
+edit-mode Log label still carried the
 dark-on-amber colour from before the D148 hierarchy, so on the raised
 charcoal primary it was dark on dark: the "empty shell".
 
@@ -6375,3 +6387,42 @@ figure, the strip's first-use sentence still waits for a real weigh-in,
 and the check-in gate is unchanged. A real weigh-in or a Health import
 overwrites the row as before. The Log label uses the primary tier's
 foreground. Pins re-anchored in `campaign5.firstUse.test.js`.
+
+## D154 — Kettlebells reach generation through the kit the person named, never by tier (lead ruling under D33, 2026-09-06)
+
+**Report.** Founder, after Sentry VOLYUME-28 on iOS 1.3.5+64: kettlebell
+exercises "missing from the plans in the library and probably on the
+engine and plan builder too. Check all the new ones".
+
+**What was observed.** Library: the seed race (routine seed ran before
+the corpus top-up inserted the kettlebell and band rows) created the
+kettlebell and band library plans with stations missing; fixed on main
+(seed awaits the exercise chain, plans repair in place). Every exercise
+name in all 57 library plans resolves against the live corpus. Builder:
+the picker offers the Kettlebell chip and all 59 rows. Engine: a
+kettlebell style plan (the F-16 REVISED route: the "Kettlebells"
+onboarding answer installs the library plan, and Update plan regenerates
+inside its style pool) fills 9 of 9 slots with kettlebell rows. ORDINARY
+generation reached 0 kettlebell slots in 36 real runs across all six
+equipment profiles: only Kettlebell Goblet Squat and Kettlebell Row
+(Single-Arm) are COMMON in the C16 registry; the 40 grinds are
+SPECIALIST or NICHE, and the recognisable gate prefers STAPLE/COMMON
+whenever enough of them can fill the session.
+
+**Ruling.** No tier change. The profiles that admit kettlebell rows
+(full_gym, dumbbells_only, home_gym) do not know whether the person owns
+a kettlebell: raising the grinds to COMMON would hand kettlebell presses
+and lunges to dumbbell-only and home-gym users who never said they have
+one, which is a wrong prescription, not a richer one. The kit the person
+NAMES is the only honest trigger, and that path (kettlebell answer,
+style pool, swap sheet, picker chip) is complete and verified. C16
+(staples first) and EL-11 (ordinary plans never receive kettlebell
+content because it exists) stand. Sandbag (8 rows, none COMMON) is
+ruled the same way; medicine ball and sled stay out under EL-4 and
+EL-22.
+
+**Founder fork, open.** If ordinary home-gym plans SHOULD draw on
+kettlebells, the product change is an equipment inventory (a "which of
+these do you own" answer that adds kettlebell rows to the person's own
+pool), not a tier edit. Put to the founder in chat as a multiple-choice
+question; no work started.

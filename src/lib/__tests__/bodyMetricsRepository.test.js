@@ -50,7 +50,8 @@ describe('bodyMetricsRepository', () => {
       const logMorningWeight = jest.fn(async () => 'mw-1');
       const { repo } = createHarness({ deps: { logMorningWeight } });
       await repo.logBodyMetric('u1', { weightKg: 82.4, loggedAt: 111 });
-      expect(logMorningWeight).toHaveBeenCalledWith('u1', { weightKg: 82.4, loggedAt: 111 });
+      // D153 follow-up: the write-through preserves any marker already on the day's row.
+      expect(logMorningWeight).toHaveBeenCalledWith('u1', { weightKg: 82.4, loggedAt: 111, preserveNotes: true });
     });
 
     test('a measurements-only entry (no weight) never touches morning_weights', async () => {

@@ -1,9 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getAllExercises, createRoutine, addExerciseToRoutine,
-  createProgramme, getLibraryPlans,
+  createProgramme, getLibraryPlans, getRoutinesForPlan, getRoutineExercisesWithDetails,
 } from './database';
 import { logError, logWarn, logInfo } from './errorLog';
+// Sentry VOLYUME-28 (2026-09-06): the exercise seed chain is awaited before
+// any template name is resolved (see runExerciseSeedChain in seedExercises).
+import { exercisesReady } from './seedExercises';
 // F-16 (certification 2026-09-05): the two band-only library plans live in
 // their own module and join LIBRARY_PLANS below.
 import { BAND_LIBRARY_PLANS } from './seedRoutines.bandPlans';
@@ -19,7 +22,94 @@ import { BAND_LIBRARY_PLANS } from './seedRoutines.bandPlans';
 // stylePools.js) that constrains its own generation and swaps.
 // v16 (certification 2026-09-05, F-16): the two band library plans. The
 // seed dedupes by plan name, so a bump only adds what is new.
-const SEED_KEY = '@volyume_routines_seeded_v16';
+// v17 (Sentry VOLYUME-28, 2026-09-06): no new plans. The bump makes every
+// existing install run the repair pass once: on 1.3.5+64 the routine seed
+// raced the corpus top-up, 90 template names resolved to nothing for two
+// seconds, and the kettlebell and band plans were created with stations
+// missing. The seed now waits for the exercise chain, repairs any library
+// routine that lacks a template exercise, and keeps repairing on later
+// launches while anything is still missing.
+const SEED_KEY = '@volyume_routines_seeded_v17';
+// Set when a run left a template exercise unresolved; cleared once a repair
+// pass finds nothing missing. Read on every launch so the repair reruns
+// without waiting for the next SEED_KEY bump.
+const INCOMPLETE_KEY = '@volyume_routines_seed_incomplete';
+
+/**
+ * Template exercise def -> the addExerciseToRoutine call the seed makes.
+ * One place, so the first seed and the repair pass write identical rows.
+ */
+async function addTemplateExercise(routineId, exercise, def, index) {
+  // EL-9 (docs/exercise-library-expansion-2026-09-05/05-DECISIONS.md):
+  // a circuit template's exercise def carries supersetGroupId,
+  // groupKind: 'circuit' and roundRestSeconds alongside the usual
+  // fields (rounds are `sets`, station transition is `rest: 0`,
+  // the between-round rest is roundRestSeconds). Every existing
+  // plan's exercises carry none of these, so this is a pure
+  // addition: they pass null/default exactly as before.
+  await addExerciseToRoutine(
+    routineId,
+    exercise.id,
+    index,
+    def.repsMin,
+    def.repsMax,
+    def.notes || null,
+    def.sets,
+    null,
+    def.rest,
+    def.supersetGroupId || null,
+    true,
+    null,
+    def.groupKind || null,
+    def.roundRestSeconds || null,
+  );
+}
+
+/**
+ * Repair pass: for every library plan that already exists on the device,
+ * add any template exercise its routine lacks, at the template's own
+ * position (the first seed used the template index as order_in_routine,
+ * so a gap is exactly the missing index). Routines are matched to template
+ * workouts by position, falling back to name. Never removes or reorders
+ * anything a routine already has; never touches user copies.
+ *
+ * @param {Array<object>} plans     LIBRARY_PLANS-shaped templates
+ * @param {Array<object>} existing  library programme rows (getLibraryPlans)
+ * @param {Record<string, object>} byName  exercise rows keyed by canonical name
+ * @returns {Promise<{ added: number, stillMissing: number }>}
+ */
+export async function repairLibraryPlans(plans, existing, byName) {
+  const byPlanName = new Map((existing ?? []).map((p) => [p.name, p]));
+  let added = 0;
+  let stillMissing = 0;
+  for (const plan of plans ?? []) {
+    const row = byPlanName.get(plan?.name);
+    if (!row) continue;
+    let routines;
+    try { routines = await getRoutinesForPlan(row.id); } catch (_) { continue; }
+    for (let w = 0; w < plan.workouts.length; w++) {
+      const workoutDef = plan.workouts[w];
+      const routine = (routines[w] && routines[w].name === workoutDef.name)
+        ? routines[w]
+        : routines.find((r) => r.name === workoutDef.name);
+      if (!routine) continue;
+      let present;
+      try {
+        present = new Set((await getRoutineExercisesWithDetails(routine.id)).map((x) => x.routineExercise.exerciseId));
+      } catch (_) { continue; }
+      for (let i = 0; i < workoutDef.exercises.length; i++) {
+        const def = workoutDef.exercises[i];
+        const exercise = byName[def.name];
+        if (!exercise) { stillMissing += 1; continue; }
+        if (present.has(exercise.id)) continue;
+        await addTemplateExercise(routine.id, exercise, def, i);
+        present.add(exercise.id);
+        added += 1;
+      }
+    }
+  }
+  return { added, stillMissing };
+}
 
 // REQUIRED_EXERCISES removed (EL-15, exercise-library-expansion-2026-09-05):
 // these 18 rows are now ordinary canonical corpus entries
@@ -2431,7 +2521,20 @@ export async function seedRoutinesIfNeeded(userId) {
     if (alreadySeeded) {
       const existingLibrary = await getLibraryPlans().catch(() => []);
       if (existingLibrary.length > 0) {
-        return; // healthy state, nothing to do
+        // Healthy, unless an earlier run left template exercises unresolved:
+        // then repair once the exercise chain has finished.
+        const incomplete = await AsyncStorage.getItem(INCOMPLETE_KEY).catch(() => null);
+        if (incomplete === '1') {
+          stage = 'repair';
+          await exercisesReady();
+          const all = await getAllExercises();
+          const lookup = {};
+          for (const ex of all) lookup[ex.name] = ex;
+          const res = await repairLibraryPlans(LIBRARY_PLANS, existingLibrary, lookup);
+          if (res.added > 0) logInfo('seedRoutines.repaired', `Added ${res.added} missing exercises to library plans`);
+          if (res.stillMissing === 0) await AsyncStorage.removeItem(INCOMPLETE_KEY).catch(() => {});
+        }
+        return;
       }
       // Marker set but DB empty, clear marker so the seed below actually runs.
       await AsyncStorage.removeItem(SEED_KEY).catch(() => {});
@@ -2439,6 +2542,10 @@ export async function seedRoutinesIfNeeded(userId) {
     }
 
     stage = 'loadExercises';
+    // The corpus top-up must have finished before a single template name is
+    // resolved (VOLYUME-28): a name that is not in the table yet is not a
+    // missing exercise, it is a race.
+    await exercisesReady();
     const existing = await getAllExercises();
     const byName = {};
     for (const ex of existing) {
@@ -2456,6 +2563,7 @@ export async function seedRoutinesIfNeeded(userId) {
 
     // Create library plans we haven't seeded yet
     stage = 'createPlans';
+    let missing = 0;
     for (let planIndex = 0; planIndex < LIBRARY_PLANS.length; planIndex++) {
       const plan = LIBRARY_PLANS[planIndex];
       // Index as well as name: a hole yields undefined here, so the name is
@@ -2490,39 +2598,32 @@ export async function seedRoutinesIfNeeded(userId) {
           const def = workoutDef.exercises[i];
           const exercise = byName[def.name];
           if (!exercise) {
+            missing += 1;
             logWarn('seedRoutines.exerciseNotFound', `exercise not found: ${def.name}`);
             continue;
           }
-          // EL-9 (docs/exercise-library-expansion-2026-09-05/05-DECISIONS.md):
-          // a circuit template's exercise def carries supersetGroupId,
-          // groupKind: 'circuit' and roundRestSeconds alongside the usual
-          // fields (rounds are `sets`, station transition is `rest: 0`,
-          // the between-round rest is roundRestSeconds). Every existing
-          // plan's exercises carry none of these, so this is a pure
-          // addition: they pass null/default exactly as before.
-          await addExerciseToRoutine(
-            routine.id,
-            exercise.id,
-            i,
-            def.repsMin,
-            def.repsMax,
-            def.notes || null,
-            def.sets,
-            null,
-            def.rest,
-            def.supersetGroupId || null,
-            true,
-            null,
-            def.groupKind || null,
-            def.roundRestSeconds || null,
-          );
+          await addTemplateExercise(routine.id, exercise, def, i);
         }
       }
     }
 
+    // Plans that already existed may have been created by an earlier run
+    // that raced the corpus top-up: fill their gaps now.
+    stage = 'repair';
+    stageDetail = null;
+    const repaired = await repairLibraryPlans(LIBRARY_PLANS, existingLibrary, byName);
+    if (repaired.added > 0) logInfo('seedRoutines.repaired', `Added ${repaired.added} missing exercises to library plans`);
+
     stage = 'setMarker';
     stageDetail = null;
     await AsyncStorage.setItem(SEED_KEY, '1');
+    if (missing > 0 || repaired.stillMissing > 0) {
+      // Remember the gap so the next launch repairs it once the chain has run.
+      await AsyncStorage.setItem(INCOMPLETE_KEY, '1').catch(() => {});
+      logWarn('seedRoutines.incomplete', `${missing + repaired.stillMissing} template exercises unresolved; will repair on a later launch`);
+    } else {
+      await AsyncStorage.removeItem(INCOMPLETE_KEY).catch(() => {});
+    }
     logInfo('seedRoutines.created', `Created ${LIBRARY_PLANS.length} library plans`);
   } catch (err) {
     logError('seedRoutines.seedRoutinesIfNeeded', err, { stage, stageDetail });

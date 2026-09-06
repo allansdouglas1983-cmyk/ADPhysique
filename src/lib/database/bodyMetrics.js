@@ -48,7 +48,9 @@ export function createBodyMetricsRepository({
     const kg = data?.weightKg;
     if (!Number.isFinite(kg) || kg <= 0) return;
     try {
-      await logMorningWeight(userId, { weightKg: kg, loggedAt: data.loggedAt ?? fallbackMs });
+      // D153 follow-up: never clear a marker another writer set on the same
+      // day (the enrolment seed, a Health import's source line).
+      await logMorningWeight(userId, { weightKg: kg, loggedAt: data.loggedAt ?? fallbackMs, preserveNotes: true });
     } catch (_) { /* best-effort: the body-metric entry itself is saved */ }
   }
   async function logBodyMetric(userId, data) {

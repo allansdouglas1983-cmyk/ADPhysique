@@ -38,7 +38,7 @@ import { getSupabaseClient, hasStoredAuthSession } from '../lib/supabase';
 // startup auth-hydration flash fix — see the give-up branch in the render).
 import { classifyAuthBoot, classifyFreshInstall } from '../lib/authBootGate';
 import { initDatabase, cleanupOrphanRoutineExercises } from '../lib/database';
-import { seedExercisesIfNeeded, topUpNewExercisesIfNeeded, backfillExerciseMetadataIfNeeded, rederiveExerciseMetadataIfNeeded } from '../lib/seedExercises';
+import { runExerciseSeedChain } from '../lib/seedExercises';
 import * as haptics from '../lib/haptics';
 import {
   configureNotificationHandler,
@@ -1179,10 +1179,10 @@ export default function RootNavigator() {
         throw raceErr;
       }
       if (timer) clearTimeout(timer);
-      seedExercisesIfNeeded()
-        .then(() => topUpNewExercisesIfNeeded())
-        .then(() => backfillExerciseMetadataIfNeeded())
-        .then(() => rederiveExerciseMetadataIfNeeded())
+      // One awaited chain (seedExercises.js runExerciseSeedChain): the
+      // routine seed waits on it, so a grown corpus is fully inserted before
+      // any template name is resolved (Sentry VOLYUME-28, 2026-09-06).
+      runExerciseSeedChain()
         .catch((e) => _bootLog('warn', 'RootNavigator.bootstrap.seedExercises', e));
       cleanupOrphanRoutineExercises().catch((e) => _bootLog('warn', 'RootNavigator.bootstrap.cleanupOrphanRoutines', e));
       // OpenFoodFacts UK snapshot import. Idempotent + safe;

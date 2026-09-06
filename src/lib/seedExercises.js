@@ -36,7 +36,13 @@ const METADATA_BACKFILL_KEY = '@volyume_exercise_metadata_backfilled_v1';
 // v6 (final pass S2, 2026-09-05): every delt-primary press now derives the
 // overhead position, so a "no overhead" rule covers Seated Dumbbell Press,
 // Z-Press, Log Press and the kettlebell presses on existing installs too.
-const METADATA_REDERIVE_KEY = '@volyume_exercise_metadata_rederived_v6';
+// v7 (certification 2026-09-06, new-family reachability): the band
+// reclassification no longer fires on the name alone, so the six
+// "Band-Resisted"/"Reverse Band" barbell lifts derive `barbell` (Full Gym
+// and Barbell & Plates) instead of `band` (no-equipment profile only).
+// The category is written by corpusEntryToSeedRow, so without this bump an
+// install that already ran v6 would keep the wrong category for good.
+const METADATA_REDERIVE_KEY = '@volyume_exercise_metadata_rederived_v7';
 // Bumped when exercises are added to the corpus so the top-up scans for the
 // new canonical IDs once on installs that already seeded an earlier list.
 // v4 (EL-14/EL-15, exercise-library-expansion-2026-09-05): the corpus
@@ -266,3 +272,57 @@ export async function rederiveExerciseMetadataIfNeeded() {
     logSeedChainFailure('seedExercises.rederiveExerciseMetadataIfNeeded', err);
   }
 }
+
+// ── Readiness for the routine seed (Sentry VOLYUME-28, 2026-09-06) ────────
+// seedRoutinesIfNeeded reads getAllExercises() to resolve every template
+// name. On an existing install updating to a build whose corpus has grown
+// (the kettlebell and band families, 918 rows), that read used to race the
+// fire-and-forget top-up below: Home mounted, the routine seed ran, and 90
+// template names were "not found" for two seconds while the new rows were
+// still being inserted. The kettlebell and band library plans were then
+// created with stations missing, and the name dedupe froze them that way.
+// The chain is now one promise the routine seed awaits, with a ceiling so
+// a stuck chain can never hold the routine seed for ever.
+let _chainPromise = null;
+// Resolves as soon as every corpus ROW is in the table (seed + top-up). The
+// metadata passes that follow only rewrite columns on rows that already
+// exist, so a waiter that needs names to resolve does not wait for them.
+let _rowsPromise = null;
+
+export function runExerciseSeedChain() {
+  if (_chainPromise) return _chainPromise;
+  let markRows;
+  _rowsPromise = new Promise((resolve) => { markRows = resolve; });
+  _chainPromise = (async () => {
+    try {
+      await seedExercisesIfNeeded();
+      await topUpNewExercisesIfNeeded();
+    } finally {
+      markRows();
+    }
+    await backfillExerciseMetadataIfNeeded();
+    await rederiveExerciseMetadataIfNeeded();
+  })().catch((err) => {
+    // Every step logs its own failure; the chain itself never rejects, so
+    // a waiter proceeds with whatever the table holds.
+    logError('seedExercises.runExerciseSeedChain', err, {});
+  });
+  return _chainPromise;
+}
+
+/**
+ * Resolves once every corpus row has been inserted (or after `timeoutMs`,
+ * whichever is first; the ceiling exists so a stuck chain can never hold
+ * the routine seed for ever, and the routine seed repairs any gap on a
+ * later launch). Resolves immediately when no chain was ever started in
+ * this process (tests, tools), so a caller can always await it.
+ */
+export function exercisesReady({ timeoutMs = 60000 } = {}) {
+  if (!_rowsPromise) return Promise.resolve();
+  let timer;
+  const ceiling = new Promise((resolve) => { timer = setTimeout(resolve, timeoutMs); });
+  return Promise.race([_rowsPromise, ceiling]).then(() => clearTimeout(timer));
+}
+
+/** Test seam: forget the chain so a suite can start a fresh one. */
+export function _resetExerciseSeedChainForTests() { _chainPromise = null; _rowsPromise = null; }

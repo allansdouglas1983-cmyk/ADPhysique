@@ -1614,15 +1614,11 @@ export default function ProOnboardingScreen({ navigation }) {
         // enrolment row forever while the profile and morning series carried
         // the new one. The record stores the weight it logged, so an edited
         // weight re-logs and the enrolment row agrees with its siblings.
-        if (!priorBuild?.weightLoggedAt || (Number.isFinite(priorBuild?.weightKg) && priorBuild.weightKg !== bwKg)) {
-          await logBodyMetric(user.id, {
-            weightKg: bwKg,
-            bodyFatPercent: bfNum,
-            bodyFatSource: baselineBfSource,
-            loggedAt: Date.now(),
-          });
-          await markBuildProgress(user.id, { weightLoggedAt: Date.now(), weightKg: bwKg });
-        }
+        // D153 follow-up (2026-09-06): the MARKED morning-weight write goes
+        // FIRST. logBodyMetric below writes through to the same day's row
+        // (preserving notes), and each write fires its own cloud push; with
+        // the marker set before the write-through, both pushes carry it and
+        // the order they land in cannot change what the row means.
         // Also seed the morning weights series so the weekly check-in
         // gate (needs 3 readings in the last 7 days) counts enrolment
         // day. Without this, a user who enrols on their chosen check-in
@@ -1647,6 +1643,15 @@ export default function ProOnboardingScreen({ navigation }) {
           // eslint-disable-next-line global-require
           try { require('../lib/errorLog').logError('ProOnboarding.logMorningWeight', e, { uid: user?.id }); } catch (_) {}
         });
+        if (!priorBuild?.weightLoggedAt || (Number.isFinite(priorBuild?.weightKg) && priorBuild.weightKg !== bwKg)) {
+          await logBodyMetric(user.id, {
+            weightKg: bwKg,
+            bodyFatPercent: bfNum,
+            bodyFatSource: baselineBfSource,
+            loggedAt: Date.now(),
+          });
+          await markBuildProgress(user.id, { weightLoggedAt: Date.now(), weightKg: bwKg });
+        }
       }
 
       if (user?.id && (sex || hcm || ageNum)) {
