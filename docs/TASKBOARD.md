@@ -33,6 +33,32 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## SENTRY TRIAGE AND THE CODEC-LESS ANDROID BUILDS (2026-09-06) — CODE ON MAIN `39df0f8`; FOUNDER: PUBLISH A CODEC BUILD TO PLAY.
+
+Founder brief in chat 2026-09-06 (a live Pixel 9 user on build 3560).
+Facts from Sentry: every Android event in the last 14 days is from builds
+3560/3561 (codec-less, D143) or older; zero from 3564+. The fixed build
+has never reached a user. VOLYUME-33 = three devices (one incident
+reproduction, one emulator, one Honor phone in Paris turned away once).
+
+Landed on main: network-noise signature shared across warnings, sync-scope
+errors and bulk aggregates (allNetwork/lastError); wrong password logs at
+info; PGRST303 clock-skew retry on the profile reads (sync pull, session
+restore) and the food library RPC; the training-reminder test pins its
+clock. 24 Sentry issues resolved with reasons, 2 ignored until escalating,
+VOLYUME-1K (iOS native crash, no symbols on build 57) left open.
+
+Builds: 3567 (main f02847c, codec gates passed, artefacts to 9 Sept);
+3568 dispatched from 39df0f8 (adds the sign-in clock-skew retry).
+
+FOUNDER (in chat 2026-09-06, this is the delivery):
+1. Upload the 3568 AAB (or 3567) to a Play internal testing track; update
+   one device that has the Play 3560/3561 build with data on it, through
+   Play; expect the data on open and a `dbCrypto.migrated` info event in
+   Sentry with no `dbCrypto.migrate`/`dbCrypto.abort`. Then promote.
+2. Give the go for an iOS build so VOLYUME-1K gets symbols and the D143
+   residue fix reaches TestFlight.
+
 ## FINAL WHOLE-PRODUCT CERTIFICATION (2026-09-05) — COMPLETE, MERGED TO MAIN. Report `docs/final-certification-2026-09-05/10-CERTIFICATION.md`; device checklist `DEVICE-CHECKLIST.md`. Record D152 + `docs/final-certification-2026-09-05/07-FINDINGS.md` (F-01..F-20); evidence `01`..`06` same folder.
 
 Founder brief in chat 2026-09-05 (one autonomous end-to-end task: discover,
