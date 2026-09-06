@@ -562,8 +562,9 @@ appends both after `PARTNER_CHEER`; `notificationRoute.js` routes both to
 channel description gains "Community follows and activity";
 `categoryPrefs.js` blob fields `communityFollowEnabled`,
 `communityActivityEnabled` (default true). NotificationSettingsScreen:
-new section "Community" with two toggles and the line "Pushes pause in
-quiet hours and never arrive while a wellbeing check is open." Guards
+new section "Community" with two toggles and the line "These arrive when
+something happens, and never while a wellbeing check is open." (SD-15a:
+server-sent pushes cannot see device quiet hours today) Guards
 `campaign14.categoryOwnership` and `campaign14.routingTruth` extended.
 
 ## 8. Deep links and web

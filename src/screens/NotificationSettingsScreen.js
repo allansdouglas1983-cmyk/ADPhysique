@@ -785,7 +785,7 @@ export default function NotificationSettingsScreen({ navigation }) {
           </View>
           <View style={[styles.helperRow, live.helperRow]}>
             <Text style={[styles.helperText, live.helperText]}>
-              Pushes pause in quiet hours and never arrive while a wellbeing check is open.
+              These arrive when something happens, and never while a wellbeing check is open.
             </Text>
           </View>
         </Card>
