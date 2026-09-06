@@ -79,8 +79,10 @@ ALL THREE SUPERSEDED: the founder's iOS 1.3.5+64 showed VOLYUME-28
 "exercise not found" x90 on an existing install (routine seed raced the
 corpus top-up; kettlebell and band library plans created with stations
 missing). Fixed on main: seed awaits the exercise chain, library plans
-repair in place, seed key v17. Use the build dispatched from that head
-for Play, and rebuild iOS before submitting 1.3.5.
+repair in place, seed key v17. Run 3570 (ea34c8c, another session's
+setup-weight fix) predates the seed fix: SUPERSEDED. Run 3571 (main
+6554f6d: seed fix + picker chips + band-on-bar + setup weight) is the
+build for Play; rebuild iOS before submitting 1.3.5.
 
 FOUNDER (in chat 2026-09-06, this is the delivery):
 1. Upload the 3568 AAB (or 3567) to a Play internal testing track; update
