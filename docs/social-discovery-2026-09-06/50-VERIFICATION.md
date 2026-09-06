@@ -89,3 +89,15 @@ Tests:       16 skipped, 16841 passed, 16857 total
 Snapshots:   17 passed, 17 total
 Time:        192.671 s
 ```
+
+Final product pass (blueprint §14), settled tree:
+
+```
+> volyume@1.3.5 lint
+> eslint . --max-warnings 0
+(no output; exit 0)
+Test Suites: 1 skipped, 1216 passed, 1216 of 1217 total
+Tests:       16 skipped, 16869 passed, 16885 total
+Snapshots:   17 passed, 17 total
+Time:        280.535 s
+```

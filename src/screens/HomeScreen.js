@@ -12,6 +12,8 @@ import { colors, fontSize, fontWeight, spacing, radius, withAlpha, alpha, type, 
 import useTheme from '../hooks/useTheme';
 import ScreenHeader from '../components/ScreenHeader';
 import CommunityHeaderAction from '../components/community/CommunityHeaderAction';
+import HomeCommunityIntroCard from '../components/HomeCommunityIntroCard';
+import { readCachedMe, hasProfile } from '../lib/community/profile';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
@@ -331,6 +333,10 @@ export default function HomeScreen({ navigation, route }) {
   // dismissed so it never flashes before the stored flag is read; shown only
   // for a person with NOTHING set up (no rows at all, history included).
   const [hytOfferDismissed, setHytOfferDismissed] = useState(true);
+  // Blueprint section 14: the one-time Community introduction. Defaults
+  // dismissed so it never flashes before the stored flag and the cached
+  // profile are read; never shown to someone who already has a profile.
+  const [communityIntroDismissed, setCommunityIntroDismissed] = useState(true);
   const [hytNothingSetUp, setHytNothingSetUp] = useState(false);
   const [showCoachingNudge, setShowCoachingNudge] = useState(false);
   const [totalSessions, setTotalSessions] = useState(0);
@@ -486,6 +492,7 @@ export default function HomeScreen({ navigation, route }) {
         loadBriefDismissal(),
         loadWelcome(),
         loadHytOffer(),
+        loadCommunityIntro(),
         loadActivationNudge(), // S6: tier-blind, computes from workouts + account age + ED flag
         loadTodayWeight(),
         loadLatestCoachOutput(),
@@ -644,6 +651,25 @@ export default function HomeScreen({ navigation, route }) {
 
   const welcomeKey = user?.id ? `@volyume_home_welcome_${user.id}` : null;
   const hytOfferKey = user?.id ? `@volyume_hyt_offer_${user.id}` : null;
+  const communityIntroKey = user?.id ? `@volyume_community_intro_${user.id}` : null;
+
+  async function loadCommunityIntro() {
+    if (!communityIntroKey || !user?.id) return;
+    try {
+      const [flag, me] = await Promise.all([
+        AsyncStorage.getItem(communityIntroKey),
+        readCachedMe(user.id),
+      ]);
+      setCommunityIntroDismissed(flag === 'true' || hasProfile(me));
+    } catch (_) {
+      setCommunityIntroDismissed(true);
+    }
+  }
+
+  const dismissCommunityIntro = useCallback(() => {
+    setCommunityIntroDismissed(true);
+    if (communityIntroKey) AsyncStorage.setItem(communityIntroKey, 'true').catch(() => {});
+  }, [communityIntroKey]);
 
   async function loadHytOffer() {
     if (!hytOfferKey) return;
@@ -2693,6 +2719,18 @@ export default function HomeScreen({ navigation, route }) {
             relativeDay={lastSessionRelativeDay}
             onOpenHistory={goToWorkoutHistory}
             onRepeat={handleRepeatLastSession}
+          />
+        )}
+
+        {/* ── Blueprint section 14: the one-time Community introduction.
+            Training first: it sits under the hero, the evidence and the
+            last session. Shown once a person has completed a session, has
+            no Community profile in the cache, has not dismissed it, and
+            no ranked banner holds the slot. Either action retires it. ── */}
+        {!initialLoading && user?.id && totalSessions > 0 && !communityIntroDismissed && shownBannerKey == null && (
+          <HomeCommunityIntroCard
+            onOpen={() => { haptics.selection(); dismissCommunityIntro(); navigation.navigate('Community'); }}
+            onDismiss={() => { haptics.selection(); dismissCommunityIntro(); }}
           />
         )}
 

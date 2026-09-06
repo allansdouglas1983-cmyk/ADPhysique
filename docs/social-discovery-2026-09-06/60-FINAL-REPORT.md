@@ -44,10 +44,23 @@ build without Partners is in users' hands; it is not applied.
 
 ## Information architecture
 Not a tab. Community sits in the Today stack, reached from a persistent
-header action on Today (with an unseen-activity dot), the Coach Support
-row, a "Programmes from the community" row on Train, the Settings row, and
-every share surface (plan detail, workout summary, share card, block
-complete). A user who never taps any of these never meets it.
+header action on Today (with an unseen-activity dot), a one-time
+introduction card on Today after the first completed session, the Coach
+Support row, a "Programmes from the community" row on Train, a
+"Programmes from other lifters" row in the plan library, the Settings
+row, and every share surface (plan detail, workout summary, share card,
+block complete). A user who never taps any of these never meets it; the
+introduction card is dismissed for good by either of its actions.
+
+## What is distinctive (final product pass, SD-02a / SD-07a)
+Three things no researched competitor offers: Adapt for me (a shared
+programme refitted to your kit, exclusions and limitations by the coach's
+own deterministic chain, circuits intact, every change explained);
+training stories computed from the coaching model (a completed block with
+its weeks, sessions and lift deltas) and always chosen by a human;
+discovery through chosen training facts with the reasons shown. The
+programme screen and the hub hero now say the first of these at the
+moment of choice.
 
 ## People discovery
 Search by handle prefix or display name over public profiles; suggested

@@ -204,3 +204,34 @@ its fallback form).
 - **SD-04a Browse before joining.** The hub loads Discover for a user with
   no profile by skipping the two profile-only RPCs and never letting one
   optional section's failure discard the others.
+
+## Final product pass (lead, 2026-09-06, founder challenge on discoverability and differentiation)
+
+- **SD-02a IA holds; two labelled paths added.** Community stays off the
+  tab bar. The evidence against the current placement was specific: a new
+  user had no labelled path to Community on Today before their first
+  workout summary (the header action is an unnamed glyph and its dot needs
+  activity a new user does not have), and the plan library, the one place
+  people go to choose a programme, did not mention other lifters'
+  programmes. Fixed with a one-time introduction card on Today after the
+  first completed session (dismissed for good by either action, never
+  shown to someone with a profile, training content always above it) and
+  a row in the plan library. A sixth tab was reconsidered and rejected
+  again on the same grounds as SD-02.
+- **SD-07a The differentiator is said at the moment of choice.** The
+  programme screen now carries one line under Adapt for me and Use as-is
+  explaining what Adapt does; the hub hero leads with "Programmes you can
+  make your own" rather than a list of nouns any competitor could print.
+- **What makes Volyume Community distinctive (the lead's judgement).**
+  (1) Adapt for me: a shared programme refitted to the recipient's kit,
+  exclusions and limitations by the same deterministic chain the coach
+  uses, circuits intact, every change explained, the original untouched.
+  No researched product does this. (2) Training stories are computed from
+  the coaching model, not typed: a completed block with its weeks,
+  sessions and lift deltas is a story only a structured coaching app can
+  tell, and every story is a human choice, never an auto-post. (3)
+  Discovery through chosen training facts with the reasons shown ("Uses a
+  programme you use", "Trains at PureGym Leeds"), honest at 25 people
+  because it needs relevance, not volume. Privacy by construction
+  (structure-only programmes, body data never, minors protected) is the
+  fourth thing, and it is what lets the first three exist.

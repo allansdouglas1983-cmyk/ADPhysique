@@ -26,6 +26,7 @@ import { BLOCK_START_SENTENCE, ACTIVATION_MEANING_SENTENCE } from '../lib/blockE
 import { SkeletonCard } from '../components/Skeleton';
 import SearchBar from '../components/SearchBar';
 import Card from '../components/Card';
+import { navigateCrossTab } from '../navigation/navigateCrossTab';
 import Chip from '../components/Chip';
 import EmptyState from '../components/EmptyState';
 import useAppStore from '../store/useAppStore';
@@ -723,7 +724,26 @@ export default function PlanLibraryScreen({ navigation, route }) {
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.planSeparator} />}
         ListHeaderComponent={
-          showQuizBanner ? (
+          <>
+            {/* Blueprint section 14: the library is where people choose a
+                programme, so other lifters' programmes sit beside Volyume's.
+                One row, into Community Discover focused on programmes. */}
+            <Card
+              style={styles.quizBanner}
+              onPress={() => navigateCrossTab(navigation, 'HomeTab', 'Community', { segment: 'discover', focus: 'programmes' })}
+              accessibilityLabel="Programmes from other lifters. Use as-is or refit them to your kit."
+              accessibilityRole="button"
+            >
+              <View style={[styles.quizBannerIcon, live.quizBannerIcon]}>
+                <Ionicons name="people-outline" size={20} color={t.colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.quizBannerTitle, live.quizBannerTitle]}>Programmes from other lifters</Text>
+                <Text style={[styles.quizBannerBody, live.quizBannerBody]}>Use as-is or refit them to your kit.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={iconSize.sm} color={t.colors.textMuted} />
+            </Card>
+            {showQuizBanner ? (
             <Card
               style={styles.quizBanner}
               onPress={openQuiz}
@@ -738,7 +758,8 @@ export default function PlanLibraryScreen({ navigation, route }) {
               </View>
               <Ionicons name="chevron-forward" size={iconSize.sm} color={t.colors.textMuted} />
             </Card>
-          ) : null
+            ) : null}
+          </>
         }
         ListEmptyComponent={
           loadError ? (
