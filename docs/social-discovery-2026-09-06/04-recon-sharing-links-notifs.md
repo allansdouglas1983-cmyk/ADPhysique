@@ -271,18 +271,16 @@ notification category (e.g. "someone followed you", "your post got a
 cheer") needs a slot in `EVENT_PRIORITY` to be budgeted at all** — omitting
 it makes it exempt/unbounded.
 
-**Foreground suppression handler** (`src/lib/notifications/handler.js:17-83`,
-`configureNotificationHandler()`): intercepts before display and silently
-suppresses (`shouldShowAlert/Banner/List: false`) when the underlying action
-is already done — `rest_end` always suppressed in foreground (in-app timer
-owns the moment, `:25-27`); `morning_weight`/`evening_weight` suppressed if
-already logged today OR an ED flag is open (`:33-36`); `weekly_checkin` if
-already checked in this week (`:37-39`); `training_reminder` if already
-trained today (`:40-42`); `checkin_missed` if recently checked in or ED-flag
-open (`:47-50`); `meal_log_reminder` always suppressed under ED flag
-(`:56-58`); `activation_nudge` if the stage has passed or ED-flag open
-(`:59-66`). Every ED-flag read (`_edFlagOpen()`, `:140-155`) is fail-CLOSED:
-a DB read error is treated as flag-open (suppress), never as flag-closed.
+**Foreground suppression handler** (`handler.js:17-83`,
+`configureNotificationHandler()`): intercepts before display, suppresses
+when the underlying action is already done — `rest_end` always in
+foreground (`:25-27`); weight prompts if already logged today OR ED flag
+open (`:33-36`); `weekly_checkin` if checked in this week (`:37-39`);
+`training_reminder` if trained today (`:40-42`); `checkin_missed` if
+recently checked in or ED-flag open (`:47-50`); `meal_log_reminder` always
+under ED flag (`:56-58`); `activation_nudge` if stage passed or ED-flag open
+(`:59-66`). `_edFlagOpen()` (`:140-155`) is fail-CLOSED: a DB read error is
+treated as flag-open, never flag-closed.
 
 **ED-flag suppression rule (repeated pattern, 5 sites in scheduler.js)**
 pinned by a SOURCE-LEVEL regression guard, not behaviour test:
