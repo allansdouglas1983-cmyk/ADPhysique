@@ -13,8 +13,9 @@ notice-and-action mechanism description.**
   employee count, balance sheet, or EU average monthly active user count
   changes materially.
 - Authority: `docs/social-discovery-2026-09-06/30-BLUEPRINT.md` §§3, 11;
-  `40-DECISIONS.md` SD-11, SD-14; sourced findings in
-  `docs/social-discovery-2026-09-06/13-research-policy-safety-coldstart.md`
+  `40-DECISIONS.md` SD-11, SD-14; `docs/social-discovery-2026-09-06/
+  70-DISCOVERY-BLUEPRINT.md` §2; `40-DECISIONS.md` SD-21; sourced findings
+  in `docs/social-discovery-2026-09-06/13-research-policy-safety-coldstart.md`
   §3.
 
 ---
@@ -110,13 +111,41 @@ requires be "easily accessible" and in "clear, plain, intelligible,
 user-friendly and unambiguous language"; it is written in exactly that
 register, matching Volyume's house voice.
 
-## 6. Contact
+## 6. Interpersonal communication service note (one-to-one messaging)
+
+Community added one-to-one messaging between mutually connected people
+(`70-DISCOVERY-BLUEPRINT.md` §2, SD-21). Private, one-to-one messaging of
+this kind is generally treated as falling outside the DSA's "hosting
+service" and "online platform" categories: it is not content stored and
+disseminated to the public, or to a wider audience than the sender chose,
+at the sender's request in the sense Article 3(g) of the DSA and its
+recitals describe, but a direct exchange between two specific people, the
+kind of function the EU's own regulatory scheme separately treats as
+"interpersonal communication" rather than platform hosting. On that
+reading, message content itself sits outside the scope of the DSA's
+hosting-service and platform obligations assessed above (Sections 2 to 5),
+including the size-tiered ones.
+
+This does not narrow Volyume's own report path. The notice-and-action
+mechanism described in Section 3 was built once, uniformly, across every
+Community content type, and messages are one of those types by design:
+every message is individually reportable (target kind `message`), feeds
+the same moderator queue with the same 24-hour target, and is covered by
+the same audit log. So even where DSA hosting-service scope may not
+technically reach message content, Volyume's actual moderation coverage
+does, and a person reporting a message gets the identical mechanism as a
+person reporting a post, comment or programme. This note records the
+scope question honestly rather than either claiming messaging sits fully
+inside DSA hosting-service duties or using the scope question as a reason
+to moderate messages any less than everything else.
+
+## 7. Contact
 
 The published contact address for all of the above is
 **support@volyume.app** (`public/support/index.html` §9, the app's live
 support page).
 
-## 7. Conclusion
+## 8. Conclusion
 
 Volyume self-assesses as a DSA micro enterprise. Its notice-and-action
 mechanism, moderator audit log, and terms-of-service transparency satisfy

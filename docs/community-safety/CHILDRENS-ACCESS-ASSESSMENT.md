@@ -11,9 +11,10 @@ against Ofcom's published guidance for a small user-to-user service.**
   onboarding, or any Community feature changes in a way that could change
   the conclusion below.
 - Authority: `docs/social-discovery-2026-09-06/30-BLUEPRINT.md` §§1, 2, 6;
-  `40-DECISIONS.md` SD-05; sourced findings in
-  `docs/social-discovery-2026-09-06/13-research-policy-safety-coldstart.md`
-  §3.
+  `40-DECISIONS.md` SD-05; `docs/social-discovery-2026-09-06/
+  70-DISCOVERY-BLUEPRINT.md` §§1, 2, 3, 6; `40-DECISIONS.md` SD-32;
+  sourced findings in `docs/social-discovery-2026-09-06/
+  13-research-policy-safety-coldstart.md` §3.
 
 ---
 
@@ -84,13 +85,32 @@ self-reported a second time in Community):
   there is no map, no radius search, no "at the gym now" signal, and the
   optional "area" label a minor sets is itself excluded from the
   area-dimension list that would otherwise surface it to strangers.
-- **No direct messages and no image upload** anywhere in Community,
-  regardless of age: the two features most guidance treats as the
-  primary route for an adult to privately contact or groom a minor are
-  simply absent from the product.
+- **No image upload** anywhere in Community, regardless of age: the
+  feature most guidance treats as the primary route for illegal
+  image-based harm is simply absent from the product for everyone.
+- **No connection requests, in either direction.** A minor's account can
+  neither send nor receive a connection request; the second campaign's
+  Connect tier (`70-DISCOVERY-BLUEPRINT.md` §1, SD-32) is server-enforced
+  as unavailable to any account flagged `is_minor`, whichever side of the
+  request they would be on.
+- **No messaging.** Since messaging is only ever possible between two
+  people who are mutually Connected, and a minor can never be part of a
+  connection, a minor's account can neither send nor receive a message.
+  This is the primary route most guidance treats as the way an adult
+  privately contacts or grooms a minor, and it is simply unreachable here.
+- **No training profile age band.** A minor's account is never asked to
+  share, and never computes, the `tp_age_band` field; it is adult-only by
+  design (`70-DISCOVERY-BLUEPRINT.md` §3).
+- **Never listed in any Find people door.** A minor's profile is excluded
+  from every door on the Find people screen ("at my gym", "near me",
+  "train like me", "on my programme", "open to training together",
+  "people you might know") and from search, on the same basis as the
+  existing discovery exclusion below; the training partner flag is not
+  offered to a minor's account at all.
 - A minor can still share their own profile link directly with someone
   they choose (e.g. a training partner they already know), and that
   recipient can request to follow; the same followers-only gate applies.
+  A follow is the only relationship a minor's account can ever be part of.
 - The Join screen shows a specific line to a user assessed as a minor:
   "Under 18: your profile is followers-only and does not appear in
   search," so the restriction is disclosed, not silent.
@@ -104,6 +124,7 @@ Practice, in force since 25 July 2025) is the required next document.
 That full assessment is **not** this document and has not been produced
 here; it is recorded as an outstanding item for the founder to prioritise,
 alongside the measures already built above which anticipate its likely
-conclusions (followers-only, discovery exclusion, no location, no DMs, no
-images). Producing it does not require any additional feature to ship
+conclusions (followers-only, discovery exclusion from every Find people
+door, no location, no connections or messaging for minors, no images).
+Producing it does not require any additional feature to ship
 first; it can proceed against the feature set as already built.
