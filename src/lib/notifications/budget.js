@@ -58,6 +58,10 @@ export const EVENT_PRIORITY = Object.freeze([
   CATEGORY.MONTHLY_RECAP,
   CATEGORY.PLANNED_MEAL_CONFIRM, // F3: gentle, low-priority nudge
   CATEGORY.PARTNER_CHEER,
+  // SD-15: Community's two categories sit at the bottom of the priority
+  // list, same rank tier as partner cheer.
+  CATEGORY.COMMUNITY_FOLLOW,
+  CATEGORY.COMMUNITY_ACTIVITY,
 ]);
 
 export function isEventCategory(category) {

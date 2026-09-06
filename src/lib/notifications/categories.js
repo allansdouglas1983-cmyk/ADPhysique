@@ -53,6 +53,13 @@ export const CATEGORY = Object.freeze({
   // ahead and re-laid on every open, so by construction it fires only after
   // genuine absence. Its own toggle (Settings -> Notifications and reminders).
   RETURN_NUDGE: 'return_nudge',
+  // Community (blueprint SD-15, 2026-09-06): the two budgeted Community
+  // event categories. COMMUNITY_FOLLOW covers new follower / follow
+  // request / request accepted; COMMUNITY_ACTIVITY covers reaction /
+  // comment / programme use. Both are server-sendable (community-notify
+  // Edge Function), exactly like PARTNER_CHEER above.
+  COMMUNITY_FOLLOW: 'community_follow',
+  COMMUNITY_ACTIVITY: 'community_activity',
 });
 
 /**
@@ -164,6 +171,11 @@ export const CATEGORY_CHANNELS = Object.freeze({
   // D142: push only. There is no in-app half - the whole point is a user
   // who is not in the app; once they are back the plan card says it all.
   [CATEGORY.RETURN_NUDGE]: [CHANNEL.PUSH],
+  // SD-15: both Community categories are push + in-app, ED-flag downgraded
+  // to in-app-only at send time by community-notify, exactly as
+  // PARTNER_CHEER above.
+  [CATEGORY.COMMUNITY_FOLLOW]: [CHANNEL.PUSH, CHANNEL.IN_APP],
+  [CATEGORY.COMMUNITY_ACTIVITY]: [CHANNEL.PUSH, CHANNEL.IN_APP],
 });
 
 /**
@@ -244,6 +256,8 @@ export function categoryForDataType(type) {
     // category, so its opt-out, budget rank and telemetry are the ones the
     // user already knows rather than a new surface they have never seen.
     case 'block_ready_to_review': return CATEGORY.WEEKLY_COACH_READY;
+    case 'community_follow': return CATEGORY.COMMUNITY_FOLLOW;
+    case 'community_activity': return CATEGORY.COMMUNITY_ACTIVITY;
     default: return null;
   }
 }

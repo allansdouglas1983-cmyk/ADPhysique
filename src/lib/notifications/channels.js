@@ -40,7 +40,7 @@ export async function ensureNotifChannels() {
     // the OS settings.
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Updates',
-      description: 'Partner cheers and other Volyume updates',
+      description: 'Partner cheers, Community follows and activity, and other Volyume updates',
       importance: Notifications.AndroidImportance.DEFAULT,
       sound: 'default',
       enableVibrate: true,

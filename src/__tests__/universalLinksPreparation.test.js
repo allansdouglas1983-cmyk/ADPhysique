@@ -14,9 +14,14 @@ describe('Universal Links migration preparation', () => {
     ));
     expect(aasa.applinks.details).toEqual([expect.objectContaining({
       appID: 'K79JA5JUF8.app.volyume',
-      paths: expect.arrayContaining(['/partner/*', '/auth/callback', '/auth/callback/']),
+      // SD-16: Community's external link pages join the existing partner
+      // and auth-callback paths -- profile (/u), programme (/p) and story
+      // (/s), each a wildcard prefix over the query-form link.
+      paths: expect.arrayContaining([
+        '/partner/*', '/auth/callback', '/auth/callback/', '/u/*', '/p/*', '/s/*',
+      ]),
     })]);
-    expect(aasa.applinks.details[0].paths).toHaveLength(3);
+    expect(aasa.applinks.details[0].paths).toHaveLength(6);
   });
 
   test.each([

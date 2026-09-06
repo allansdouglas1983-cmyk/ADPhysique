@@ -177,6 +177,14 @@ export function routeForNotificationType(type, data = {}) {
       // F3: tap lands on the Diary, where the "Mark as eaten" banner and the
       // per-meal confirm live for the day with unconfirmed planned meals.
       return { tab: 'DiaryTab', screen: 'Diary' };
+    case 'community_follow':
+    case 'community_activity':
+      // SD-15: both Community push categories land on the Activity screen
+      // inside Community, the inbox for follows, reactions, comments and
+      // programme-use beats. `source` mirrors the other notification-driven
+      // entry points (e.g. partner_cheer above) so surface-view telemetry
+      // can attribute the open.
+      return { tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' } };
     case 'diary_day':
       // §15 item 8 (deep-link expansion): the general-purpose target for any
       // notification that references ONE specific diary day rather than

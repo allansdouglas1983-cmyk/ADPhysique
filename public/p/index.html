@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title id="pageTitle">Programme · Volyume Community</title>
+<meta id="pageDescription" name="description" content="A training programme shared on Volyume Community.">
+<link rel="icon" type="image/png" href="/favicon.png">
+<meta name="theme-color" content="#0D0D0D">
+<!--
+  SD-16 (blueprint §8, 40-DECISIONS.md). Programme pages are indexable, so
+  there is deliberately no noindex meta tag here (unlike /u and /s).
+
+  When the app is installed, the OS intercepts this URL via the verified
+  app link (app.json autoVerify, host volyume.app, pathPrefix "/u"/"/p"/"/s")
+  and this page never renders. It exists for someone who does not have the
+  app yet, or an unauthenticated web visitor: it renders the public,
+  allow-listed fields the community-public Edge Function returns and links
+  to the app / store.
+
+  Query form only (?id=<uuid>): the site is static GitHub Pages with no
+  path rewriting, the same fallback form the partner page already uses.
+-->
+<style>
+  :root{
+    --bg:#0D0D0D; --surface:#191917; --surface2:#232320; --border:#2E2E2C;
+    --amber:#F5A623; --amberFill:#E08C0B; --amberBg:rgba(245,166,35,0.12);
+    --text:#FFFFFF; --textSecondary:#9E9E9E;
+    --good:#7FB069; --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{color-scheme:dark;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font);
+    -webkit-font-smoothing:antialiased; line-height:1.5;}
+  .wrap{max-width:640px; margin:0 auto; padding:56px 24px 64px;}
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:40px;}
+  .brand img{height:36px; width:auto;}
+  h1{font-weight:900; letter-spacing:-0.5px; font-size:clamp(26px,6vw,34px); line-height:1.15; margin:0 0 10px;}
+  .creator{display:flex; align-items:center; gap:10px; margin:0 0 18px;}
+  .creator .avatar{width:32px; height:32px; border-radius:50%; background:var(--amberBg); color:var(--amber);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex:0 0 auto;}
+  .creator .name{color:var(--textSecondary); font-size:15px;}
+  .creator .name b{color:var(--text); font-weight:700;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 24px;}
+  .chip{background:var(--surface2); border:1px solid var(--border); color:var(--textSecondary);
+    font-size:13px; font-weight:600; padding:6px 12px; border-radius:999px;}
+  .desc{color:var(--textSecondary); font-size:16px; margin:0 0 32px; white-space:pre-wrap;}
+  .day{margin:0 0 20px;}
+  .day h2{font-size:16px; font-weight:800; margin:0 0 10px;}
+  .set-row{display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); font-size:15px;}
+  .set-row:last-child{border-bottom:none;}
+  .set-row .exName{font-weight:600;}
+  .set-row .setDetail{color:var(--textSecondary); flex:0 0 auto; text-align:right;}
+  .circuit{border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin:0 0 4px; background:var(--surface);}
+  .circuit h3{font-size:14px; text-transform:uppercase; letter-spacing:0.04em; color:var(--amber); margin:0 0 10px; font-weight:800;}
+  .circuit .station{display:flex; justify-content:space-between; gap:12px; padding:6px 0; font-size:15px;}
+  .cta{display:block; text-align:center; background:var(--amberFill); color:#0D0D0D; font-weight:800;
+    font-size:17px; padding:16px; border-radius:14px; margin:28px 0 12px; text-decoration:none;}
+  .cta.secondary{background:transparent; color:var(--text); border:1px solid var(--border); font-weight:600;}
+  .muted{color:var(--textSecondary); font-size:14px; margin-top:24px;}
+  a{color:var(--amber);}
+  #loading, #notfound{padding:80px 0; text-align:center; color:var(--textSecondary); font-size:16px;}
+  #content{display:none;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><img src="/volyume-wordmark.png" alt="Volyume"></div>
+
+    <div id="loading">Loading programme…</div>
+    <div id="notfound" style="display:none;">This link has expired or is private.</div>
+
+    <div id="content">
+      <h1 id="title"></h1>
+      <div class="creator" id="creatorRow" style="display:none;">
+        <span class="avatar" id="creatorAvatar"></span>
+        <span class="name" id="creatorName"></span>
+      </div>
+      <div class="chips" id="chips"></div>
+      <p class="desc" id="description" style="display:none;"></p>
+      <div id="days"></div>
+
+      <a class="cta" id="open" href="#">Open in Volyume</a>
+      <a class="cta secondary" id="store" href="https://play.google.com/store/apps/details?id=app.volyume">Get Volyume</a>
+      <p class="muted">Shared on Volyume Community. See our <a href="/privacy/">privacy policy</a>.</p>
+    </div>
+  </div>
+
+  <script>
+    // SD-16: the Supabase project's Edge Functions origin. Kept as the same
+    // literal project URL public/auth/confirm/index.html, public/survey/
+    // index.html and public/email/unsubscribe/index.html already use
+    // (client library grep found no shared constant in public/ or web/).
+    var SUPABASE_FUNCTIONS_ORIGIN = 'https://sujrylzzxcqxxfygptns.supabase.co/functions/v1';
+
+    function humanize(key) {
+      if (!key) return '';
+      return String(key).split('_').map(function (w) {
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      }).join(' ');
+    }
+
+    function initials(name) {
+      var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '?';
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function renderChips(programme) {
+      var chips = document.getElementById('chips');
+      chips.innerHTML = '';
+      if (programme.style_key) chips.appendChild(el('span', 'chip', humanize(programme.style_key)));
+      if (programme.days_per_week != null) chips.appendChild(el('span', 'chip', programme.days_per_week + (programme.days_per_week === 1 ? ' day' : ' days')));
+      if (programme.exercise_count != null) chips.appendChild(el('span', 'chip', programme.exercise_count + (programme.exercise_count === 1 ? ' exercise' : ' exercises')));
+      if (programme.has_circuits) chips.appendChild(el('span', 'chip', 'Circuits'));
+    }
+
+    function setDetailText(ex) {
+      var sets = ex.sets != null ? ex.sets : '—';
+      var repsMin = ex.reps_min != null ? ex.reps_min : null;
+      var repsMax = ex.reps_max != null ? ex.reps_max : null;
+      var reps = repsMin != null && repsMax != null
+        ? (repsMin === repsMax ? repsMin : (repsMin + ' to ' + repsMax))
+        : (repsMin != null ? repsMin : (repsMax != null ? repsMax : null));
+      var rest = ex.rest_seconds != null ? (ex.rest_seconds + 's rest') : null;
+      var out = sets + (reps != null ? (' x ' + reps) : '');
+      if (rest) out += ' · ' + rest;
+      return out;
+    }
+
+    // A circuit group is a run of exercises sharing one superset_group_id
+    // with group_kind === 'circuit' (client library src/lib/community/
+    // snapshot.js — "sets is also the round count for a circuit").
+    // Everything else renders as a straight set. Anything that is not a
+    // circuit (including a plain, non-circuit superset) renders as a
+    // straight set, matching the blueprint's two-case contract exactly.
+    function renderDay(day) {
+      var wrap = el('div', 'day');
+      wrap.appendChild(el('h2', null, day.name || ''));
+
+      var exercises = Array.isArray(day.exercises) ? day.exercises : [];
+      var i = 0;
+      while (i < exercises.length) {
+        var ex = exercises[i];
+        if (ex.group_kind === 'circuit' && ex.superset_group_id) {
+          var groupId = ex.superset_group_id;
+          var stations = [];
+          while (i < exercises.length && exercises[i].group_kind === 'circuit' && exercises[i].superset_group_id === groupId) {
+            stations.push(exercises[i]);
+            i += 1;
+          }
+          var rounds = stations[0].sets != null ? stations[0].sets : '—';
+          var roundRest = stations[0].round_rest_seconds;
+          var block = el('div', 'circuit');
+          block.appendChild(el('h3', null, 'Circuit · ' + rounds + (rounds === 1 ? ' round' : ' rounds')
+            + (roundRest != null ? (' · ' + roundRest + 's between rounds') : '')));
+          stations.forEach(function (st) {
+            var row = el('div', 'station');
+            row.appendChild(el('span', null, st.exercise_name || 'Exercise'));
+            var reps = (st.reps_min != null && st.reps_max != null)
+              ? (st.reps_min === st.reps_max ? st.reps_min : (st.reps_min + ' to ' + st.reps_max))
+              : (st.reps_min != null ? st.reps_min : st.reps_max);
+            row.appendChild(el('span', null, reps != null ? (reps + ' reps') : ''));
+            block.appendChild(row);
+          });
+          wrap.appendChild(block);
+        } else {
+          var setRow = el('div', 'set-row');
+          setRow.appendChild(el('span', 'exName', ex.exercise_name || 'Exercise'));
+          setRow.appendChild(el('span', 'setDetail', setDetailText(ex)));
+          wrap.appendChild(setRow);
+          i += 1;
+        }
+      }
+      return wrap;
+    }
+
+    function render(programme) {
+      document.getElementById('pageTitle').textContent = (programme.title || 'Programme') + ' · Volyume Community';
+      var descMeta = document.getElementById('pageDescription');
+      descMeta.setAttribute('content', (programme.description || 'A training programme shared on Volyume Community.').slice(0, 200));
+
+      document.getElementById('title').textContent = programme.title || 'Programme';
+
+      var creator = programme.creator || {};
+      if (creator.handle || creator.display_name) {
+        document.getElementById('creatorRow').style.display = 'flex';
+        document.getElementById('creatorAvatar').textContent = initials(creator.display_name || creator.handle);
+        var nameEl = document.getElementById('creatorName');
+        nameEl.innerHTML = '';
+        if (creator.display_name) {
+          var b = document.createElement('b');
+          b.textContent = creator.display_name;
+          nameEl.appendChild(b);
+          nameEl.appendChild(document.createTextNode(' '));
+        }
+        if (creator.handle) nameEl.appendChild(document.createTextNode('@' + creator.handle));
+      }
+
+      renderChips(programme);
+
+      if (programme.description) {
+        var d = document.getElementById('description');
+        d.style.display = 'block';
+        d.textContent = programme.description;
+      }
+
+      var days = (programme.snapshot && Array.isArray(programme.snapshot.days)) ? programme.snapshot.days : [];
+      var daysEl = document.getElementById('days');
+      days.forEach(function (day) { daysEl.appendChild(renderDay(day)); });
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    }
+
+    function showNotFound() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('notfound').style.display = 'block';
+    }
+
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var id = (params.get('id') || '').trim();
+
+      document.getElementById('open').setAttribute('href', 'volyume://p?id=' + encodeURIComponent(id));
+
+      if (/iPad|iPhone|iPod/i.test(navigator.userAgent)) {
+        // iOS LAUNCH: replace REPLACE_WITH_APP_STORE_ID once Volyume is
+        // published on iOS (not yet live) — same placeholder as the
+        // partner page.
+        document.getElementById('store')
+          .setAttribute('href', 'https://apps.apple.com/app/idREPLACE_WITH_APP_STORE_ID');
+      }
+
+      if (!id) { showNotFound(); return; }
+
+      fetch(SUPABASE_FUNCTIONS_ORIGIN + '/community-public?kind=programme&id=' + encodeURIComponent(id))
+        .then(function (res) {
+          if (!res.ok) throw new Error('not-found');
+          return res.json();
+        })
+        .then(render)
+        .catch(showNotFound);
+    })();
+  </script>
+</body>
+</html>

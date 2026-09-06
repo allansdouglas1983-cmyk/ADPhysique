@@ -19,7 +19,7 @@ import {
   setPreference as setPrefRow,
   migrateFromLegacyBlob,
 } from '../lib/notifications/preferences';
-import { setCategoryEnabled, isCategoryEnabled } from '../lib/notifications/categoryPrefs';
+import { setCategoryEnabled, isCategoryEnabled, pushCategoryPrefsNow } from '../lib/notifications/categoryPrefs';
 import { CATEGORY } from '../lib/notifications/categories';
 import { scheduleMealReminders, scheduleActivationNudge, cancelActivationNudge, scheduleReturnNudge, cancelReturnNudge, MEAL_REMINDERS_KEY } from '../lib/notifications/scheduler';
 import { restoreNotifications } from '../lib/notifications';
@@ -31,6 +31,7 @@ import {
 import useAppStore from '../store/useAppStore';
 import Card from '../components/Card';
 import SectionLabel from '../components/SectionLabel';
+import { useToast } from '../components/Toast';
 
 const NOTIF_PREFS_KEY = '@volyume_notification_prefs';
 
@@ -75,6 +76,7 @@ export default function NotificationSettingsScreen({ navigation }) {
   // Memoised: this screen renders mapped meal-reminder rows.
   const t = useTheme();
   const live = useMemo(() => buildLiveStyles(t), [t]);
+  const toast = useToast();
   const [morningEnabled, setMorningEnabled] = useState(false);
   const [morningHour, setMorningHour] = useState(7);
   const [morningMinute, setMorningMinute] = useState(0);
@@ -92,6 +94,10 @@ export default function NotificationSettingsScreen({ navigation }) {
   const [activationNudgeEnabled, setActivationNudgeEnabled] = useState(true);
   // D142: the return nudge's own one-tap switch, blob-backed, default on.
   const [returnNudgeEnabled, setReturnNudgeEnabled] = useState(true);
+  // SD-15: Community's two toggles, blob-backed, default on -- same shape as
+  // the getting-started nudges above.
+  const [communityFollowEnabled, setCommunityFollowEnabled] = useState(true);
+  const [communityActivityEnabled, setCommunityActivityEnabled] = useState(true);
   useEffect(() => {
     (async () => {
       try {
@@ -99,6 +105,8 @@ export default function NotificationSettingsScreen({ navigation }) {
         const blob = raw ? (JSON.parse(raw) ?? {}) : {};
         setActivationNudgeEnabled(blob.activationNudgeEnabled !== false);
         setReturnNudgeEnabled(blob.returnNudgeEnabled !== false);
+        setCommunityFollowEnabled(blob.communityFollowEnabled !== false);
+        setCommunityActivityEnabled(blob.communityActivityEnabled !== false);
       } catch (_) { /* default on */ }
     })();
   }, []);
@@ -423,6 +431,38 @@ export default function NotificationSettingsScreen({ navigation }) {
     } catch (_) {}
   }
 
+  // SD-15: Community follows/activity have no local schedule to lay or
+  // cancel -- the community-notify Edge Function sends them off a live
+  // follow/reaction/comment/programme-use event and reads the projection
+  // row at that moment, exactly like partner cheers (#12,
+  // CoachingRemindersScreen.handlePartnerCheerToggle). So there is no
+  // schedule/cancel call here, only the one authority write plus an
+  // immediate projection push so an opt-out takes effect before the next
+  // ordinary sync.
+  async function handleCommunityFollowToggle(value) {
+    setCommunityFollowEnabled(value);
+    try {
+      const userId = useAppStore.getState().user?.id;
+      await setCategoryEnabled(userId, CATEGORY.COMMUNITY_FOLLOW, value);
+      await pushCategoryPrefsNow(userId);
+      toast.show(value ? 'Community follows on' : 'Community follows off', { variant: 'success' });
+    } catch (_) {
+      toast.show('Could not save that change', { variant: 'error' });
+    }
+  }
+
+  async function handleCommunityActivityToggle(value) {
+    setCommunityActivityEnabled(value);
+    try {
+      const userId = useAppStore.getState().user?.id;
+      await setCategoryEnabled(userId, CATEGORY.COMMUNITY_ACTIVITY, value);
+      await pushCategoryPrefsNow(userId);
+      toast.show(value ? 'Community activity on' : 'Community activity off', { variant: 'success' });
+    } catch (_) {
+      toast.show('Could not save that change', { variant: 'error' });
+    }
+  }
+
   function handleTrainingTimePick() {
     const currentLabel = `${String(trainingHour).padStart(2, '0')}:${String(trainingMinute).padStart(2, '0')}`;
     appAlert(
@@ -698,6 +738,56 @@ export default function NotificationSettingsScreen({ navigation }) {
           <View style={[styles.helperRow, live.helperRow]}>
             <Text style={[styles.helperText, live.helperText]}>
               One calm note if three weeks pass without you opening Volyume, so you know your plan is still here. Never more than one.
+            </Text>
+          </View>
+        </Card>
+
+        {/* SD-15: Community's two notification categories, blob-backed,
+            default on -- same row/toggle components and persistence calls
+            as the sections above. */}
+        <SectionLabel style={styles.sectionLabel}>Community</SectionLabel>
+        <Card style={styles.card}>
+          <View style={styles.toggleRow}>
+            <View style={[styles.toggleIconWrap, live.toggleIconWrap]}>
+              <Ionicons name="people-outline" size={18} color={t.colors.primary} />
+            </View>
+            <Text style={[styles.toggleLabel, live.toggleLabel]}>New followers</Text>
+            <Switch
+              value={communityFollowEnabled}
+              onValueChange={handleCommunityFollowToggle}
+              trackColor={{ false: t.colors.surface3, true: withAlpha(t.colors.primary, alpha.half) }}
+              thumbColor={t.colors.primary}
+              ios_backgroundColor={t.colors.surface2}
+              accessibilityLabel="New followers toggle"
+            />
+          </View>
+          <View style={[styles.helperRow, live.helperRow]}>
+            <Text style={[styles.helperText, live.helperText]}>
+              Follow requests and new followers.
+            </Text>
+          </View>
+          <View style={styles.toggleRow}>
+            <View style={[styles.toggleIconWrap, live.toggleIconWrap]}>
+              <Ionicons name="chatbubble-outline" size={18} color={t.colors.primary} />
+            </View>
+            <Text style={[styles.toggleLabel, live.toggleLabel]}>Reactions and comments</Text>
+            <Switch
+              value={communityActivityEnabled}
+              onValueChange={handleCommunityActivityToggle}
+              trackColor={{ false: t.colors.surface3, true: withAlpha(t.colors.primary, alpha.half) }}
+              thumbColor={t.colors.primary}
+              ios_backgroundColor={t.colors.surface2}
+              accessibilityLabel="Reactions and comments toggle"
+            />
+          </View>
+          <View style={[styles.helperRow, live.helperRow]}>
+            <Text style={[styles.helperText, live.helperText]}>
+              When someone reacts to or comments on your posts, or uses your programme.
+            </Text>
+          </View>
+          <View style={[styles.helperRow, live.helperRow]}>
+            <Text style={[styles.helperText, live.helperText]}>
+              Pushes pause in quiet hours and never arrive while a wellbeing check is open.
             </Text>
           </View>
         </Card>

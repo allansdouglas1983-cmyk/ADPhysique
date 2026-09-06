@@ -86,6 +86,15 @@ describe('routeForNotificationType', () => {
     });
   });
 
+  test('SD-15: community_follow and community_activity land on the Community Activity screen', () => {
+    expect(routeForNotificationType('community_follow')).toEqual({
+      tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' },
+    });
+    expect(routeForNotificationType('community_activity')).toEqual({
+      tab: 'HomeTab', screen: 'CommunityActivity', params: { source: 'notification' },
+    });
+  });
+
   test('§15 item 8: diary_day with a valid local day-key opens that exact diary day', () => {
     expect(routeForNotificationType('diary_day', { date: '2026-07-05' })).toEqual({
       tab: 'DiaryTab', screen: 'Diary', params: { date: '2026-07-05' },

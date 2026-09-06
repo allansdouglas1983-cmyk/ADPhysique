@@ -62,9 +62,13 @@ describe('C7 release-config laws', () => {
     expect(aasa.applinks.details[0].appID.endsWith('app.volyume')).toBe(true);
   });
 
-  test('the Android https app link is scoped to the partner path the AASA claims', () => {
-    const https = expo.android.intentFilters.flatMap((f) => f.data ?? []).find((d) => d.host === 'volyume.app');
-    expect(https.pathPrefix).toBe('/partner');
+  test('the Android https app links are scoped to exactly the paths the AASA claims', () => {
+    // SD-16: Community's external link pages (blueprint §8) add /u, /p and
+    // /s alongside the existing /partner intent filter, same autoVerify
+    // https/volyume.app shape.
+    const https = expo.android.intentFilters.flatMap((f) => f.data ?? []).filter((d) => d.host === 'volyume.app');
+    const pathPrefixes = https.map((d) => d.pathPrefix).sort();
+    expect(pathPrefixes).toEqual(['/p', '/partner', '/s', '/u']);
   });
 
   test('package-visibility query actions are BARE names (the plugin prepends the prefix)', () => {

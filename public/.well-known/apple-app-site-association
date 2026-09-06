@@ -7,7 +7,10 @@
         "paths": [
           "/partner/*",
           "/auth/callback",
-          "/auth/callback/"
+          "/auth/callback/",
+          "/u/*",
+          "/p/*",
+          "/s/*"
         ]
       }
     ]
