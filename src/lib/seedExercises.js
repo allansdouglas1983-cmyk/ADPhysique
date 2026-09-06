@@ -278,12 +278,22 @@ export async function rederiveExerciseMetadataIfNeeded() {
 // The chain is now one promise the routine seed awaits, with a ceiling so
 // a stuck chain can never hold the routine seed for ever.
 let _chainPromise = null;
+// Resolves as soon as every corpus ROW is in the table (seed + top-up). The
+// metadata passes that follow only rewrite columns on rows that already
+// exist, so a waiter that needs names to resolve does not wait for them.
+let _rowsPromise = null;
 
-export async function runExerciseSeedChain() {
+export function runExerciseSeedChain() {
   if (_chainPromise) return _chainPromise;
+  let markRows;
+  _rowsPromise = new Promise((resolve) => { markRows = resolve; });
   _chainPromise = (async () => {
-    await seedExercisesIfNeeded();
-    await topUpNewExercisesIfNeeded();
+    try {
+      await seedExercisesIfNeeded();
+      await topUpNewExercisesIfNeeded();
+    } finally {
+      markRows();
+    }
     await backfillExerciseMetadataIfNeeded();
     await rederiveExerciseMetadataIfNeeded();
   })().catch((err) => {
@@ -295,16 +305,18 @@ export async function runExerciseSeedChain() {
 }
 
 /**
- * Resolves once the exercise seed chain has finished (or after `timeoutMs`,
- * whichever is first). Resolves immediately when no chain was ever started
- * in this process (tests, tools), so a caller can always await it.
+ * Resolves once every corpus row has been inserted (or after `timeoutMs`,
+ * whichever is first; the ceiling exists so a stuck chain can never hold
+ * the routine seed for ever, and the routine seed repairs any gap on a
+ * later launch). Resolves immediately when no chain was ever started in
+ * this process (tests, tools), so a caller can always await it.
  */
-export function exercisesReady({ timeoutMs = 20000 } = {}) {
-  if (!_chainPromise) return Promise.resolve();
+export function exercisesReady({ timeoutMs = 60000 } = {}) {
+  if (!_rowsPromise) return Promise.resolve();
   let timer;
   const ceiling = new Promise((resolve) => { timer = setTimeout(resolve, timeoutMs); });
-  return Promise.race([_chainPromise, ceiling]).then(() => clearTimeout(timer));
+  return Promise.race([_rowsPromise, ceiling]).then(() => clearTimeout(timer));
 }
 
 /** Test seam: forget the chain so a suite can start a fresh one. */
-export function _resetExerciseSeedChainForTests() { _chainPromise = null; }
+export function _resetExerciseSeedChainForTests() { _chainPromise = null; _rowsPromise = null; }
