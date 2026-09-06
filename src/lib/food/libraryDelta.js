@@ -24,7 +24,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, uid as makeUid, runInTransaction } from '../database';
-import { getSupabaseClient } from '../supabase';
+import { getSupabaseClient, withClockSkewRetry } from '../supabase';
 import { logInfo, logWarn, logError } from '../errorLog';
 import { microSqlColumns, microSqlPlaceholders, microSqlUpsertExcluded, microValuesFromRow } from './micronutrients';
 
@@ -102,9 +102,14 @@ async function _run({ force }) {
   for (let page = 0; page < MAX_PAGES_PER_RUN; page++) {
     let rows = null;
     try {
-      const { data, error } = await sb.rpc('food_library_pull', {
+      // PGRST303 clock skew (2026-09-06, Sentry VOLYUME-32): the device clock
+      // sitting a second or two ahead of Dublin makes PostgREST reject the JWT
+      // as "issued at future". It is transient and the same token works on a
+      // retry, so wait it out once rather than breaking the page loop and
+      // leaving the library stale until the next throttle window.
+      const { data, error } = await withClockSkewRetry(() => sb.rpc('food_library_pull', {
         _since: highestUpdatedAt,
-      });
+      }));
       if (error) {
         logWarn('food.libraryDelta.rpc', error.message, {
           code: error.code, page,

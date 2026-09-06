@@ -16,6 +16,7 @@
 // during the transition between "no Sentry" and "Sentry installed".
 
 import { scrubEvent, scrubBreadcrumb } from './observability/sentryScrub';
+import { NETWORK_NOISE, isNetworkNoise } from './observability/networkNoise';
 
 let SentryNative = null;
 let initialised = false;
@@ -161,6 +162,34 @@ export function setSentryUser(user) {
   } catch (_) {}
 }
 
+// captureError's ONE gate (2026-09-06, Sentry VOLYUME-2H + the 2D family).
+// Historically captureError was ungated on principle: real errors always ship.
+// That principle holds everywhere except one case the triage proved -- a sync
+// or supabase scope whose error IS the network being unreachable. Those are not
+// defects: the app is offline-first, the push failed because there was no
+// route to Dublin, and src/lib/syncQueue.js owns the retry. Nothing is
+// actionable, nothing is lost, and 201 events of
+// "sync.tables.capabilityConstraints.pushUpsert / TypeError: Network request
+// failed" is the same non-event 201 times.
+//
+// Both halves are required, deliberately:
+//   - the scope must match /^(sync|supabase)\./, so a network failure anywhere
+//     ELSE (a screen, a payment, a media upload) still ships as an error;
+//   - the text must match the network signature in the error message or in
+//     extra.originalError (the coerced-PostgREST shape captureError builds
+//     above), so a sync-scope error with a REAL cause -- RLS 42501, a schema
+//     drift, a constraint violation -- still ships.
+// The local errorLog ring buffer (Settings -> Debug Logs) is upstream of this
+// and keeps every one of these either way.
+function _isExpectedNetworkSyncError(err, ctx, extra) {
+  try {
+    if (!/^(sync|supabase)\./.test(String(ctx?.scope ?? ''))) return false;
+    if (isNetworkNoise(err?.message)) return true;
+    return isNetworkNoise(extra?.originalError);
+  } catch (_) { /* fail open to visibility: capture normally */ }
+  return false;
+}
+
 /**
  * Forward an error to Sentry. errorLog.logError → captureError.
  *
@@ -188,6 +217,15 @@ export function captureError(error, ctx = {}) {
       err = new Error(msg || 'Non-Error value captured');
       extra = { ...(ctx.extra || {}), originalError: error };
     }
+    if (_isExpectedNetworkSyncError(err, ctx, extra)) {
+      SentryNative.addBreadcrumb({
+        message: err?.message ?? String(error),
+        category: ctx.scope ?? 'app',
+        level: 'error',
+        data: extra ?? undefined,
+      });
+      return;
+    }
     SentryNative.withScope((scope) => {
       if (ctx.scope) scope.setTag('scope', ctx.scope);
       if (ctx.tags) {
@@ -207,17 +245,26 @@ export function captureError(error, ctx = {}) {
 // events on a single issue). An unreachable network is expected
 // offline-first behaviour -- the sync queue owns the retry -- so these
 // demote to a warning-level breadcrumb: still attached to any subsequent
-// real error, no event, no quota burn. Two triggers:
-//   1. the RN fetch signature ("Network request failed") anywhere in the
-//      message or context, regardless of connectivity knowledge;
+// real error, no event, no quota burn. Three triggers (the third added by
+// the 2026-09-06 triage):
+//   1. the network-unreachable signature (observability/networkNoise.js:
+//      failed/timed-out fetches, AuthRetryableFetchError, "Load failed",
+//      NSURL "appears to be offline", ECONNRESET/ETIMEDOUT/ENOTFOUND ...)
+//      anywhere in the message or context, regardless of connectivity
+//      knowledge;
 //   2. a sync-family warning (sync.* / supabase.* scope) while NetInfo has
 //      told us the device is offline (observability.isKnownOffline) -- the
 //      aggregate warnings (e.g. sync.push.legacy.errors) don't carry the
-//      fetch text but describe the same expected condition.
-// captureError is deliberately NOT gated: real errors always ship. The
-// local errorLog ring buffer (Settings -> Debug Logs) is upstream of this
-// and keeps every warning either way.
-const NETWORK_NOISE = /network request failed/i;
+//      fetch text but describe the same expected condition;
+//   3. an aggregate warning that STATES its cause: extra.allNetwork === true
+//      is set by the sync layer when every error counted during the window
+//      matched the signature (sync.js logPgErr/logBulkWarn). This replaces
+//      guessing at an aggregate whose own text carries no network wording --
+//      "partial push 400 of 600" (VOLYUME-28) and sync.push.legacy.errors
+//      (VOLYUME-2C) now say so themselves.
+// The 2026-09-06 triage widened the signature after the same offline session
+// shipped 736 timeouts, 886 db.upsert.failed and 401 aggregates under strings
+// the old single-pattern gate did not know.
 // Store-side "cannot sell right now" warnings from the payments layer
 // (2026-07-13, founder clean-slate mandate): a sideloaded Android build --
 // the founder's whole test loop -- gets one of these from Google's billing
@@ -229,8 +276,9 @@ const NETWORK_NOISE = /network request failed/i;
 const STORE_NOISE = /sku not found|item.{0,12}unavailable|billing.{0,12}unavailable|service.{0,12}unavailable|no play offer|product not found|st13runtime_error/i;
 function _isExpectedOfflineNoise(message, ctx) {
   try {
+    if (ctx?.extra?.allNetwork === true) return true;
     if (NETWORK_NOISE.test(String(message ?? ''))) return true;
-    if (ctx?.extra && NETWORK_NOISE.test(JSON.stringify(ctx.extra))) return true;
+    if (ctx?.extra && isNetworkNoise(ctx.extra)) return true;
     if (/^payments\./.test(String(ctx?.scope ?? '')) && STORE_NOISE.test(String(message ?? ''))) return true;
     if (/^(sync|supabase)\./.test(String(ctx?.scope ?? ''))) {
       // Lazy require: observability's own Sentry forwarding goes through

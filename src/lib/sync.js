@@ -14,6 +14,7 @@
  */
 
 import { getSupabaseClient } from './supabase';
+import { isNetworkNoise } from './observability/networkNoise';
 import { CIRCUIT_SYNC_COLUMNS_ENABLED } from './sync/featureFlags';
 import {
   getAllWorkouts,
@@ -99,10 +100,44 @@ function getClient() {
 // pushes call logPgErr outside this window and are not counted.
 let _bulkPushTracking = false;
 let _bulkPushErrorCount = 0;
+// Cause of the bulk-push failures, carried out to the aggregate warnings
+// (2026-09-06, Sentry VOLYUME-28 / 2C / 2J). "partial push 400 of 600" and
+// "sync.push.legacy.errors" carry no network wording of their own, so the
+// Sentry noise gate had to GUESS from NetInfo whether an unreachable network
+// caused them -- and NetInfo reports "connected" all through a flaky cell
+// handover, which is exactly the session that produced those issues. Record
+// what actually failed instead: the last error message seen during the window
+// (message only, never a row or an id -- PII stays out of Sentry per
+// sentryScrub.js) and whether EVERY counted error matched the
+// network-unreachable signature. _bulkPushAllNetwork starts true and is ANDed
+// down by the first non-network failure, so it can only claim "all network"
+// when that is literally true; with zero errors it is never read.
+let _bulkPushLastError = null;
+let _bulkPushAllNetwork = true;
+
+// Fold one failure into the bulk-window cause summary. Message only.
+function _noteBulkError(message) {
+  if (!_bulkPushTracking) return;
+  const text = typeof message === 'string' ? message.slice(0, 200) : String(message ?? '');
+  _bulkPushLastError = text || null;
+  if (!isNetworkNoise(text)) _bulkPushAllNetwork = false;
+}
+
+/**
+ * The cause summary for the bulk-push window, for an aggregate warning's extra.
+ *
+ * Read it INSIDE the window, or immediately after it in bulkUploadLocalData's
+ * own return (both current callers). Reading it later would report the previous
+ * run's cause, since the fields are reset only when the next window opens.
+ */
+function _bulkPushCause() {
+  return { lastError: _bulkPushLastError, allNetwork: _bulkPushAllNetwork };
+}
 
 function logPgErr(scope, err) {
   if (!err) return;
   if (_bulkPushTracking) _bulkPushErrorCount += 1;
+  _noteBulkError(err.message || String(err));
   logWarn(scope, err.message || String(err), {
     code: err.code ?? null,
     details: err.details ?? null,
@@ -127,6 +162,7 @@ function missingSchemaColumn(err, table, columns = []) {
 // helper runs outside bulkUploadLocalData.
 function logBulkWarn(scope, message, meta) {
   if (_bulkPushTracking) _bulkPushErrorCount += 1;
+  _noteBulkError(message);
   logWarn(scope, message, meta);
 }
 
@@ -715,6 +751,8 @@ export async function bulkUploadLocalData(supabaseUserId, localUserId) {
 
   _bulkPushTracking = true;
   _bulkPushErrorCount = 0;
+  _bulkPushLastError = null;
+  _bulkPushAllNetwork = true;
   let threw = false;
   try {
     // Every exercise, canonical + custom, pushed first so all the
@@ -766,7 +804,15 @@ export async function bulkUploadLocalData(supabaseUserId, localUserId) {
             // inside _upsertWorkout/_upsertSets; the resulting double-count is
             // harmless (errors > 0 is the only thing that matters). (SYNC-1)
             logBulkWarn('sync.bulkUploadLocalData', 'workout upload failed', {
-              workoutId: w?.id, supabaseUserId, error: e?.message,
+              workoutId: w?.id,
+              supabaseUserId,
+              error: e?.message,
+              // Cause summary read AFTER logBulkWarn has folded this failure in
+              // is what we want, but the meta is built first, so state this
+              // one's own network verdict directly and let lastError carry the
+              // window's running message.
+              lastError: typeof e?.message === 'string' ? e.message.slice(0, 200) : null,
+              allNetwork: isNetworkNoise(e?.message) && _bulkPushAllNetwork,
             });
           }
         })
@@ -846,7 +892,11 @@ export async function bulkUploadLocalData(supabaseUserId, localUserId) {
   }
   // Report failures so the runner can fold them into errored_count and the
   // sign-out push-first safety can refuse to wipe local data on a bad push.
-  return { errors: _bulkPushErrorCount + (threw ? 1 : 0) };
+  // lastError/allNetwork are the CAUSE summary and are read only by the
+  // runner's aggregate breadcrumb (sync.push.legacy.errors); nothing branches
+  // on them, so the push contract itself is unchanged.
+  const errors = _bulkPushErrorCount + (threw ? 1 : 0);
+  return { errors, ..._bulkPushCause() };
 }
 
 // ─── Per-table push helpers ───────────────────────────────────────────────
@@ -939,7 +989,9 @@ async function _pushRoutinesAndExercises(sb, supabaseUserId, localUserId) {
         }
       }
       if (rPushed < rows.length) {
-        logWarn('sync._pushRoutines', 'partial push', { pushed: rPushed, total: rows.length });
+        logWarn('sync._pushRoutines', 'partial push', {
+          pushed: rPushed, total: rows.length, ..._bulkPushCause(),
+        });
       }
     }
     const routineExs = await getAllRoutineExercisesForUser(localUserId);

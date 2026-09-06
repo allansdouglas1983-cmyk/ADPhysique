@@ -1080,7 +1080,7 @@ const useAppStore = create((set, get) => ({
     let cloudData = null;
     try {
       // eslint-disable-next-line global-require
-      const { getSupabaseClient } = require('../lib/supabase');
+      const { getSupabaseClient, withClockSkewRetry } = require('../lib/supabase');
       const sb = getSupabaseClient();
       if (!sb) return;
       const READ_TIMEOUT_MS = 10_000;
@@ -1092,7 +1092,13 @@ const useAppStore = create((set, get) => ({
       // sex; on ANY read error fall back to the exact prior sex-less select so
       // restore/routing is never coupled to the migration.
       const BASE_COLS = 'first_name, training_focus, training_age, primary_equipment, units, bar_weight, tier, trial_state, pro_trial_ends_at, first_run_complete';
-      const runRead = (cols) => sb.from('users_profile').select(cols).eq('id', supabaseUserId).maybeSingle();
+      // Sentry VOLYUME-2Q (2026-09-06): PostgREST can reject a freshly minted
+      // token with PGRST303 "JWT issued at future" for a second or two after
+      // sign-in. Both reads below failed on it, cloudData ended null, and the
+      // "no profile row" branch could send an onboarded person back to the
+      // wizard. Retry the skew once; every other error behaves as before.
+      const retry = typeof withClockSkewRetry === 'function' ? withClockSkewRetry : (fn) => fn();
+      const runRead = (cols) => retry(() => sb.from('users_profile').select(cols).eq('id', supabaseUserId).maybeSingle());
       let readTimeoutId;
       const timeoutPromise = new Promise((_, reject) => {
         readTimeoutId = setTimeout(() => reject(new Error('cloud-read-timeout')), READ_TIMEOUT_MS);

@@ -66,6 +66,11 @@ describe('scheduleTrainingReminders (D4)', () => {
   });
 
   test('D142: enabled + permission granted: a bounded run of dated one-shots on the habit days at 08:00, never a repeat', async () => {
+    // The count depends on the wall clock: run on a habit day before 08:00
+    // and today's slot is still ahead, so the horizon holds one more. Pin
+    // "now" to a Monday mid-morning (neither habit day) so the count is 16
+    // whatever day the suite runs (it failed on Sunday 6 Sep 2026 at 05:00).
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date(2026, 8, 7, 10, 0, 0, 0).getTime());
     store({
       [tr.REMINDER_PREF_KEY]: 'true',
       [tr.SCHEDULE_KEY]: JSON.stringify({ days: [0, 3] }), // Sunday, Wednesday
@@ -88,6 +93,7 @@ describe('scheduleTrainingReminders (D4)', () => {
     }
     const last = new Date(mockSchedule.mock.calls.at(-1)[0].trigger.date);
     expect(last.getTime() - Date.now()).toBeLessThanOrEqual(tr.TRAINING_HORIZON_DAYS * 86400000 + 86400000);
+    nowSpy.mockRestore();
   });
 
   test('D142: trainingHorizonDates is pure, capped, and never in the past', () => {

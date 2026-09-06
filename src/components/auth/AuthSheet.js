@@ -168,13 +168,27 @@ export default function AuthSheet({ visible, initialMode = 'signup', onClose, na
     audit('auth.signin.attempt', { method: emailMode === 'signup' ? 'email_signup' : 'email' });
     const { logInfo, logError } = require('../../lib/errorLog');
     logInfo('LoginScreen.email.begin', `mode=${emailMode}`);
+    // A mistyped password is ordinary use, not a defect (2026-09-06, Sentry
+    // VOLYUME-2Z): 13 events of "AuthApiError: Invalid login credentials"
+    // arrived as ERRORS from the line below. Supabase answers a wrong
+    // email/password pair with exactly this 400, so it is logged at info --
+    // still in the ring buffer (Settings -> Debug logs) and still on the
+    // Sentry breadcrumb trail for any real error that follows, just not an
+    // issue of its own. Every OTHER provider error keeps its error level, and
+    // what the user sees is unchanged either way.
+    const isBadCredentials = (err) => err?.status === 400
+      && /invalid login credentials/i.test(String(err?.message ?? ''));
     setEmailSubmitting(true);
     setNotice(null);
     try {
       const fn = emailMode === 'signup' ? signUpWithEmail : signInWithEmail;
       const { data, error } = await fn(e, password);
       if (error) {
-        logError('LoginScreen.email.providerError', error, { mode: emailMode });
+        if (isBadCredentials(error)) {
+          logInfo('LoginScreen.email.providerError', 'invalid login credentials', { mode: emailMode });
+        } else {
+          logError('LoginScreen.email.providerError', error, { mode: emailMode });
+        }
         // Calm, plain wording (never the raw SDK string) mapped from the
         // common Supabase auth errors; anything else gets the safe fallback.
         // The mapping moved to lib/authErrorCopy so the network case (E-5)

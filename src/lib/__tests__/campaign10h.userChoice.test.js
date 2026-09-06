@@ -21,7 +21,13 @@
  */
 
 jest.mock('expo-sqlite');
-jest.mock('../supabase', () => ({ getSupabaseClient: () => null }));
+jest.mock('../supabase', () => ({
+  getSupabaseClient: () => null,
+  // Pass-through stand-in for the PGRST303 clock-skew retry (2026-09-06
+  // triage) that tables/profiles.js wraps its users_profile read in; the retry
+  // itself is pinned in src/lib/__tests__/supabase.clockSkew.test.js.
+  withClockSkewRetry: (fn) => fn(),
+}));
 jest.mock('../errorLog', () => ({
   logError: jest.fn(), logWarn: jest.fn(), logInfo: jest.fn(),
 }));
@@ -175,7 +181,10 @@ describe('F-4: the profile pull never wipes an allergy or a local-only pref', ()
   const loadWithStore = (state) => {
     jest.resetModules();
     jest.doMock('expo-sqlite');
-    jest.doMock('../supabase', () => ({ getSupabaseClient: () => null }));
+    jest.doMock('../supabase', () => ({
+      getSupabaseClient: () => null,
+      withClockSkewRetry: (fn) => fn(),
+    }));
     jest.doMock('../errorLog', () => ({
       logError: jest.fn(), logWarn: jest.fn(), logInfo: jest.fn(),
     }));

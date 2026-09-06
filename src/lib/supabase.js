@@ -665,6 +665,75 @@ export async function signInWithApple() {
   }
 }
 
+// ─── PostgREST clock-skew retry (2026-09-06, Sentry VOLYUME-2Q / 32) ──────
+//
+// PGRST303 "JWT issued at future" is PostgREST refusing a token whose `iat` is
+// ahead of the server's clock. It is not a bad token and not a signed-out user:
+// it is a second or two of skew between the device and Dublin, and the SAME
+// token is accepted on a retry moments later. 61 events across 5 users landed
+// on the users_profile read at login, and more on the food library delta RPC --
+// and in both places the app failed the operation outright rather than waiting
+// out a clock. A profile read that comes back empty at login is the worst
+// possible response to it, because "no profile row" is how the app recognises a
+// user who has never onboarded.
+//
+// The remedy is a short, bounded wait and one retry. Deliberately NOT a general
+// retry wrapper: only this one transient auth condition is retried, everything
+// else returns or throws exactly as before, and the attempt budget is small
+// enough that an exhausted retry still fails fast.
+
+/**
+ * True when `err` is PostgREST rejecting a token for clock skew.
+ * Accepts a PostgREST { code, message, hint, details } shape or a thrown Error.
+ *
+ * @param {unknown} err
+ * @returns {boolean}
+ */
+export function isClockSkewError(err) {
+  if (!err || typeof err !== 'object') return false;
+  if (err.code === 'PGRST303') return true;
+  const text = `${err.message ?? ''} ${err.details ?? ''} ${err.hint ?? ''}`;
+  return /issued at future/i.test(text);
+}
+
+const _skewDelay = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+
+/**
+ * Run a Supabase call, retrying ONLY on a clock-skew rejection.
+ *
+ * `fn` is expected to return a PostgREST-shaped `{ data, error }` (the skew
+ * arrives as `error`, not a throw) but a thrown skew error is handled the same
+ * way. Any other error -- returned or thrown -- is passed straight back on the
+ * first attempt, unretried. When the attempts are exhausted the caller sees
+ * exactly what it would have seen without this wrapper: the last result, or the
+ * last throw.
+ *
+ * @template T
+ * @param {() => Promise<T>} fn
+ * @param {{ delayMs?: number, attempts?: number }} [opts]
+ * @returns {Promise<T>}
+ */
+export async function withClockSkewRetry(fn, { delayMs = 1500, attempts = 2 } = {}) {
+  const total = Math.max(1, Math.trunc(attempts) || 1);
+  let result;
+  for (let i = 0; i < total; i += 1) {
+    const isLast = i === total - 1;
+    try {
+      result = await fn();
+    } catch (e) {
+      if (isLast || !isClockSkewError(e)) throw e;
+      await _skewDelay(delayMs);
+      continue;
+    }
+    if (!isLast && isClockSkewError(result?.error)) {
+      await _skewDelay(delayMs);
+      continue;
+    }
+    return result;
+  }
+  return result;
+}
+
 export async function upsertUserProfile(userId, profile) {
   const c = getSupabaseClient();
   if (!c) return { data: null, error: null };

@@ -107,3 +107,24 @@ describe('Apple device-state sign-in is a handled condition, not an error (VOLYU
     expect(LOGIN).toContain('Check you are signed in to iCloud');
   });
 });
+
+describe('a mistyped password is ordinary use, not an error (VOLYUME-2Z)', () => {
+  test('invalid login credentials logs at info; every other provider error stays an error', () => {
+    // The classifier itself: Supabase answers a wrong email/password pair with
+    // a 400 whose message is exactly this string.
+    expect(LOGIN).toMatch(/status === 400/);
+    expect(LOGIN).toMatch(/invalid login credentials/i);
+    // The info branch and the untouched error branch must BOTH still exist:
+    // an "improvement" that demoted every provider error would hide real
+    // sign-in breakage (a bad key, a project outage) behind the same change.
+    expect(LOGIN).toMatch(/logInfo\('LoginScreen\.email\.providerError'/);
+    expect(LOGIN).toMatch(/logError\('LoginScreen\.email\.providerError'/);
+  });
+
+  test('what the user sees is unchanged: the copy mapping still runs for both', () => {
+    // The classification is a logging decision only. authErrorMessage must be
+    // reached after the branch, not inside one arm of it.
+    const body = LOGIN.split('LoginScreen.email.providerError')[2] ?? '';
+    expect(body).toContain('authErrorMessage(error)');
+  });
+});

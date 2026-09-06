@@ -20,6 +20,7 @@
  */
 
 import { logSyncError } from '../telemetry';
+import { withClockSkewRetry } from '../../supabase';
 import { resolve as resolveConflict } from '../conflict';
 
 // camelCase store keys → snake_case users_profile columns. Order
@@ -188,11 +189,19 @@ export async function pullProfiles(sb, { userId } = {}) {
   if (!sb || !userId) return { count: 0, errors: 0 };
   try {
     const BASE_COLS = 'first_name, units, training_focus, training_age, primary_equipment, bar_weight, diet_preference, updated_at, column_updates_at';
-    const runRead = (cols) => sb
+    // PGRST303 clock skew (2026-09-06, Sentry VOLYUME-2Q): this read runs on
+    // the session-restore pull, right after sign-in, which is exactly when a
+    // device clock a second or two ahead of Dublin makes PostgREST reject the
+    // JWT as "issued at future". It succeeds on a retry moments later, so wait
+    // it out once instead of reporting the profile pull as errored. Wrapping
+    // runRead itself covers the column-tolerance fallbacks too, and only a skew
+    // rejection ever retries -- a missing column still falls through to the
+    // next select on its first attempt, unchanged.
+    const runRead = (cols) => withClockSkewRetry(() => sb
       .from('users_profile')
       .select(cols)
       .eq('id', userId)
-      .maybeSingle();
+      .maybeSingle());
     // Column tolerance (migrate_094 sex, migrate_112 allergen_excludes):
     // try the fullest select first, then fall back column by column so the
     // profile pull is never coupled to either migration being applied.

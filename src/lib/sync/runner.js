@@ -245,8 +245,17 @@ export async function syncAll({ userId, localUserId, triggeredBy = 'manual' } = 
             // safety won't wipe local data that never reached cloud).
             if (upload.errors) {
               erroredCount += upload.errors;
+              // lastError/allNetwork (2026-09-06, Sentry VOLYUME-2C): the
+              // aggregate's own text says nothing about WHY the legacy push
+              // failed, so the Sentry noise gate had to infer it from NetInfo
+              // -- which reports "connected" right through the flaky handover
+              // that produced 401 of these. bulkUploadLocalData now reports the
+              // cause it observed (message only, no PII), and allNetwork===true
+              // demotes the aggregate to a breadcrumb in sentry.js.
               syncCrumb('sync.push.legacy', 'sync.push.legacy.errors', {
                 errors: upload.errors,
+                lastError: upload.lastError ?? null,
+                allNetwork: upload.allNetwork === true,
               });
             }
           }

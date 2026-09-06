@@ -14,6 +14,11 @@
 
 jest.mock('../../supabase', () => ({
   getSupabaseClient: jest.fn(),
+  // The PGRST303 clock-skew retry (2026-09-06 triage) wraps the users_profile
+  // read in tables/profiles.js. It only ever retries that one transient code,
+  // so a straight pass-through is the correct stand-in here; the retry itself
+  // is pinned in src/lib/__tests__/supabase.clockSkew.test.js.
+  withClockSkewRetry: (fn) => fn(),
 }));
 
 jest.mock('../telemetry', () => ({
