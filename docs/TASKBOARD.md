@@ -33,6 +33,23 @@ The full register is `docs/ux-world-class-audit-2026-07-09/DECISIONS-2026-07-09.
 
 ---
 
+## SOCIAL / COMMUNITY / DISCOVERY (2026-09-06) — IN FLIGHT on `claude/volyume-social-discovery-h7dknu`
+
+Founder brief in chat 2026-09-06: replace Partners with a real social,
+discovery, community and sharing ecosystem; one autonomous end-to-end task
+(research -> decisions -> architecture -> build -> verify). Campaign folder
+`docs/social-discovery-2026-09-06/` (README = document map). Authority for
+every ruling: `40-DECISIONS.md` (SD-nn) in that folder; the edit-gate spec
+is `30-BLUEPRINT.md`.
+
+Phase A (recon + research, READ-ONLY agents, wider window granted by the
+brief): nine agents writing `01`..`05` (repo) and `10`..`13` (research).
+Recovery path: re-dispatch any missing file from the briefs recorded in the
+README document map. Phases B-E follow in the same session; each landing
+updates this entry, the handover and the decisions register.
+
+---
+
 ## SENTRY TRIAGE AND THE CODEC-LESS ANDROID BUILDS (2026-09-06) — CODE ON MAIN `39df0f8`; FOUNDER: PUBLISH A CODEC BUILD TO PLAY.
 
 Founder brief in chat 2026-09-06 (a live Pixel 9 user on build 3560).
